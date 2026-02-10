@@ -22,6 +22,7 @@ import SendReport from "../Pages/Dashboard/SendReport/SendReport";
 import SOFLabs from "../Pages/SOFLabs/SOFLabs";
 import AddUser from "../Pages/Dashboard/user_control/add-user/AddUser";
 import ICTDLabs from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLabs";
+import ICTDLUpdate from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLUpdate/ICTDLUpdate";
 import ManageUser from "../Pages/Dashboard/user_control/manege_user/ManageUser";
 const router = createBrowserRouter([
   {
@@ -110,10 +111,14 @@ const router = createBrowserRouter([
         Component: ICTDLabs,
       },
       {
+        path: "ictdLabsUpdate/:id",
+        Component: ICTDLUpdate,
+      },
+      {
         path: "add-user",
         Component: AddUser,
       },
-      
+
       {
         path: "manage-user",
         Component: ManageUser,

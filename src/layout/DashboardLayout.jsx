@@ -59,7 +59,7 @@ const DashboardLayout = () => {
         },
         {
           path: "/dashboard/ictdLabs",
-          name: "ICTD Labs",
+          name: "ICTDL Labs",
         },
       ],
     },

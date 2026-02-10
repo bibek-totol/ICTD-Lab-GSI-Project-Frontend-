@@ -15,8 +15,10 @@ import {
 } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const SOFLabs = () => {
+  const { t } = useTranslation();
   const [labs, setLabs] = useState([]);
   const [search, setSearch] = useState("");
   const [entries, setEntries] = useState(25);
@@ -27,13 +29,13 @@ const SOFLabs = () => {
   const [upazila, setUpazila] = useState("");
 
   const fetchLabs = () => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/labs`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/labs?labType=sof`)
       .then((res) => res.json())
       .then((resData) => {
-        const allLabs = resData?.data || [];
-        const sofLabs = allLabs.filter((lab) => lab.labType === "sof");
-        setLabs(sofLabs);
-        setPage(1);
+        if (resData.success) {
+          setLabs(resData.data || []);
+          setPage(1);
+        }
       })
       .catch((error) => {
         console.error("Error fetching SOF labs data:", error);
@@ -414,7 +416,7 @@ const SOFLabs = () => {
                       <td colSpan="7" className="px-6 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 text-emerald-500">
                           <FaSearch className="text-4xl opacity-50" />
-                          <p>কোন তথ্য পাওয়া যায়নি</p>
+                          <p>{t("no_data_found")}</p>
                         </div>
                       </td>
                     </tr>
@@ -462,11 +464,10 @@ const SOFLabs = () => {
                     <button
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${
-                        page === pageNum
+                      className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${page === pageNum
                           ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-500 scale-110"
                           : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm hover:shadow-md hover:scale-105"
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>

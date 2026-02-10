@@ -477,26 +477,75 @@ const LabDetails = () => {
 
               {selectedLab ? (
                 <div>
-                  {/* Static Lab Images Gallery */}
-                  <div className="mt-4 pt-4 border-t border-emerald-500/20">
-                    <p className="text-sm font-semibold text-emerald-200/70 mb-3">
-                      {t('lab_images')}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <PhotoProvider>
-                        {staticLabImages.map((imgSrc, idx) => (
-                          <PhotoView key={idx} src={imgSrc}>
-                            <img
-                              src={imgSrc}
-                              alt={`Lab ${idx + 1}`}
-                              className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-emerald-500/20"
-                              loading="lazy"
-                            />
-                          </PhotoView>
-                        ))}
-                      </PhotoProvider>
+                  {/* Lab Images Gallery */}
+                  {selectedLab.labImages && selectedLab.labImages.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-emerald-500/20">
+                      <p className="text-sm font-semibold text-emerald-200/70 mb-3">
+                        ল্যাবের ছবি
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <PhotoProvider>
+                          {selectedLab.labImages.map((imgSrc, idx) => (
+                            <PhotoView key={idx} src={imgSrc}>
+                              <img
+                                src={imgSrc}
+                                alt={`Lab ${idx + 1}`}
+                                className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-emerald-500/20"
+                                loading="lazy"
+                              />
+                            </PhotoView>
+                          ))}
+                        </PhotoProvider>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Institution Images Gallery */}
+                  {selectedLab.institutionImages && selectedLab.institutionImages.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-emerald-500/20">
+                      <p className="text-sm font-semibold text-emerald-200/70 mb-3">
+                        প্রতিষ্ঠানের ছবি
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <PhotoProvider>
+                          {selectedLab.institutionImages.map((imgSrc, idx) => (
+                            <PhotoView key={idx} src={imgSrc}>
+                              <img
+                                src={imgSrc}
+                                alt={`Institution ${idx + 1}`}
+                                className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-emerald-500/20"
+                                loading="lazy"
+                              />
+                            </PhotoView>
+                          ))}
+                        </PhotoProvider>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fallback to static images if no uploaded images */}
+                  {(!selectedLab.labImages || selectedLab.labImages.length === 0) &&
+                    (!selectedLab.institutionImages || selectedLab.institutionImages.length === 0) && (
+                      <div className="mt-4 pt-4 border-t border-emerald-500/20">
+                        <p className="text-sm font-semibold text-emerald-200/70 mb-3">
+                          {t('lab_images')}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <PhotoProvider>
+                            {staticLabImages.map((imgSrc, idx) => (
+                              <PhotoView key={idx} src={imgSrc}>
+                                <img
+                                  src={imgSrc}
+                                  alt={`Lab ${idx + 1}`}
+                                  className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity border border-emerald-500/20"
+                                  loading="lazy"
+                                />
+                              </PhotoView>
+                            ))}
+                          </PhotoProvider>
+                        </div>
+                      </div>
+                    )}
 
                   <motion.div
                     initial={{ opacity: 0 }}

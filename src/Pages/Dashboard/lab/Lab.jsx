@@ -17,6 +17,9 @@ import {
 import * as XLSX from "xlsx";
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+
 const Lab = () => {
   const { t } = useTranslation();
   const [labs, setLabs] = useState([]);
@@ -29,16 +32,19 @@ const Lab = () => {
   const [upazila, setUpazila] = useState("");
 
   const fetchLabs = () => {
-    fetch("/srd-data.json")
+    fetch(`${API_BASE_URL}/ictdl?limit=10000`)
       .then((res) => res.json())
       .then((data) => {
-        setLabs(data);
-        setPage(1);
+        if (data.success) {
+          setLabs(data.data);
+          setPage(1);
+        }
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
       });
   };
+
 
   useEffect(() => {
     fetchLabs();
@@ -89,8 +95,8 @@ const Lab = () => {
       t('email'),
     ];
 
-    const rows = filtered.map((l) => [
-      l["sl."],
+    const rows = filtered.map((l, index) => [
+      index + 1,
       l.district,
       l.upazila,
       l.institute,
@@ -98,6 +104,7 @@ const Lab = () => {
       l.mobile,
       l.email,
     ]);
+
 
     const csv =
       headers.join(",") +
@@ -316,15 +323,16 @@ const Lab = () => {
                   {paginated.length > 0 ? (
                     paginated.map((l, i) => (
                       <motion.tr
-                        key={l["sl."] || `${l.district}-${i}`}
+                        key={l.id || `${l.district}-${i}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="hover:bg-emerald-50 transition-all duration-200 group border-b border-emerald-50/50 hover:shadow-sm"
                       >
                         <td className={`px-6 font-medium text-emerald-600 ${start + i + 1 === 1 ? 'py-5' : 'py-4'}`}>
-                          {l["sl."]}
+                          {start + i + 1}
                         </td>
+
                         <td className="px-6 py-4 text-emerald-900/80">{l.district}</td>
                         <td className="px-6 py-4 text-emerald-900/80">{l.upazila}</td>
                         <td className="px-6 py-4">

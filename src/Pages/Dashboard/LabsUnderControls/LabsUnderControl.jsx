@@ -7,6 +7,7 @@ import {
   HiOutlineDownload,
   HiOutlinePrinter,
   HiOutlineRefresh,
+  HiOutlineTrash,
 } from "react-icons/hi";
 import { FaBookOpen, FaFileCsv, FaFileExcel } from "react-icons/fa";
 import * as XLSX from "xlsx";
@@ -167,6 +168,8 @@ const LabsUnderControl = () => {
     setIsModalOpen(false);
     setCurrentLab(null);
   };
+
+  
 
   return (
     <div className="min-h-screen bg-emerald-50 p-6 space-y-6">
@@ -398,11 +401,10 @@ const LabsUnderControl = () => {
                       <td className="px-6 py-4">
                         <div className="flex flex-col gap-1 items-center space-y-1.5">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${
-                              lab.labType === "sof"
-                                ? "bg-blue-50 text-blue-600 border border-blue-100"
-                                : "bg-purple-50 text-purple-600 border border-purple-100"
-                            }`}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${lab.labType === "sof"
+                              ? "bg-blue-50 text-blue-600 border border-blue-100"
+                              : "bg-purple-50 text-purple-600 border border-purple-100"
+                              }`}
                           >
                             {lab.labType === "sof" ? "SOF" : "ICTDL & SOF"}
                           </span>
@@ -465,7 +467,7 @@ const LabsUnderControl = () => {
                             title="Update Lab"
                           >
                             <HiOutlinePencil className="w-5 h-5" />
-                     
+
                           </Link>
                           <Link
                             to={`/dashboard/filesComplaints/${lab.id}`}
@@ -473,16 +475,16 @@ const LabsUnderControl = () => {
                             title="File Complaint"
                           >
                             <HiOutlineExclamationCircle className="w-5 h-5" />
-                           
+
                           </Link>
                           <button
                             onClick={() => handleOpenModal(lab)}
-                            className="cursor-pointer  hover:scale-110 flex items-center gap-2 px-3 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm"
+                            className="cursor-pointer hover:scale-110 flex items-center gap-2 px-3 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm"
                             title="Send Report"
                           >
                             <FaBookOpen className="w-5 h-5" />
-                           
                           </button>
+                      
                         </div>
                       </td>
                     </tr>
@@ -546,11 +548,10 @@ const LabsUnderControl = () => {
                   <button
                     key={i + 1}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === i + 1
-                        ? "bg-emerald-600 text-white shadow-sm border border-emerald-500"
-                        : "text-emerald-600 hover:bg-emerald-100 hover:text-emerald-800 border border-transparent"
-                    }`}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === i + 1
+                      ? "bg-emerald-600 text-white shadow-sm border border-emerald-500"
+                      : "text-emerald-600 hover:bg-emerald-100 hover:text-emerald-800 border border-transparent"
+                      }`}
                   >
                     {i + 1}
                   </button>
