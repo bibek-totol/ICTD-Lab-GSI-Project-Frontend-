@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router";
 import {
@@ -72,7 +73,10 @@ const FilesComplaints = () => {
       screenshot: data.screenshot?.[0] || null,
     };
     console.log("Complaint submitted:", complaintData);
-    alert(`Complaint submitted successfully for ${selectedDevice}!`);
+    toast.success(`Complaint submitted successfully for ${selectedDevice}!`, {
+      icon: '✅',
+      style: { borderRadius: '10px', background: '#333', color: '#fff' }
+    });
     closeModal();
   };
 

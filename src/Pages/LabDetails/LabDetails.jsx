@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import toast from "react-hot-toast";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -296,13 +297,17 @@ const LabDetails = () => {
               break;
           }
 
-          alert(errorMessage);
+          toast.error(errorMessage, {
+            style: { borderRadius: '10px', background: '#333', color: '#fff' }
+          });
           setIsLoadingLocation(false);
         },
         options,
       );
     } else {
-      alert("Geolocation is not supported by your browser.");
+      toast.error("Geolocation is not supported by your browser.", {
+        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+      });
       setIsLoadingLocation(false);
     }
   }, [labs, distance, calculateDistance]);

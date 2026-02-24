@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import {
   HiOutlineDocumentText,
@@ -53,7 +54,10 @@ const ReportForm = ({ onClose, instituteName, labId }) => {
       const result = await response.json();
 
       if (result.success) {
-        alert("✅ Report submitted successfully!");
+        toast.success("Report submitted successfully!", {
+          icon: '✅',
+          style: { borderRadius: '10px', background: '#333', color: '#fff' }
+        });
         // Clean up image previews
         imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
         onClose();

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { FaSave, FaTrashAlt, FaUndo } from "react-icons/fa";
 import { motion } from "framer-motion";
 import usersData from "../../../../data/userdb.json";
@@ -46,9 +47,45 @@ const ManageUser = () => {
   };
 
   const deleteUser = (id) => {
-    if (window.confirm("Delete this user?")) {
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-    }
+    toast((t) => (
+      <div className="flex items-center gap-4 p-1">
+        <div className="flex flex-col gap-1">
+          <p className="font-bold text-emerald-900 text-sm">Delete User?</p>
+          <p className="text-xs text-emerald-600">This action cannot be undone.</p>
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              setUsers((prev) => prev.filter((u) => u.id !== id));
+              toast.success("User deleted successfully", {
+                icon: '🗑️',
+                style: { borderRadius: '10px', background: '#333', color: '#fff' }
+              });
+            }}
+            className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+          >
+            Confirm
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100 cursor-pointer"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 6000,
+      position: 'top-center',
+      style: {
+        minWidth: '350px',
+        borderRadius: '1rem',
+        background: '#fff',
+        border: '1px solid #d1fae5',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+      },
+    });
   };
 
   return (
@@ -133,11 +170,10 @@ const ManageUser = () => {
                           onClick={() => saveUser(user.id)}
                           disabled={!hasChange}
                           title="Save"
-                          className={`text-lg transition ${
-                            hasChange
+                          className={`text-lg transition ${hasChange
                               ? "text-emerald-600 hover:text-emerald-800"
                               : "text-gray-300 cursor-not-allowed"
-                          }`}
+                            }`}
                         >
                           <FaSave />
                         </button>
@@ -147,11 +183,10 @@ const ManageUser = () => {
                           onClick={() => resetUser(user.id)}
                           disabled={!hasChange}
                           title="Reset"
-                          className={`text-lg transition ${
-                            hasChange
+                          className={`text-lg transition ${hasChange
                               ? "text-blue-600 hover:text-blue-800"
                               : "text-gray-300 cursor-not-allowed"
-                          }`}
+                            }`}
                         >
                           <FaUndo />
                         </button>
