@@ -1,21 +1,19 @@
 import { useState } from "react";
-import toast from "react-hot-toast";
-import { FaSave, FaTrashAlt, FaUndo } from "react-icons/fa";
+import { FaSave, FaUndo } from "react-icons/fa";
 import { motion } from "framer-motion";
 import usersData from "../../../../data/userdb.json";
 
 const ManageUser = () => {
-  const [users, setUsers] = useState(usersData);
+  const [users, setUsers] = useState(
+  usersData.map((u) => ({
+    ...u,
+    status: u.status === "Active" ? "Active" : "Inactive",
+    institute_name: u.institute_name ?? "N/A",
+  }))
+);
   const [drafts, setDrafts] = useState({});
 
-  const roles = [
-    "District Admin",
-    "Division Admin",
-    "Upazila Admin",
-    "Lab Admin",
-  ];
-
-  const statuses = ["Active", "Inactive", "Blocked"];
+  const statuses = ["Active", "Inactive"];
 
   const handleChange = (id, key, value) => {
     setDrafts((prev) => ({
@@ -26,9 +24,7 @@ const ManageUser = () => {
 
   const saveUser = (id) => {
     setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id ? { ...u, ...drafts[id] } : u
-      )
+      prev.map((u) => (u.id === id ? { ...u, ...drafts[id] } : u))
     );
 
     setDrafts((prev) => {
@@ -46,48 +42,6 @@ const ManageUser = () => {
     });
   };
 
-  const deleteUser = (id) => {
-    toast((t) => (
-      <div className="flex items-center gap-4 p-1">
-        <div className="flex flex-col gap-1">
-          <p className="font-bold text-emerald-900 text-sm">Delete User?</p>
-          <p className="text-xs text-emerald-600">This action cannot be undone.</p>
-        </div>
-        <div className="flex gap-2 ml-auto">
-          <button
-            onClick={() => {
-              toast.dismiss(t.id);
-              setUsers((prev) => prev.filter((u) => u.id !== id));
-              toast.success("User deleted successfully", {
-                icon: '🗑️',
-                style: { borderRadius: '10px', background: '#333', color: '#fff' }
-              });
-            }}
-            className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
-          >
-            Confirm
-          </button>
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100 cursor-pointer"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ), {
-      duration: 6000,
-      position: 'top-center',
-      style: {
-        minWidth: '350px',
-        borderRadius: '1rem',
-        background: '#fff',
-        border: '1px solid #d1fae5',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-      },
-    });
-  };
-
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -97,12 +51,8 @@ const ManageUser = () => {
     >
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-emerald-950">
-            Manage Users
-          </h1>
-          <p className="text-emerald-700 mt-2">
-            Update user role and status using save or reset
-          </p>
+          <h1 className="text-3xl font-bold text-emerald-950">Manage Users</h1>
+          <p className="text-emerald-700 mt-2">Update user status and save or reset</p>
         </div>
 
         <div className="bg-white/90 rounded-2xl shadow-xl border border-emerald-100 overflow-x-auto">
@@ -112,6 +62,7 @@ const ManageUser = () => {
                 <th className="px-6 py-4 text-left">#</th>
                 <th className="px-6 py-4 text-left">Name</th>
                 <th className="px-6 py-4 text-left">Email</th>
+                <th className="px-6 py-4 text-left">Institute</th>
                 <th className="px-6 py-4 text-left">Role</th>
                 <th className="px-6 py-4 text-left">Status</th>
                 <th className="px-6 py-4 text-center">Action</th>
@@ -121,7 +72,6 @@ const ManageUser = () => {
             <tbody className="divide-y divide-emerald-100">
               {users.map((user, index) => {
                 const draft = drafts[user.id] || {};
-                const roleValue = draft.role ?? user.role;
                 const statusValue = draft.status ?? user.status;
                 const hasChange = !!drafts[user.id];
 
@@ -131,22 +81,14 @@ const ManageUser = () => {
                     <td className="px-6 py-4">{user.name}</td>
                     <td className="px-6 py-4">{user.email}</td>
 
-                    <td className="px-6 py-4">
-                      <select
-                        value={roleValue}
-                        onChange={(e) =>
-                          handleChange(user.id, "role", e.target.value)
-                        }
-                        className="border border-emerald-200 rounded-xl px-3 py-2"
-                      >
-                        {roles.map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
+                    <td className="px-6 py-4">{user.institute_name || "N/A"}</td>
+
+                    {/* Role visible only */}
+                    <td className="px-6 py-4 font-medium text-emerald-900">
+                      {user.role}
                     </td>
 
+                    {/* Editable Status */}
                     <td className="px-6 py-4">
                       <select
                         value={statusValue}
@@ -190,15 +132,6 @@ const ManageUser = () => {
                         >
                           <FaUndo />
                         </button>
-
-                        {/* Delete */}
-                        <button
-                          onClick={() => deleteUser(user.id)}
-                          title="Delete"
-                          className="text-red-600 hover:text-red-800 transition"
-                        >
-                          <FaTrashAlt />
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -207,10 +140,7 @@ const ManageUser = () => {
 
               {users.length === 0 && (
                 <tr>
-                  <td
-                    colSpan="6"
-                    className="text-center py-12 text-emerald-500"
-                  >
+                  <td colSpan="7" className="text-center py-12 text-emerald-500">
                     No users found
                   </td>
                 </tr>

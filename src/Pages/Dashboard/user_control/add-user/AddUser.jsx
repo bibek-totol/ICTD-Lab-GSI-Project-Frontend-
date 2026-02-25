@@ -130,7 +130,6 @@ const AddUser = () => {
 
   const roles = [
     "SUPER ADMIN",
-    "LAB ADMIN",
     "DIVISION ADMIN",
     "DISTRICT ADMIN",
     "UPAZILA ADMIN",

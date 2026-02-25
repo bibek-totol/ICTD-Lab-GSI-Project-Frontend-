@@ -82,7 +82,7 @@ const DashboardLayout = () => {
       subItems: [
         {
           path: "/dashboard/add-user",
-          name: t("Add User"),
+          name: t("Add Admin"),
         },
         {
           path: "/dashboard/manage-user",
