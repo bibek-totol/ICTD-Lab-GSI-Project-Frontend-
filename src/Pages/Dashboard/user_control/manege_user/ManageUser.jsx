@@ -112,11 +112,10 @@ const ManageUser = () => {
                           onClick={() => saveUser(user.id)}
                           disabled={!hasChange}
                           title="Save"
-                          className={`text-lg transition ${
-                            hasChange
+                          className={`text-lg transition ${hasChange
                               ? "text-emerald-600 hover:text-emerald-800"
                               : "text-gray-300 cursor-not-allowed"
-                          }`}
+                            }`}
                         >
                           <FaSave />
                         </button>
@@ -126,11 +125,10 @@ const ManageUser = () => {
                           onClick={() => resetUser(user.id)}
                           disabled={!hasChange}
                           title="Reset"
-                          className={`text-lg transition ${
-                            hasChange
+                          className={`text-lg transition ${hasChange
                               ? "text-blue-600 hover:text-blue-800"
                               : "text-gray-300 cursor-not-allowed"
-                          }`}
+                            }`}
                         >
                           <FaUndo />
                         </button>

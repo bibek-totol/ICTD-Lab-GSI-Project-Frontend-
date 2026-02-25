@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import {
     HiOutlineSearch,
     HiOutlineFilter,
@@ -184,25 +185,65 @@ const SendReport = () => {
     };
 
     const handleDeleteReport = async (reportId) => {
-        if (!confirm("Are you sure you want to delete this report?")) return;
+        toast((t) => (
+            <div className="flex items-center gap-4 p-1">
+                <div className="flex flex-col gap-1">
+                    <p className="font-bold text-emerald-900 text-sm">Delete Report?</p>
+                    <p className="text-xs text-emerald-600">This action cannot be undone.</p>
+                </div>
+                <div className="flex gap-2 ml-auto">
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            const loadingToast = toast.loading("Deleting report...", {
+                                style: { borderRadius: '10px', background: '#333', color: '#fff' }
+                            });
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/lab-reports/${reportId}`, {
-                method: "DELETE",
-            });
-            const result = await response.json();
+                            try {
+                                const response = await fetch(`${API_BASE_URL}/lab-reports/${reportId}`, {
+                                    method: "DELETE",
+                                });
+                                const result = await response.json();
 
-            if (result.success) {
-                alert("✅ Report deleted successfully!");
-                // Refresh the data
-                setReportsData(reportsData.filter((r) => r.id !== reportId));
-            } else {
-                alert("❌ Failed to delete report");
-            }
-        } catch (error) {
-            console.error("Error deleting report:", error);
-            alert("❌ Failed to delete report");
-        }
+                                if (result.success) {
+                                    toast.success("Report deleted successfully", {
+                                        id: loadingToast,
+                                        icon: '🗑️',
+                                        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+                                    });
+                                    // Refresh the data
+                                    setReportsData(reportsData.filter((r) => r.id !== reportId));
+                                } else {
+                                    toast.error(result.message || "Failed to delete report", { id: loadingToast });
+                                }
+                            } catch (error) {
+                                console.error("Error deleting report:", error);
+                                toast.error("Failed to delete report", { id: loadingToast });
+                            }
+                        }}
+                        className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-100 cursor-pointer"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        ), {
+            duration: 6000,
+            position: 'top-center',
+            style: {
+                minWidth: '350px',
+                borderRadius: '1rem',
+                background: '#fff',
+                border: '1px solid #d1fae5',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            },
+        });
     };
 
     return (

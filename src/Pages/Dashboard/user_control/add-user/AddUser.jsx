@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { FaUserPlus } from "react-icons/fa";
 import { GrPowerReset } from "react-icons/gr";
 import { motion } from "framer-motion";
@@ -84,17 +85,23 @@ const AddUser = () => {
     e.preventDefault();
 
     if (!form.role) {
-      alert("Role is required");
+      toast.error("Role is required", {
+        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+      });
       return;
     }
 
     if (!form.division || !form.district || !form.upazila) {
-      alert("Division, District and Upazila are required");
+      toast.error("Division, District and Upazila are required", {
+        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+      });
       return;
     }
 
     if (!/^01[3-9]\d{8}$/.test(form.phone)) {
-      alert("Enter a valid phone number (01XXXXXXXXX)");
+      toast.error("Enter a valid phone number (01XXXXXXXXX)", {
+        style: { borderRadius: '10px', background: '#333', color: '#fff' }
+      });
       return;
     }
 
@@ -110,7 +117,10 @@ const AddUser = () => {
     };
 
     console.log("✅ Backend Payload:", payload);
-    alert("User created successfully");
+    toast.success("User created successfully", {
+      icon: '👤',
+      style: { borderRadius: '10px', background: '#333', color: '#fff' }
+    });
     handleReset();
   };
 
@@ -172,7 +182,7 @@ const AddUser = () => {
             </div>
 
             {/* Designation */}
-            
+
 
             {/* Email */}
             <div>
