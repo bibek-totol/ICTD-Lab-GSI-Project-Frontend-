@@ -8,6 +8,7 @@ const getComplaints = async (params) => {
 };
 
 const createComplaint = async (data) => {
+    // If data is regular object, axios handles it. If it's FormData, axios handles that too.
     const response = await axios.post(API_URL, data);
     return response.data;
 };

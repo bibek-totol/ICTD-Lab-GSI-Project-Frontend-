@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
+import { FaImage } from "react-icons/fa";
+import ComplaintService from "../../../../../services/complaint.service";
+import LabService from "../../../../../services/lab.service";
 import {
   HiOutlineExclamationCircle,
   HiOutlineArrowLeft,
@@ -25,8 +28,18 @@ import networkswitch from "../../../../../assets/complaint/switch.png";
 import internet from "../../../../../assets/complaint/internet.png";
 
 const FilesComplaints = () => {
+  const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState("");
+  const [labData, setLabData] = useState(null);
+
+  useEffect(() => {
+    if (id) {
+      LabService.getLabById(id).then(res => {
+        if (res.success) setLabData(res.data);
+      });
+    }
+  }, [id]);
 
   const {
     register,
@@ -35,27 +48,17 @@ const FilesComplaints = () => {
     formState: { errors },
   } = useForm();
 
-  const devices = [
-    { name: "Laptop", icon: laptop },
-    { name: "LED Smart TV", icon: smarttv },
-    { name: "Printer", icon: printer },
-    { name: "Scanner", icon: scanneer },
-    { name: "Web Camera", icon: webcam },
-    { name: "Router", icon: router },
-    { name: "Network Switch", icon: networkswitch },
-    { name: "Internet (6mo)", icon: internet },
+  const categories = [
+    { name: "Equipment", icon: laptop, description: "Issues with laptops, TVs, printers, etc." },
+    { name: "Infrastructure", icon: smartBoard, description: "Lab building, electricity, furniture issues." },
+    { name: "Internet", icon: internet, description: "Connectivity, router, or network problems." },
+    { name: "Personnel", icon: attandence, description: "Staff attendance or behavior issues." },
+    { name: "Security", icon: smartCard, description: "Theft, damage, or safety concerns." },
+    { name: "Other", icon: scanneer, description: "Any other situational complaints." },
   ];
 
-  const schoolFeature = [
-    { name: "Digital SmartBoard", icon: smartBoard },
-    { name: "Desktop", icon: desktop },
-    { name: "Attendance Machine", icon: attandence },
-    { name: "Digital ID Card", icon: smartCard },
-    { name: "Wi-Fi Router", icon: wifi },
-  ];
-
-  const openModal = (deviceName) => {
-    setSelectedDevice(deviceName);
+  const openModal = (categoryName) => {
+    setSelectedDevice(categoryName); // Using this as category
     setIsModalOpen(true);
     reset();
   };
@@ -66,18 +69,39 @@ const FilesComplaints = () => {
     reset();
   };
 
-  const onSubmit = (data) => {
-    const complaintData = {
-      device: selectedDevice,
-      ...data,
-      screenshot: data.screenshot?.[0] || null,
-    };
-    console.log("Complaint submitted:", complaintData);
-    toast.success(`Complaint submitted successfully for ${selectedDevice}!`, {
-      icon: '✅',
-      style: { borderRadius: '10px', background: '#333', color: '#fff' }
-    });
-    closeModal();
+  const onSubmit = async (data) => {
+    const loadingToast = toast.loading("Submitting complaint...");
+    try {
+      const formData = new FormData();
+      formData.append("category", selectedDevice);
+      formData.append("subject", data.subject);
+      formData.append("description", data.description);
+      formData.append("priority", data.priority);
+
+      // These should come from context or lab-selection if not hardcoded
+      // For now, let's assume they are required from somewhere. 
+      // If this page is reached from a lab-context, we'd have them.
+      // Mocking them for now if not present.
+      formData.append("division", labData?.division || "N/A");
+      formData.append("district", labData?.district || "N/A");
+      formData.append("upazila", labData?.upazila || "N/A");
+      formData.append("institute", labData?.institute || "N/A");
+      formData.append("labType", labData?.type || "");
+
+      if (data.screenshot && data.screenshot.length > 0) {
+        for (let i = 0; i < data.screenshot.length; i++) {
+          formData.append("complaintImages", data.screenshot[i]);
+        }
+      }
+
+      await ComplaintService.createComplaint(formData);
+
+      toast.success("Submitting successfully!", { id: loadingToast });
+      closeModal();
+    } catch (err) {
+      toast.error("Failed to submit complaint", { id: loadingToast });
+      console.error(err);
+    }
   };
 
   const InputGroup = ({ label, error, required, children }) => (
@@ -131,71 +155,43 @@ const FilesComplaints = () => {
             </div>
           </div>
           <p className="text-gray-600 text-sm ml-14">
-            Select a device or feature to report an issue
+            Select a situational category to report an issue
           </p>
         </div>
       </div>
 
-      {/* Digital Devices Section */}
+      {/* Situational Categories Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b-2 border-emerald-100">
-          <h2 className="text-xl font-bold text-green-950">Digital Lab Devices</h2>
+          <h2 className="text-xl font-bold text-green-950">Select Complaint Category</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {devices.map((device, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((cat, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 p-6 flex flex-col items-center group cursor-pointer transform hover:-translate-y-1"
-              onClick={() => openModal(device.name)}
+              className="bg-white rounded-3xl shadow-sm hover:shadow-2xl border border-emerald-50 hover:border-emerald-200 transition-all duration-500 p-8 flex flex-col items-center group cursor-pointer transform hover:-translate-y-2 relative overflow-hidden"
+              onClick={() => openModal(cat.name)}
             >
-              <div className="w-24 h-24 mb-4 flex items-center justify-center p-3 bg-gradient-to-br from-gray-50 to-emerald-50 rounded-2xl group-hover:from-emerald-100 group-hover:to-blue-100 transition-all duration-300 shadow-md group-hover:shadow-lg">
-                <img
-                  src={device.icon}
-                  alt={device.name}
-                  className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-300"
-                />
-              </div>
-              <h3 className="text-center font-semibold text-gray-800 mb-4 h-10 flex items-center leading-tight">
-                {device.name}
-              </h3>
-              <button
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-50 to-blue-50 text-emerald-700 font-semibold text-sm hover:from-emerald-600 hover:to-blue-600 hover:text-white transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-              >
-                <HiOutlineExclamationCircle className="w-5 h-5" />
-                Report Issue
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 group-hover:bg-emerald-100 transition-colors duration-500"></div>
 
-      {/* School Features Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-3 border-b-2 border-blue-100">
-          <h2 className="text-xl font-bold text-green-950">School Features</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {schoolFeature.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300 p-6 flex flex-col items-center group cursor-pointer transform hover:-translate-y-1"
-              onClick={() => openModal(feature.name)}
-            >
-              <div className="w-24 h-24 mb-4 flex items-center justify-center p-3 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl group-hover:from-blue-100 group-hover:to-emerald-100 transition-all duration-300 shadow-md group-hover:shadow-lg">
+              <div className="w-24 h-24 mb-6 flex items-center justify-center p-4 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl group-hover:scale-110 transition-all duration-500 shadow-inner">
                 <img
-                  src={feature.icon}
-                  alt={feature.name}
-                  className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-300"
+                  src={cat.icon}
+                  alt={cat.name}
+                  className="w-full h-full object-contain"
                 />
               </div>
-              <h3 className="text-center font-semibold text-gray-800 mb-4 h-10 flex items-center leading-tight">
-                {feature.name}
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {cat.name}
               </h3>
+              <p className="text-center text-gray-500 text-sm mb-6 px-4 leading-relaxed">
+                {cat.description}
+              </p>
               <button
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-50 to-emerald-50 text-blue-700 font-semibold text-sm hover:from-blue-600 hover:to-emerald-600 hover:text-white transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+                className="w-full py-3 px-6 rounded-2xl bg-emerald-50 text-emerald-700 font-bold text-sm group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 border border-emerald-100 group-hover:border-emerald-600"
               >
                 <HiOutlineExclamationCircle className="w-5 h-5" />
-                Report Issue
+                Select {cat.name}
               </button>
             </div>
           ))}
@@ -210,22 +206,21 @@ const FilesComplaints = () => {
             onClick={closeModal}
           ></div>
 
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
-
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-emerald-50">
               <div>
                 <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <HiOutlineExclamationCircle className="w-6 h-6 text-red-500" />
-                  File Complaint
+                  <HiOutlineExclamationCircle className="w-6 h-6 text-emerald-600" />
+                  File &quot;{selectedDevice}&quot; Complaint
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Reporting issue for: <span className="font-semibold text-emerald-600">{selectedDevice}</span>
+                <p className="text-xs text-emerald-600 mt-1 font-medium italic">
+                  Please provide details about the situational issue.
                 </p>
               </div>
               <button
                 onClick={closeModal}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-colors shadow-sm"
               >
                 <HiOutlineX className="w-6 h-6" />
               </button>
@@ -234,40 +229,32 @@ const FilesComplaints = () => {
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <div className="space-y-5">
-
-                <InputGroup label="Device Status" error={errors.deviceStatus} required>
-                  <Select
-                    {...register("deviceStatus", { required: "Status is required" })}
-                  >
-                    <option value="">Select current status...</option>
-                    <option value="not-working">Not Working (Completely)</option>
-                    <option value="partially-working">Partially Working</option>
-                    <option value="damaged">Physically Damaged</option>
-                    <option value="missing">Missing / Stolen</option>
-                    <option value="needs-repair">Maintenance Required</option>
-                  </Select>
-                </InputGroup>
-
-                <InputGroup label="Affected Quantity" error={errors.quantity} required>
+                <InputGroup label="Subject" error={errors.subject} required>
                   <Input
-                    type="number"
-                    {...register("quantity", {
-                      required: "Quantity is required",
-                      min: { value: 1, message: "Min quantity is 1" },
-                      valueAsNumber: true
-                    })}
-                    placeholder="e.g. 1"
+                    {...register("subject", { required: "Subject is required" })}
+                    placeholder="Briefly describe the issue (e.g. Broken lock)"
                   />
                 </InputGroup>
 
-                <InputGroup label="Problem Description" error={errors.problemDescription} required>
+                <InputGroup label="Priority" error={errors.priority} required>
+                  <Select
+                    {...register("priority", { required: "Priority is required" })}
+                  >
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                  </Select>
+                </InputGroup>
+
+                <InputGroup label="Detailed Description" error={errors.description} required>
                   <Textarea
-                    {...register("problemDescription", {
-                      required: "Please describe the issue",
-                      minLength: { value: 10, message: "Use at least 10 chars" }
+                    {...register("description", {
+                      required: "Please describe the issue in detail",
+                      minLength: { value: 10, message: "Please provide more details (min 10 chars)" }
                     })}
-                    rows="4"
-                    placeholder="Please describe exactly what is wrong..."
+                    rows="5"
+                    placeholder="Details about what happened, who is involved, and current status..."
                   />
                 </InputGroup>
 
@@ -276,14 +263,17 @@ const FilesComplaints = () => {
                     Attach Evidence (Optional)
                   </label>
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-emerald-50 hover:border-emerald-400 transition-all">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-emerald-50 hover:border-emerald-400 transition-all group">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <HiOutlinePhotograph className="w-8 h-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                        <p className="text-xs text-gray-500">SVG, PNG, JPG (MAX. 5MB)</p>
+                        <HiOutlinePhotograph className="w-8 h-8 text-gray-400 mb-2 group-hover:text-emerald-500 transition-colors" />
+                        <p className="text-sm text-gray-500 group-hover:text-emerald-700">
+                          <span className="font-semibold">Click to upload</span> (Max 5 images)
+                        </p>
+                        <p className="text-xs text-gray-400">PNG, JPG or JPEG</p>
                       </div>
                       <input
                         type="file"
+                        multiple
                         className="hidden"
                         accept="image/*"
                         {...register("screenshot")}
@@ -299,17 +289,18 @@ const FilesComplaints = () => {
               <button
                 onClick={closeModal}
                 className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                type="button"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit(onSubmit)}
-                className="px-6 py-2.5 text-sm font-semibold text-white bg-green-950 hover:bg-green-900 rounded-xl shadow-lg shadow-green-950/30 hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+                className="px-8 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-200 hover:shadow-xl transition-all transform hover:-translate-y-1 active:scale-95 flex items-center gap-2"
               >
-                Submit Complaint
+                <FaImage className="w-4 h-4" />
+                Submit Report
               </button>
             </div>
-
           </div>
         </div>
       )}
