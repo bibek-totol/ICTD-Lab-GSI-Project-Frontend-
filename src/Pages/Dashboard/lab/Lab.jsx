@@ -28,6 +28,7 @@ const Lab = () => {
   const [page, setPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  const [division, setDivision] = useState("");
   const [district, setDistrict] = useState("");
   const [upazila, setUpazila] = useState("");
 
@@ -50,15 +51,25 @@ const Lab = () => {
     fetchLabs();
   }, []);
 
-  const districts = useMemo(() => [...new Set(labs.map((l) => l.district))], [labs]);
+  const divisions = useMemo(() => [...new Set(labs.map((l) => l.division).filter(Boolean))], [labs]);
+
+  const districts = useMemo(() => [
+    ...new Set(
+      labs
+        .filter((l) => !division || l.division === division)
+        .map((l) => l.district)
+        .filter(Boolean)
+    ),
+  ], [labs, division]);
 
   const upazilas = useMemo(() => [
     ...new Set(
       labs
-        .filter((l) => !district || l.district === district)
+        .filter((l) => (!division || l.division === division) && (!district || l.district === district))
         .map((l) => l.upazila)
+        .filter(Boolean)
     ),
-  ], [labs, district]);
+  ], [labs, division, district]);
 
   const filtered = useMemo(() => labs.filter((lab) => {
     const matchesText = Object.values(lab)
@@ -67,17 +78,19 @@ const Lab = () => {
       .includes(search.toLowerCase());
 
     return (
+      (!division || lab.division === division) &&
       (!district || lab.district === district) &&
       (!upazila || lab.upazila === upazila) &&
       matchesText
     );
-  }), [labs, district, upazila, search]);
+  }), [labs, division, district, upazila, search]);
 
   const start = (page - 1) * entries;
   const paginated = filtered.slice(start, start + entries);
   const totalPages = Math.ceil(filtered.length / entries);
 
   const resetFilters = () => {
+    setDivision("");
     setDistrict("");
     setUpazila("");
     setSearch("");
@@ -87,6 +100,7 @@ const Lab = () => {
   const exportCSV = () => {
     const headers = [
       t('serial'),
+      t('division'),
       t('district'),
       t('upazila'),
       t('institute'),
@@ -97,6 +111,7 @@ const Lab = () => {
 
     const rows = filtered.map((l, index) => [
       index + 1,
+      l.division,
       l.district,
       l.upazila,
       l.institute,
@@ -181,7 +196,25 @@ const Lab = () => {
                 transition={{ duration: 0.3 }}
                 className="border-t border-emerald-100"
               >
-                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+                      {t('division_label')}
+                    </label>
+                    <select
+                      value={division}
+                      onChange={(e) => {
+                        setDivision(e.target.value);
+                        setDistrict("");
+                        setUpazila("");
+                      }}
+                      className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-sm text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 outline-none transition-all shadow-sm hover:border-emerald-300"
+                    >
+                      <option value="" className="bg-white">{t('all_divisions')}</option>
+                      {divisions.map((d) => <option key={d} value={d} className="bg-white">{d}</option>)}
+                    </select>
+                  </div>
+
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
                       {t('district_label')}
@@ -305,6 +338,7 @@ const Lab = () => {
                 <tr className="bg-emerald-100/50 border-b border-emerald-200">
                   {[
                     t('serial'),
+                    t('division'),
                     t('district'),
                     t('upazila'),
                     t('institute'),
@@ -333,6 +367,7 @@ const Lab = () => {
                           {start + i + 1}
                         </td>
 
+                        <td className="px-6 py-4 text-emerald-900/80">{l.division}</td>
                         <td className="px-6 py-4 text-emerald-900/80">{l.district}</td>
                         <td className="px-6 py-4 text-emerald-900/80">{l.upazila}</td>
                         <td className="px-6 py-4">
@@ -360,7 +395,7 @@ const Lab = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="px-6 py-12 text-center">
+                      <td colSpan="8" className="px-6 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 text-emerald-500">
                           <FaSearch className="text-4xl opacity-50" />
                           <p>{t('no_data_found')}</p>

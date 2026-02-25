@@ -19,8 +19,8 @@ const ICTDLabs = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
-    const [filters, setFilters] = useState({ district: "All", upazila: "All" });
-    const [filterOptions, setFilterOptions] = useState({ districts: [], upazilas: [] });
+    const [filters, setFilters] = useState({ division: "All", district: "All", upazila: "All" });
+    const [filterOptions, setFilterOptions] = useState({ divisions: [], districts: [], upazilas: [] });
     const [isImporting, setIsImporting] = useState(false);
 
     const entriesPerPage = 25;
@@ -38,7 +38,11 @@ const ICTDLabs = () => {
             const response = await fetch(`${API_BASE_URL}/ictdl/filter-options`);
             const result = await response.json();
             if (result.success) {
-                setFilterOptions(result.data);
+                setFilterOptions({
+                    divisions: result.data.divisions || [],
+                    districts: result.data.districts || [],
+                    upazilas: result.data.upazilas || [],
+                });
             }
         } catch (error) {
             console.error("Error fetching filter options:", error);
@@ -51,6 +55,7 @@ const ICTDLabs = () => {
             const params = new URLSearchParams({
                 page: currentPage.toString(),
                 limit: entriesPerPage.toString(),
+                division: filters.division,
                 district: filters.district,
                 upazila: filters.upazila,
                 search: searchTerm,
@@ -220,7 +225,20 @@ const ICTDLabs = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-emerald-100">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t border-emerald-100">
+                        {/* Division */}
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-emerald-600 uppercase">বিভাগ (Division)</label>
+                            <select
+                                value={filters.division}
+                                onChange={(e) => { setFilters({ ...filters, division: e.target.value, district: "All" }); setCurrentPage(1); }}
+                                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-900 outline-none"
+                            >
+                                <option value="All">সকল বিভাগ</option>
+                                {filterOptions.divisions.map(d => <option key={d} value={d} className="text-black">{d}</option>)}
+                            </select>
+                        </div>
+                        {/* District */}
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-emerald-600 uppercase">জেলা (District)</label>
                             <select
@@ -232,6 +250,7 @@ const ICTDLabs = () => {
                                 {filterOptions.districts.map(d => <option key={d} value={d} className="text-black">{d}</option>)}
                             </select>
                         </div>
+                        {/* Upazila */}
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা (Upazila)</label>
                             <select
@@ -243,9 +262,10 @@ const ICTDLabs = () => {
                                 {filterOptions.upazilas.map(u => <option key={u} value={u} className="text-black">{u}</option>)}
                             </select>
                         </div>
+                        {/* Clear */}
                         <div className="flex items-end">
                             <button
-                                onClick={() => { setFilters({ district: "All", upazila: "All" }); setSearchTerm(""); setCurrentPage(1); }}
+                                onClick={() => { setFilters({ division: "All", district: "All", upazila: "All" }); setSearchTerm(""); setCurrentPage(1); }}
                                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all text-sm font-semibold"
                             >
                                 <HiOutlineFilter className="w-5 h-5" />
@@ -278,7 +298,13 @@ const ICTDLabs = () => {
                                         <td className="px-6 py-4">{(currentPage - 1) * entriesPerPage + idx + 1}</td>
                                         <td className="px-6 py-4 font-semibold text-emerald-950">{lab.institute}</td>
                                         <td className="px-6 py-4">
-                                            <div className="flex flex-col"><span className="font-medium">{lab.upazila}</span><span className="text-xs text-emerald-500">{lab.district}</span></div>
+                                            <div className="flex flex-col">
+                                                <span className="font-medium">{lab.upazila}</span>
+                                                <span className="text-xs text-emerald-600">{lab.district}</span>
+                                                {lab.division && (
+                                                    <span className="text-xs text-emerald-400">বিভাগ: {lab.division}</span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col"><span className="font-medium">{lab.head}</span><span className="text-xs text-emerald-500">{lab.mobile}</span></div>

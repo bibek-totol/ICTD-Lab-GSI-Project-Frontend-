@@ -53,6 +53,10 @@ const LabsUpdate = () => {
           setLabData(data);
 
           // Pre-fill form
+          setValue("division", data.division);
+          setValue("district", data.district);
+          setValue("upazila", data.upazila);
+          setValue("seat", data.seat);
           setValue("head", data.head);
           setValue("email", data.email);
           setValue("mobile", formatMobile(data.mobile));
@@ -143,6 +147,10 @@ const LabsUpdate = () => {
     setIsPending(true);
     const formData = new FormData();
 
+    formData.append("division", data.division || "");
+    formData.append("district", data.district || "");
+    formData.append("upazila", data.upazila || "");
+    formData.append("seat", data.seat || "");
     formData.append("head", data.head);
     formData.append("email", data.email || "");
     formData.append("mobile", data.mobile);
@@ -228,10 +236,29 @@ const LabsUpdate = () => {
               <div><h3 className="font-bold text-emerald-950">প্রতিষ্ঠানের তথ্য</h3><p className="text-xs text-emerald-500 uppercase font-semibold">মৌলিক তথ্য (অপরিবর্তনযোগ্য)</p></div>
             </div>
             <div className="space-y-4">
-              <div><label className="text-xs font-bold text-emerald-600 uppercase">প্রতিষ্ঠানের নাম</label><div className="mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-500 font-medium">{labData?.institute}</div></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs font-bold text-emerald-600 uppercase">বিভাগ</label><div className="mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-500 font-medium">{labData?.division}</div></div>
-                <div><label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা</label><div className="mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-500 font-medium">{labData?.upazila}</div></div>
+              <div>
+                <label className="text-xs font-bold text-emerald-600 uppercase">প্রতিষ্ঠানের নাম</label>
+                <div className="mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-500 font-medium">
+                  {labData?.institute}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">বিভাগ</label>
+                  <input type="text" {...register("division")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">জেলা</label>
+                  <input type="text" {...register("district")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা</label>
+                  <input type="text" {...register("upazila")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">আসন (Seat)</label>
+                  <input type="text" {...register("seat")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                </div>
               </div>
             </div>
           </div>

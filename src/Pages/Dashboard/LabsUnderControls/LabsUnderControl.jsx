@@ -19,6 +19,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const LabsUnderControl = () => {
   const [filters, setFilters] = useState({
     division: "All",
+    district: "All",
     upazila: "All",
     labType: "All",
   });
@@ -30,6 +31,7 @@ const LabsUnderControl = () => {
   const [error, setError] = useState(null);
   const [filterOptions, setFilterOptions] = useState({
     divisions: [],
+    districts: [],
     upazilas: [],
     labTypes: [],
   });
@@ -46,6 +48,7 @@ const LabsUnderControl = () => {
         if (result.success) {
           setFilterOptions({
             divisions: result.data.divisions || [],
+            districts: result.data.districts || [],
             upazilas: result.data.upazilas || [],
             labTypes: result.data.labTypes || [],
           });
@@ -68,6 +71,8 @@ const LabsUnderControl = () => {
         const params = new URLSearchParams();
         if (filters.division !== "All")
           params.append("division", filters.division);
+        if (filters.district !== "All")
+          params.append("district", filters.district);
         if (filters.upazila !== "All")
           params.append("upazila", filters.upazila);
         if (filters.labType !== "All")
@@ -114,6 +119,7 @@ const LabsUnderControl = () => {
   const handleResetFilters = () => {
     setFilters({
       division: "All",
+      district: "All",
       upazila: "All",
       labType: "All",
     });
@@ -142,6 +148,7 @@ const LabsUnderControl = () => {
       "Lab Type": lab.labType === "sof" ? "SOF" : "ICTDL & SOF",
       Institute: lab.institute,
       Division: lab.division,
+      District: lab.district,
       Upazila: lab.upazila,
       Seat: lab.seat,
       Head: lab.head,
@@ -169,7 +176,7 @@ const LabsUnderControl = () => {
     setCurrentLab(null);
   };
 
-  
+
 
   return (
     <div className="min-h-screen bg-emerald-50 p-6 space-y-6">
@@ -271,6 +278,7 @@ const LabsUnderControl = () => {
 
           {/* Filters Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-emerald-100">
+            {/* Division */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                 বিভাগ (Division)
@@ -278,24 +286,43 @@ const LabsUnderControl = () => {
               <select
                 value={filters.division}
                 onChange={(e) => {
-                  setFilters({ ...filters, division: e.target.value });
+                  setFilters({ ...filters, division: e.target.value, district: "All" });
                   setCurrentPage(1);
                 }}
                 className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
               >
                 <option value="All">সকল বিভাগ</option>
                 {filterOptions.divisions.map((division) => (
-                  <option
-                    className="text-black"
-                    key={division}
-                    value={division}
-                  >
+                  <option className="text-black" key={division} value={division}>
                     {division}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* District */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                জেলা (District)
+              </label>
+              <select
+                value={filters.district}
+                onChange={(e) => {
+                  setFilters({ ...filters, district: e.target.value });
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+              >
+                <option value="All">সকল জেলা</option>
+                {filterOptions.districts.map((district) => (
+                  <option className="text-black" key={district} value={district}>
+                    {district}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Upazila */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                 উপজেলা (Upazila)
@@ -317,6 +344,7 @@ const LabsUnderControl = () => {
               </select>
             </div>
 
+            {/* Lab Type */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                 ল্যাব টাইপ (Lab Type)
@@ -332,20 +360,17 @@ const LabsUnderControl = () => {
                 <option value="All">সকল টাইপ</option>
                 {filterOptions.labTypes.map((type) => (
                   <option className="text-black" key={type} value={type}>
-                    {type === "sof"
-                      ? "SOF"
-                      : type === "ictdl_sof"
-                        ? "ICTDL & SOF"
-                        : type.toUpperCase()}
+                    {type === "sof" ? "SOF" : type === "ictdl_sof" ? "ICTDL & SOF" : type.toUpperCase()}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex items-end">
+            {/* Clear Filters spans full width on xs across 4 cols */}
+            <div className="sm:col-span-2 md:col-span-4 flex justify-end">
               <button
                 onClick={handleResetFilters}
-                className="cursor-pointer hover:scale-105 w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm hover:shadow transition-all text-sm font-medium flex items-center justify-center gap-2 border border-emerald-100"
+                className="cursor-pointer hover:scale-105 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm hover:shadow transition-all text-sm font-medium flex items-center justify-center gap-2 border border-emerald-100"
               >
                 <HiOutlineFilter className="w-5 h-5" />
                 Clear Filters
@@ -431,6 +456,11 @@ const LabsUnderControl = () => {
                           <span className="text-emerald-800 font-medium">
                             {lab.upazila}
                           </span>
+                          {lab.district && (
+                            <span className="text-emerald-600 text-xs">
+                              {lab.district}
+                            </span>
+                          )}
                           <span className="text-emerald-500 text-xs">
                             বিভাগ: {lab.division}
                           </span>
@@ -484,7 +514,7 @@ const LabsUnderControl = () => {
                           >
                             <FaBookOpen className="w-5 h-5" />
                           </button>
-                      
+
                         </div>
                       </td>
                     </tr>

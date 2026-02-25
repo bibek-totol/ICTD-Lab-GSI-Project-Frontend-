@@ -93,7 +93,8 @@ const LabDetails = () => {
   const [selectedLab, setSelectedLab] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [distance, setDistance] = useState(5);
-  const [selectedDivision, setSelectedDivision] = useState("All"); // Changed default to All
+  const [selectedDivision, setSelectedDivision] = useState("All");
+  const [selectedDistrict, setSelectedDistrict] = useState("All");
   const [mapCenter, setMapCenter] = useState([23.8103, 90.4125]);
   const [mapZoom, setMapZoom] = useState(8);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -131,6 +132,17 @@ const LabDetails = () => {
     return uniqueDivisions.sort();
   }, [labs]);
 
+  const districts = useMemo(() => {
+    let filteredForDistricts = labs;
+    if (selectedDivision && selectedDivision !== "All") {
+      filteredForDistricts = labs.filter(l => l.division === selectedDivision);
+    }
+    const uniqueDistricts = [
+      ...new Set(filteredForDistricts.map((lab) => lab.district).filter(Boolean)),
+    ];
+    return uniqueDistricts.sort();
+  }, [labs, selectedDivision]);
+
   // Selected Lab Icon (Blue & Pulsing) - Memoized
   const selectedIcon = useMemo(
     () =>
@@ -167,16 +179,14 @@ const LabDetails = () => {
             [lat, long] = [long, lat];
           }
 
-          // Normalize: ICTD uses 'district', SOF uses 'division'
-          const division = labType === "ICTD" ? lab.district : lab.division;
-
-          return { ...lab, lat, long, division };
+          return { ...lab, lat, long };
         }).filter((lab) => isValidCoord(lab.lat, lab.long));
 
         setLabs(sanitizedData);
 
         // Reset filters and selection when lab type changes
         setSelectedDivision("All");
+        setSelectedDistrict("All");
         setSelectedLab(null);
         setAddress("");
 
@@ -314,11 +324,18 @@ const LabDetails = () => {
 
   // Handle division change
   const handleDivisionChange = useCallback((newDivision) => {
-
     setSelectedDivision(newDivision);
-    setCurrentLocation(null); // Reset current location when changing division
-    setSelectedLab(null); // Reset selected lab when changing division
-    setAddress(""); // Reset address
+    setSelectedDistrict("All"); // Reset district when division changes
+    setCurrentLocation(null);
+    setSelectedLab(null);
+    setAddress("");
+  }, []);
+
+  const handleDistrictChange = useCallback((newDistrict) => {
+    setSelectedDistrict(newDistrict);
+    setCurrentLocation(null);
+    setSelectedLab(null);
+    setAddress("");
   }, []);
 
   // Filter labs by selected division
@@ -330,6 +347,11 @@ const LabDetails = () => {
     // Filter by division
     if (selectedDivision && selectedDivision !== "All") {
       filtered = filtered.filter((lab) => lab.division === selectedDivision);
+    }
+
+    // Filter by district
+    if (selectedDistrict && selectedDistrict !== "All") {
+      filtered = filtered.filter((lab) => lab.district === selectedDistrict);
     }
 
     // If current location is set, filter by distance
@@ -374,8 +396,11 @@ const LabDetails = () => {
           // Validate coordinates before setting
           if (isValidCoord(avgLat, avgLong)) {
             setMapCenter([avgLat, avgLong]);
-            // Adjust zoom based on number of labs and division
-            setMapZoom(selectedDivision && selectedDivision !== "All" ? 9 : 7);
+            // Adjust zoom based on depth of filtering
+            let zoom = 7;
+            if (selectedDistrict && selectedDistrict !== "All") zoom = 11;
+            else if (selectedDivision && selectedDivision !== "All") zoom = 9;
+            setMapZoom(zoom);
           } else {
             // Fallback to default Bangladesh center if calculation fails
             setMapCenter([23.8103, 90.4125]);
@@ -394,14 +419,15 @@ const LabDetails = () => {
     }
 
     setFilteredLabs(filtered);
-  }, [selectedDivision, labs, currentLocation, distance, calculateDistance]);
+  }, [selectedDivision, selectedDistrict, labs, currentLocation, distance, calculateDistance]);
 
   // Handle distance change
   const handleDistanceChange = useCallback(
     (newDistance) => {
       setDistance(newDistance);
       if (currentLocation) {
-        setSelectedDivision("All"); // Reset division when using distance filter
+        setSelectedDivision("All");
+        setSelectedDistrict("All");
         // Update map zoom based on distance
         setMapZoom(newDistance <= 5 ? 12 : newDistance <= 15 ? 10 : 8);
 
@@ -564,12 +590,21 @@ const LabDetails = () => {
 
                       <div className="space-y-3">
                         <div className="flex items-start gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-emerald-200/70">
+                              {t('division')}
+                            </p>
+                            <p className="text-white">{selectedLab.division}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
                           <FaMapMarkerAlt className="text-emerald-500 mt-1 flex-shrink-0" />
                           <div>
                             <p className="text-sm font-semibold text-emerald-200/70">
                               {t('district')}
                             </p>
-                            <p className="text-white">{selectedLab.division}</p>
+                            <p className="text-white">{selectedLab.district}</p>
                           </div>
                         </div>
 
@@ -810,11 +845,10 @@ const LabDetails = () => {
                   : t('use_current_location')}
               </button>
 
-              {/* Division Selector */}
               <div className="space-y-2 mb-4">
                 <label className="text-sm font-semibold text-emerald-100 flex items-center gap-2">
                   <FaMapMarkerAlt className="text-emerald-400" />
-                  {t('select_district')}
+                  {t('select_division')}
                 </label>
                 <select
                   value={selectedDivision}
@@ -831,6 +865,32 @@ const LabDetails = () => {
                       className="bg-emerald-900 text-white"
                     >
                       {division}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* District Selector */}
+              <div className="space-y-2 mb-4">
+                <label className="text-sm font-semibold text-emerald-100 flex items-center gap-2">
+                  <FaMapMarkerAlt className="text-emerald-400" />
+                  {t('select_district')}
+                </label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => handleDistrictChange(e.target.value)}
+                  className="w-full bg-emerald-950/50 border border-emerald-500/30 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 outline-none transition-all shadow-sm hover:border-emerald-400"
+                >
+                  <option value="All" className="bg-emerald-900 text-white">
+                    {t('all_districts')}
+                  </option>
+                  {districts.map((district) => (
+                    <option
+                      key={district}
+                      value={district}
+                      className="bg-emerald-900 text-white"
+                    >
+                      {district}
                     </option>
                   ))}
                 </select>
