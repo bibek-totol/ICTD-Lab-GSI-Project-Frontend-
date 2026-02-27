@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import AuthService from "../services/auth.service";
 
 export const AuthContext = createContext();
@@ -9,9 +9,24 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const currentUser = AuthService.getCurrentUser();
-            if (currentUser) {
-                setUser(currentUser);
+            // First try localStorage for instant load
+            const cached = AuthService.getCurrentUser();
+            if (cached) {
+                setUser(cached);
+            }
+
+            // Then try to get fresh data from backend
+            try {
+                const freshUser = await AuthService.getMe();
+                if (freshUser) {
+                    setUser(freshUser);
+                    localStorage.setItem("user", JSON.stringify(freshUser));
+                }
+            } catch (err) {
+                // If not authenticated (cookie expired), clear local storage
+                if (!cached) {
+                    setUser(null);
+                }
             }
             setLoading(false);
         };
@@ -41,19 +56,45 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    // Role helper computed from user 
+    const role = user?.role || null;
+    const isSuperAdmin = role === "SuperAdmin";
+    const isDivisionAdmin = role === "DivisionAdmin";
+    const isDistrictAdmin = role === "DistrictAdmin";
+    const isUpazilaAdmin = role === "UpazilaAdmin";
+    const isLabAdmin = role === "LabAdmin";
+
+    // Jurisdiction helpers
+    const userDivision = user?.division || null;
+    const userDistrict = user?.district || null;
+    const userUpazila = user?.upazila || null;
+
     return (
         <AuthContext.Provider
             value={{
                 user,
                 loading,
+                role,
+                isSuperAdmin,
+                isDivisionAdmin,
+                isDistrictAdmin,
+                isUpazilaAdmin,
+                isLabAdmin,
+                userDivision,
+                userDistrict,
+                userUpazila,
                 login,
                 register,
                 verifyEmail,
                 verifyEmailCode,
                 logout,
+                setUser,
             }}
         >
             {!loading && children}
         </AuthContext.Provider>
     );
 };
+
+// Custom hook for easy consumption
+export const useAuth = () => useContext(AuthContext);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useContext } from "react";
 import * as XLSX from "xlsx";
 import {
   FaSearch,
@@ -23,8 +23,21 @@ import ComplaintService from "../../../services/complaint.service";
 import LabService from "../../../services/lab.service";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import { AuthContext } from "../../../contexts/AuthContext";
 
 const Complaints = () => {
+  const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, userDivision, userDistrict, userUpazila } = useContext(AuthContext);
+
+  // Pre-set jurisdiction-locked filters for non-SuperAdmin
+  const initialFilters = {
+    division: !isSuperAdmin && userDivision ? userDivision : "",
+    district: (!isSuperAdmin && !isDivisionAdmin && userDistrict) ? userDistrict : "",
+    upazila: (isUpazilaAdmin && userUpazila) ? userUpazila : "",
+    category: "",
+    status: "",
+    priority: "",
+  };
+
   const [data, setData] = useState([]);
   const [labs, setLabs] = useState([]);
   const [search, setSearch] = useState("");
@@ -34,9 +47,9 @@ const Complaints = () => {
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const initialFormState = {
-    division: "",
-    district: "",
-    upazila: "",
+    division: !isSuperAdmin && userDivision ? userDivision : "",
+    district: (!isSuperAdmin && !isDivisionAdmin && userDistrict) ? userDistrict : "",
+    upazila: (isUpazilaAdmin && userUpazila) ? userUpazila : "",
     institute: "",
     category: "Equipment",
     subject: "",
@@ -54,14 +67,7 @@ const Complaints = () => {
   const [existingImages, setExistingImages] = useState([]);
   const [deletedImages, setDeletedImages] = useState([]);
 
-  const [filters, setFilters] = useState({
-    division: "",
-    district: "",
-    upazila: "",
-    category: "",
-    status: "",
-    priority: "",
-  });
+  const [filters, setFilters] = useState(initialFilters);
 
   const [labSearch, setLabSearch] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -100,14 +106,8 @@ const Complaints = () => {
 
   const handleReset = () => {
     setSearch("");
-    setFilters({
-      division: "",
-      district: "",
-      upazila: "",
-      category: "",
-      status: "",
-      priority: "",
-    });
+    // Only reset non-locked filters
+    setFilters(initialFilters);
   };
 
   const handleReload = () => {

@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { FaLock, FaKey, FaEye, FaEyeSlash, FaCheckCircle } from "react-icons/fa";
+import UserService from "../../../services/user.service";
 
 const ChangePassWord = () => {
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -18,11 +20,26 @@ const ChangePassWord = () => {
 
   const newPassword = watch("newPassword");
 
-  const onSubmit = (data) => {
-    console.log("Password Data:", data);
-    // 👉 Call API here
-    toast.success("Password updated successfully!");
-    reset();
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+      const response = await UserService.changePassword({
+        oldPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+
+      if (response.success) {
+        toast.success(response.message || "Password updated successfully!");
+        reset();
+      } else {
+        toast.error(response.message || "Failed to update password");
+      }
+    } catch (error) {
+      console.error("Password update error:", error);
+      toast.error(error.response?.data?.message || "An error occurred while updating password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,6 +70,7 @@ const ChangePassWord = () => {
               </div>
               <input
                 type={showCurrentPass ? "text" : "password"}
+                autoComplete="current-password"
                 className="w-full pl-10 pr-10 py-3 bg-emerald-50 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all outline-none text-emerald-950 placeholder-emerald-300 hover:border-emerald-300"
                 placeholder="Enter current password"
                 {...register("currentPassword", {
@@ -83,6 +101,7 @@ const ChangePassWord = () => {
               </div>
               <input
                 type={showNewPass ? "text" : "password"}
+                autoComplete="new-password"
                 className="w-full pl-10 pr-10 py-3 bg-emerald-50 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all outline-none text-emerald-950 placeholder-emerald-300 hover:border-emerald-300"
                 placeholder="Enter new password"
                 {...register("newPassword", {
@@ -122,6 +141,7 @@ const ChangePassWord = () => {
               </div>
               <input
                 type={showConfirmPass ? "text" : "password"}
+                autoComplete="new-password"
                 className="w-full pl-10 pr-10 py-3 bg-emerald-50 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all outline-none text-emerald-950 placeholder-emerald-300 hover:border-emerald-300"
                 placeholder="Confirm new password"
                 {...register("confirmPassword", {
@@ -148,9 +168,20 @@ const ChangePassWord = () => {
           {/* Submit */}
           <button
             type="submit"
-            className="cursor-pointer w-full bg-red-600 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-emerald-200 hover:shadow-emerald-300 transition-all transform hover:-translate-y-0.5 active:translate-y-0 border border-emerald-100"
+            disabled={loading}
+            className={`cursor-pointer w-full font-semibold py-3.5 rounded-xl shadow-lg transition-all transform border border-emerald-100 flex items-center justify-center gap-2 ${loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-red-600 text-white hover:shadow-emerald-300 hover:-translate-y-0.5 active:translate-y-0"
+              }`}
           >
-            Update Password
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Updating...
+              </>
+            ) : (
+              "Update Password"
+            )}
           </button>
         </form>
       </div>

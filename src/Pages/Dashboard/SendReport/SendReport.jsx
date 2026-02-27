@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import toast from "react-hot-toast";
 import {
     HiOutlineSearch,
@@ -13,15 +13,23 @@ import {
 } from "react-icons/hi";
 import { FaFileExcel } from "react-icons/fa";
 import * as XLSX from "xlsx";
+import { AuthContext } from "../../../contexts/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const SendReport = () => {
+    const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, userDivision, userDistrict, userUpazila } = useContext(AuthContext);
+
+    // Compute locked jurisdiction params for non-SuperAdmin
+    const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
+    const lockedUpazila = isUpazilaAdmin ? (userUpazila || null) : null;
+
     const [filters, setFilters] = useState({
-        division: "All",
-        upazila: "All",
+        division: lockedDivision || "All",
+        upazila: lockedUpazila || "All",
         labType: "All",
     });
+
     const [entriesPerPage, setEntriesPerPage] = useState(25);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -65,12 +73,14 @@ const SendReport = () => {
             setError(null);
             try {
                 const params = new URLSearchParams();
-                if (filters.division !== "All")
-                    params.append("division", filters.division);
-                if (filters.upazila !== "All")
-                    params.append("upazila", filters.upazila);
-                if (filters.labType !== "All")
-                    params.append("labType", filters.labType);
+
+                // Apply locked jurisdiction for non-SuperAdmin
+                const divisionParam = lockedDivision || (filters.division !== "All" ? filters.division : null);
+                const upazilaParam = lockedUpazila || (filters.upazila !== "All" ? filters.upazila : null);
+
+                if (divisionParam) params.append("division", divisionParam);
+                if (upazilaParam) params.append("upazila", upazilaParam);
+                if (filters.labType !== "All") params.append("labType", filters.labType);
                 if (searchTerm) params.append("search", searchTerm);
 
                 const response = await fetch(
@@ -93,6 +103,7 @@ const SendReport = () => {
 
         fetchReports();
     }, [filters, searchTerm]);
+
 
     // Format mobile number
     const formatMobile = (mobile) => {

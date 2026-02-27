@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import RootLayout from "../layout/RootLayout";
 import ErrorPage from "../components/ErrorPage/ErrorPage";
 import Home from "../Pages/Home/Home/Home";
@@ -7,6 +7,7 @@ import Lab from "../Pages/Dashboard/lab/Lab";
 import LabDetails from "../Pages/LabDetails/LabDetails";
 import Login from "../Pages/login/Login";
 import PrivetRoute from "./PrivetRoute";
+import SuperAdminRoute from "./SuperAdminRoute";
 import DashboardHome from "../Pages/Dashboard/DashboardHome/DashboardHome";
 import DashboardLayout from "../layout/DashboardLayout";
 
@@ -24,6 +25,7 @@ import AddUser from "../Pages/Dashboard/user_control/add-user/AddUser";
 import ICTDLabs from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLabs";
 import ICTDLUpdate from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLUpdate/ICTDLUpdate";
 import ManageUser from "../Pages/Dashboard/user_control/manege_user/ManageUser";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -42,7 +44,6 @@ const router = createBrowserRouter([
         path: "all-notice",
         Component: AllNotice,
       },
-
       {
         path: "labdetails",
         Component: LabDetails,
@@ -69,60 +70,67 @@ const router = createBrowserRouter([
           </PrivetRoute>
         ),
       },
-
       {
         path: "profile",
-        Component: Profile,
+        element: <PrivetRoute><Profile /></PrivetRoute>,
       },
       {
         path: "traning",
-        Component: Traning,
+        element: <PrivetRoute><Traning /></PrivetRoute>,
       },
       {
         path: "labsUnderControl",
-        Component: LabsUnderControl,
+        element: <PrivetRoute><LabsUnderControl /></PrivetRoute>,
       },
       {
         path: "complaints",
-        Component: Complaints,
+        element: <PrivetRoute><Complaints /></PrivetRoute>,
       },
       {
         path: "changePassword",
-        Component: ChangePassWord,
+        element: <PrivetRoute><ChangePassWord /></PrivetRoute>,
       },
       {
         path: "labsUpdate/:id?",
-        Component: LabsUpdate,
+        element: <PrivetRoute><LabsUpdate /></PrivetRoute>,
       },
       {
         path: "filesComplaints/:id?",
-        Component: FilesComplaints,
+        element: <PrivetRoute><FilesComplaints /></PrivetRoute>,
       },
       {
         path: "trainingUpdate",
-        Component: TraningUpdate,
+        element: <PrivetRoute><TraningUpdate /></PrivetRoute>,
       },
       {
         path: "sendReport",
-        Component: SendReport,
+        element: <PrivetRoute><SendReport /></PrivetRoute>,
       },
       {
         path: "ictdLabs",
-        Component: ICTDLabs,
+        element: <PrivetRoute><ICTDLabs /></PrivetRoute>,
       },
       {
         path: "ictdLabsUpdate/:id",
-        Component: ICTDLUpdate,
+        element: <PrivetRoute><ICTDLUpdate /></PrivetRoute>,
       },
+      // SuperAdmin-only routes
       {
         path: "add-user",
-        Component: AddUser,
+        element: (
+          <SuperAdminRoute>
+            <AddUser />
+          </SuperAdminRoute>
+        ),
       },
-
       {
         path: "manage-user",
-        Component: ManageUser,
-      }
+        element: (
+          <SuperAdminRoute>
+            <ManageUser />
+          </SuperAdminRoute>
+        ),
+      },
     ],
   },
 ]);

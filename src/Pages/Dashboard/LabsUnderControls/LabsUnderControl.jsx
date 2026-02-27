@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   HiOutlineSearch,
   HiOutlinePencil,
@@ -9,18 +9,26 @@ import {
   HiOutlineRefresh,
   HiOutlineTrash,
 } from "react-icons/hi";
-import { FaBookOpen, FaFileCsv, FaFileExcel } from "react-icons/fa";
+import { FaBookOpen, FaFileCsv, FaFileExcel, FaShieldAlt } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { Link } from "react-router";
 import ReportForm from "./ReportForm/ReportForm";
+import { AuthContext } from "../../../contexts/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LabsUnderControl = () => {
+  const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, userDivision, userDistrict, userUpazila, role } = useContext(AuthContext);
+
+  // For non-SuperAdmin roles, lock jurisdiction filters
+  const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
+  const lockedDistrict = (!isSuperAdmin && !isDivisionAdmin) ? (userDistrict || null) : null;
+  const lockedUpazila = (isUpazilaAdmin) ? (userUpazila || null) : null;
+
   const [filters, setFilters] = useState({
-    division: "All",
-    district: "All",
-    upazila: "All",
+    division: lockedDivision || "All",
+    district: lockedDistrict || "All",
+    upazila: lockedUpazila || "All",
     labType: "All",
   });
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -69,19 +77,19 @@ const LabsUnderControl = () => {
       try {
         // Build query params
         const params = new URLSearchParams();
-        if (filters.division !== "All")
-          params.append("division", filters.division);
-        if (filters.district !== "All")
-          params.append("district", filters.district);
-        if (filters.upazila !== "All")
-          params.append("upazila", filters.upazila);
-        if (filters.labType !== "All")
-          params.append("labType", filters.labType);
+
+        // Always apply jurisdiction lock for non-SuperAdmin
+        const divisionParam = lockedDivision || (filters.division !== "All" ? filters.division : null);
+        const districtParam = lockedDistrict || (filters.district !== "All" ? filters.district : null);
+        const upazilaParam = lockedUpazila || (filters.upazila !== "All" ? filters.upazila : null);
+
+        if (divisionParam) params.append("division", divisionParam);
+        if (districtParam) params.append("district", districtParam);
+        if (upazilaParam) params.append("upazila", upazilaParam);
+        if (filters.labType !== "All") params.append("labType", filters.labType);
         if (searchTerm) params.append("search", searchTerm);
 
-        const response = await fetch(
-          `${API_BASE_URL}/labs?${params.toString()}`,
-        );
+        const response = await fetch(`${API_BASE_URL}/labs?${params.toString()}`);
         const result = await response.json();
 
         if (result.success) {
@@ -99,6 +107,7 @@ const LabsUnderControl = () => {
 
     fetchLabs();
   }, [filters, searchTerm]);
+
 
   // Format mobile number
   const formatMobile = (mobile) => {
