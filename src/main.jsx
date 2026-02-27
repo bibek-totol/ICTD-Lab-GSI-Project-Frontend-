@@ -10,6 +10,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { LanguageProvider } from "./contexts/LanguageContext.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
+import axios from "axios";
+
+// Configure Axios global interceptor for Hybrid Auth (Cookie + Header fallback)
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 //  Create client
 const queryClient = new QueryClient();

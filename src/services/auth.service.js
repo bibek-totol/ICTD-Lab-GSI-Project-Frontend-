@@ -16,9 +16,12 @@ const login = async (email, password) => {
         password,
     }, { withCredentials: true });
     
-    // Store user data in localStorage for persistence
+    // Store user data and token in localStorage for persistence
     if (response.data?.data) {
         localStorage.setItem("user", JSON.stringify(response.data.data));
+        if (response.data.token) {
+            localStorage.setItem("token", response.data.token);
+        }
     }
     return response.data?.data || response.data;
 };
@@ -42,6 +45,7 @@ const verifyEmailCode = async (email, emailCode) => {
 
 const logout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
 };
 
 const getCurrentUser = () => {
