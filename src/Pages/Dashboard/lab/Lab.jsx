@@ -14,10 +14,9 @@ import {
   FaPhone,
   FaUser
 } from "react-icons/fa";
+import api from "../../../services/api";
 import * as XLSX from "xlsx";
 import { motion, AnimatePresence } from "framer-motion";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 
 const Lab = () => {
@@ -32,18 +31,16 @@ const Lab = () => {
   const [district, setDistrict] = useState("");
   const [upazila, setUpazila] = useState("");
 
-  const fetchLabs = () => {
-    fetch(`${API_BASE_URL}/ictdl?limit=10000`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setLabs(data.data);
-          setPage(1);
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-      });
+  const fetchLabs = async () => {
+    try {
+      const { data } = await api.get("/ictdl?limit=10000");
+      if (data.success) {
+        setLabs(data.data);
+        setPage(1);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
 

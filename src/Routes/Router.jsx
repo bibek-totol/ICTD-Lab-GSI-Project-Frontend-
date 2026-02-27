@@ -8,6 +8,7 @@ import LabDetails from "../Pages/LabDetails/LabDetails";
 import Login from "../Pages/login/Login";
 import PrivetRoute from "./PrivetRoute";
 import SuperAdminRoute from "./SuperAdminRoute";
+import PublicRoute from "./PublicRoute";
 import DashboardHome from "../Pages/Dashboard/DashboardHome/DashboardHome";
 import DashboardLayout from "../layout/DashboardLayout";
 
@@ -56,7 +57,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/login",
-    Component: Login,
+    element: (
+      <PublicRoute>
+        <Login />
+      </PublicRoute>
+    ),
   },
   {
     path: "dashboard",

@@ -1,20 +1,18 @@
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_BASE_URL + "/auth";
+import api from "./api";
 
 const register = async (email, password) => {
-    const response = await axios.post(`${API_URL}/signup`, {
+    const response = await api.post(`/auth/signup`, {
         email,
         password,
-    }, { withCredentials: true });
+    });
     return response.data;
 };
 
 const login = async (email, password) => {
-    const response = await axios.post(`${API_URL}/signin`, {
+    const response = await api.post(`/auth/signin`, {
         email,
         password,
-    }, { withCredentials: true });
+    });
     
     // Store user data and token in localStorage for persistence
     if (response.data?.data) {
@@ -27,23 +25,26 @@ const login = async (email, password) => {
 };
 
 const getMe = async () => {
-    const response = await axios.get(`${API_URL}/me`, {
-        withCredentials: true,
-    });
+    const response = await api.get(`/auth/me`);
     return response.data?.data;
 };
 
 const verifyEmail = async (email) => {
-    const response = await axios.post(`${API_URL}/verify/email`, { email });
+    const response = await api.post(`/auth/verify/email`, { email });
     return response.data;
 };
 
 const verifyEmailCode = async (email, emailCode) => {
-    const response = await axios.post(`${API_URL}/verify/code`, { email, emailCode });
+    const response = await api.post(`/auth/verify/code`, { email, emailCode });
     return response.data;
 };
 
-const logout = () => {
+const logout = async () => {
+    try {
+        await api.post(`/auth/logout`, {});
+    } catch (err) {
+        console.error("Logout error:", err);
+    }
     localStorage.removeItem("user");
     localStorage.removeItem("token");
 };

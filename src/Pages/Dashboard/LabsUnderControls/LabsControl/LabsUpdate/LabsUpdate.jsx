@@ -45,7 +45,10 @@ const LabsUpdate = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/labs/${id}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/labs/${id}`, {
+          headers: { "Authorization": token ? `Bearer ${token}` : "" }
+        });
         const result = await response.json();
 
         if (result.success && result.data) {
@@ -176,8 +179,10 @@ const LabsUpdate = () => {
     }
 
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/labs/update/${id}`, {
         method: "PUT",
+        headers: { "Authorization": token ? `Bearer ${token}` : "" },
         body: formData,
       });
       const result = await response.json();

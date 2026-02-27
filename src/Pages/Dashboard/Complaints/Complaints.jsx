@@ -29,10 +29,14 @@ const Complaints = () => {
   const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, userDivision, userDistrict, userUpazila } = useContext(AuthContext);
 
   // Pre-set jurisdiction-locked filters for non-SuperAdmin
+  const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
+  const lockedDistrict = (!isSuperAdmin && !isDivisionAdmin) ? (userDistrict || null) : null;
+  const lockedUpazila = (isUpazilaAdmin) ? (userUpazila || null) : null;
+
   const initialFilters = {
-    division: !isSuperAdmin && userDivision ? userDivision : "",
-    district: (!isSuperAdmin && !isDivisionAdmin && userDistrict) ? userDistrict : "",
-    upazila: (isUpazilaAdmin && userUpazila) ? userUpazila : "",
+    division: lockedDivision || "",
+    district: lockedDistrict || "",
+    upazila: lockedUpazila || "",
     category: "",
     status: "",
     priority: "",
@@ -47,9 +51,9 @@ const Complaints = () => {
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const initialFormState = {
-    division: !isSuperAdmin && userDivision ? userDivision : "",
-    district: (!isSuperAdmin && !isDivisionAdmin && userDistrict) ? userDistrict : "",
-    upazila: (isUpazilaAdmin && userUpazila) ? userUpazila : "",
+    division: lockedDivision || "",
+    district: lockedDistrict || "",
+    upazila: lockedUpazila || "",
     institute: "",
     category: "Equipment",
     subject: "",
@@ -481,61 +485,69 @@ const Complaints = () => {
         </div>
 
         {/* Filters Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8 bg-emerald-50/50 p-5 rounded-xl border border-dashed border-emerald-200">
-          {/* Reusable Filter Component logic could minimize code, but explicit meant for clarity here */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-              <FaFilter size={10} /> Division
-            </label>
-            <select
-              value={filters.division}
-              onChange={(e) =>
-                setFilters({ ...filters, division: e.target.value })
-              }
-              className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
-            >
-              <option value="">All Divisions</option>
-              {filterOptions.divisions.map((div) => (
-                <option key={div} value={div}>{div}</option>
-              ))}
-            </select>
-          </div>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${isSuperAdmin ? "xl:grid-cols-6" : "xl:grid-cols-3"} gap-4 mb-8 bg-emerald-50/50 p-5 rounded-xl border border-dashed border-emerald-200`}>
+          {/* Division - Only show for SuperAdmin */}
+          {isSuperAdmin && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                <FaFilter size={10} /> Division
+              </label>
+              <select
+                value={filters.division}
+                onChange={(e) =>
+                  setFilters({ ...filters, division: e.target.value, district: "", upazila: "" })
+                }
+                className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
+              >
+                <option value="">All Divisions</option>
+                {filterOptions.divisions.map((div) => (
+                  <option key={div} value={div}>{div}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-              <FaFilter size={10} /> District
-            </label>
-            <select
-              value={filters.district}
-              onChange={(e) =>
-                setFilters({ ...filters, district: e.target.value })
-              }
-              className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
-            >
-              <option value="">All Districts</option>
-              {filterOptions.districts.map((dist) => (
-                <option key={dist} value={dist}>{dist}</option>
-              ))}
-            </select>
-          </div>
+          {/* District - Only show for SuperAdmin */}
+          {isSuperAdmin && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                <FaFilter size={10} /> District
+              </label>
+              <select
+                value={filters.district}
+                onChange={(e) =>
+                  setFilters({ ...filters, district: e.target.value, upazila: "" })
+                }
+                className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
+              >
+                <option value="">All Districts</option>
+                {filterOptions.districts.map((dist) => (
+                  <option key={dist} value={dist}>{dist}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-              <FaFilter size={10} /> Upazila
-            </label>
-            <select
-              value={filters.upazila}
-              onChange={(e) =>
-                setFilters({ ...filters, upazila: e.target.value })
-              }
-              className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
-            >
-              <option value="">All Upazilas</option>
-              {filterOptions.upazilas.map((upz) => (
-                <option key={upz} value={upz}>{upz}</option>
-              ))}
-            </select>
-          </div>
+          {/* Upazila - Only show for SuperAdmin */}
+          {isSuperAdmin && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                <FaFilter size={10} /> Upazila
+              </label>
+              <select
+                value={filters.upazila}
+                onChange={(e) =>
+                  setFilters({ ...filters, upazila: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
+              >
+                <option value="">All Upazilas</option>
+                {filterOptions.upazilas.map((upz) => (
+                  <option key={upz} value={upz}>{upz}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">

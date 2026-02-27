@@ -82,8 +82,8 @@ const AddUser = () => {
       return;
     }
 
-    if (form.phone && !/^01[3-9]\d{8}$/.test(form.phone)) {
-      toast.error("Enter a valid phone number (01XXXXXXXXX)");
+    if (form.phone && !/^1[3-9]\d{8}$/.test(form.phone)) {
+      toast.error("Enter a valid phone number (1XXXXXXXXX)");
       return;
     }
 
@@ -200,7 +200,12 @@ const AddUser = () => {
                   className="flex-1 outline-none text-sm"
                   placeholder="1XXXXXXXXX"
                   value={form.phone}
-                  onChange={e => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+                  onChange={e => {
+                    let value = e.target.value.replace(/\D/g, "");
+                    if (value.startsWith("880")) value = value.slice(3);
+                    if (value.startsWith("0")) value = value.slice(1);
+                    setForm({ ...form, phone: value.slice(0, 10) });
+                  }}
                 />
               </div>
             </div>

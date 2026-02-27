@@ -50,7 +50,12 @@ const LabsUnderControl = () => {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/labs/filter-options`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/labs/filter-options`, {
+          headers: {
+            "Authorization": token ? `Bearer ${token}` : "",
+          },
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -89,7 +94,12 @@ const LabsUnderControl = () => {
         if (filters.labType !== "All") params.append("labType", filters.labType);
         if (searchTerm) params.append("search", searchTerm);
 
-        const response = await fetch(`${API_BASE_URL}/labs?${params.toString()}`);
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE_URL}/labs?${params.toString()}`, {
+          headers: {
+            "Authorization": token ? `Bearer ${token}` : "",
+          },
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -127,9 +137,9 @@ const LabsUnderControl = () => {
 
   const handleResetFilters = () => {
     setFilters({
-      division: "All",
-      district: "All",
-      upazila: "All",
+      division: lockedDivision || "All",
+      district: lockedDistrict || "All",
+      upazila: lockedUpazila || "All",
       labType: "All",
     });
     setSearchTerm("");
@@ -218,6 +228,14 @@ const LabsUnderControl = () => {
             বাংলাদেশের ডিজিটাল ল্যাব ম্যানেজমেন্ট সম্পর্কে মনোন করুন
           </p>
           <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3"></div>
+          {lockedDivision && (
+            <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+              <HiOutlineFilter className="w-4 h-4" />
+              {lockedDivision} Division Admin
+              {lockedDistrict && ` — ${lockedDistrict} District`}
+              {lockedUpazila && ` — ${lockedUpazila} Upazila`}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -286,72 +304,78 @@ const LabsUnderControl = () => {
           </div>
 
           {/* Filters Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-emerald-100">
-            {/* Division */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                বিভাগ (Division)
-              </label>
-              <select
-                value={filters.division}
-                onChange={(e) => {
-                  setFilters({ ...filters, division: e.target.value, district: "All" });
-                  setCurrentPage(1);
-                }}
-                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
-              >
-                <option value="All">সকল বিভাগ</option>
-                {filterOptions.divisions.map((division) => (
-                  <option className="text-black" key={division} value={division}>
-                    {division}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className={`grid grid-cols-1 ${isSuperAdmin ? "sm:grid-cols-2 md:grid-cols-4" : "sm:grid-cols-2"} gap-4 pt-4 border-t border-emerald-100`}>
+            {/* Division - Only show for SuperAdmin */}
+            {isSuperAdmin && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                  বিভাগ (Division)
+                </label>
+                <select
+                  value={filters.division}
+                  onChange={(e) => {
+                    setFilters({ ...filters, division: e.target.value, district: "All", upazila: "All" });
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+                >
+                  <option value="All">সকল বিভাগ</option>
+                  {filterOptions.divisions.map((division) => (
+                    <option className="text-black" key={division} value={division}>
+                      {division}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            {/* District */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                জেলা (District)
-              </label>
-              <select
-                value={filters.district}
-                onChange={(e) => {
-                  setFilters({ ...filters, district: e.target.value });
-                  setCurrentPage(1);
-                }}
-                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
-              >
-                <option value="All">সকল জেলা</option>
-                {filterOptions.districts.map((district) => (
-                  <option className="text-black" key={district} value={district}>
-                    {district}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* District - Only show for SuperAdmin */}
+            {isSuperAdmin && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                  জেলা (District)
+                </label>
+                <select
+                  value={filters.district}
+                  onChange={(e) => {
+                    setFilters({ ...filters, district: e.target.value, upazila: "All" });
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+                >
+                  <option value="All">সকল জেলা</option>
+                  {filterOptions.districts.map((district) => (
+                    <option className="text-black" key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-            {/* Upazila */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                উপজেলা (Upazila)
-              </label>
-              <select
-                value={filters.upazila}
-                onChange={(e) => {
-                  setFilters({ ...filters, upazila: e.target.value });
-                  setCurrentPage(1);
-                }}
-                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
-              >
-                <option value="All">সকল উপজেলা</option>
-                {filterOptions.upazilas.map((upazila) => (
-                  <option className="text-black" key={upazila} value={upazila}>
-                    {upazila}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Upazila - Only show for SuperAdmin */}
+            {isSuperAdmin && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                  উপজেলা (Upazila)
+                </label>
+                <select
+                  value={filters.upazila}
+                  onChange={(e) => {
+                    setFilters({ ...filters, upazila: e.target.value });
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+                >
+                  <option value="All">সকল উপজেলা</option>
+                  {filterOptions.upazilas.map((upazila) => (
+                    <option className="text-black" key={upazila} value={upazila}>
+                      {upazila}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Lab Type */}
             <div className="space-y-1.5">
@@ -375,8 +399,8 @@ const LabsUnderControl = () => {
               </select>
             </div>
 
-            {/* Clear Filters spans full width on xs across 4 cols */}
-            <div className="sm:col-span-2 md:col-span-4 flex justify-end">
+            {/* Clear Filters - Adjusted layout based on role */}
+            <div className={`${isSuperAdmin ? "sm:col-span-2 md:col-span-4" : "sm:col-span-2"} flex justify-end`}>
               <button
                 onClick={handleResetFilters}
                 className="cursor-pointer hover:scale-105 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm hover:shadow transition-all text-sm font-medium flex items-center justify-center gap-2 border border-emerald-100"
@@ -462,15 +486,19 @@ const LabsUnderControl = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col text-sm">
-                          <span className="text-emerald-800 font-medium">
-                            {lab.upazila}
-                          </span>
-                          {lab.district && (
-                            <span className="text-emerald-600 text-xs">
-                              {lab.district}
-                            </span>
+                          {isSuperAdmin && (
+                            <>
+                              <span className="text-emerald-800 font-medium">
+                                {lab.upazila}
+                              </span>
+                              {lab.district && (
+                                <span className="text-emerald-600 text-xs">
+                                  {lab.district}
+                                </span>
+                              )}
+                            </>
                           )}
-                          <span className="text-emerald-500 text-xs">
+                          <span className="text-emerald-500 text-xs font-bold">
                             বিভাগ: {lab.division}
                           </span>
                         </div>

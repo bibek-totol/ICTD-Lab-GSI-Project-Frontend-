@@ -45,8 +45,10 @@ const ReportForm = ({ onClose, instituteName, labId }) => {
         formData.append("storageImages", file);
       });
 
+      const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/lab-reports`, {
         method: "POST",
+        headers: { "Authorization": token ? `Bearer ${token}` : "" },
         body: formData,
         // Don't set Content-Type header - browser will set it with boundary
       });

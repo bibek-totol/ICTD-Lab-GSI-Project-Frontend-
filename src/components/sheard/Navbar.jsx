@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FiMenu,
@@ -8,12 +8,16 @@ import {
   FiTarget,
   FiUsers,
   FiInfo,
+  FiLogOut,
+  FiLayout,
 } from "react-icons/fi";
 import logo from "../../assets/govt.png";
 import { Link, useLocation } from "react-router";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
+  const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -119,8 +123,8 @@ const Navbar = () => {
                   key={item.href}
                   to={item.href}
                   className={`relative px-2 py-1 font-medium transition-all duration-300 ${isActive
-                      ? "text-emerald-800"
-                      : "text-emerald-600 hover:text-emerald-900"
+                    ? "text-emerald-800"
+                    : "text-emerald-600 hover:text-emerald-900"
                     }`}
                 >
                   <span>{item.label}</span>
@@ -142,12 +146,32 @@ const Navbar = () => {
             {i18n.language === "bn" ? "বাংলা" : "English"}
           </button>
 
-          <Link
-            to={"/login"}
-            className="cursor-pointer hover:scale-105 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg shadow-red-500/20 border border-red-400 font-medium tracking-wide"
-          >
-            {t("login")}
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <Link
+                to={"/dashboard"}
+                className="cursor-pointer hover:scale-105 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg transition-all duration-300 shadow-lg shadow-emerald-500/20 border border-emerald-500 font-medium tracking-wide flex items-center gap-2"
+              >
+                <FiLayout size={18} />
+                {t("Dashboard")}
+              </Link>
+              <button
+                onClick={logout}
+                className="cursor-pointer hover:scale-105 bg-white hover:bg-red-50 text-red-600 px-4 py-2 rounded-lg transition-all duration-300 border border-red-200 font-medium flex items-center gap-2"
+                title="Logout"
+              >
+                <FiLogOut size={18} />
+                <span>Logout</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              to={"/login"}
+              className="cursor-pointer hover:scale-105 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-2 rounded-lg transition-all duration-300 shadow-lg shadow-red-500/20 border border-red-400 font-medium tracking-wide"
+            >
+              {t("login")}
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -174,11 +198,30 @@ const Navbar = () => {
               </Link>
             ))}
 
-            <Link to={"/login"} onClick={() => setMenuOpen(false)}>
-              <button className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg mt-2 transition-all duration-300 shadow-lg border border-red-400">
-                {t("login")}
-              </button>
-            </Link>
+            {user ? (
+              <>
+                <Link to={"/dashboard"} onClick={() => setMenuOpen(false)}>
+                  <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg mt-2 transition-all duration-300 shadow-lg border border-emerald-500 flex items-center justify-center gap-2">
+                    <FiLayout /> {t("Dashboard")}
+                  </button>
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    setMenuOpen(false);
+                  }}
+                  className="w-full bg-white hover:bg-red-50 text-red-600 border border-red-200 px-6 py-3 rounded-lg mt-2 transition-all duration-300 flex items-center justify-center gap-2 font-bold"
+                >
+                  <FiLogOut /> Logout
+                </button>
+              </>
+            ) : (
+              <Link to={"/login"} onClick={() => setMenuOpen(false)}>
+                <button className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg mt-2 transition-all duration-300 shadow-lg border border-red-400">
+                  {t("login")}
+                </button>
+              </Link>
+            )}
 
             <button
               onClick={() => {

@@ -39,7 +39,10 @@ const ICTDLUpdate = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/ictdl/${id}`);
+                const token = localStorage.getItem("token");
+                const response = await fetch(`${API_BASE_URL}/ictdl/${id}`, {
+                    headers: { "Authorization": token ? `Bearer ${token}` : "" }
+                });
                 const result = await response.json();
 
                 if (result.success && result.data) {
@@ -166,8 +169,10 @@ const ICTDLUpdate = () => {
         }
 
         try {
+            const token = localStorage.getItem("token");
             const response = await fetch(`${API_BASE_URL}/ictdl/update/${id}`, {
                 method: "PUT",
+                headers: { "Authorization": token ? `Bearer ${token}` : "" },
                 body: formData,
             });
             const result = await response.json();

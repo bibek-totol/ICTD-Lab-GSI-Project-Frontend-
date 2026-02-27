@@ -29,7 +29,12 @@ const SOFLabs = () => {
   const [upazila, setUpazila] = useState("");
 
   const fetchLabs = () => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/labs?labType=sof`)
+    const token = localStorage.getItem("token");
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/labs?labType=sof`, {
+      headers: {
+        "Authorization": token ? `Bearer ${token}` : "",
+      },
+    })
       .then((res) => res.json())
       .then((resData) => {
         if (resData.success) {
@@ -465,8 +470,8 @@ const SOFLabs = () => {
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
                       className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${page === pageNum
-                          ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-500 scale-110"
-                          : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm hover:shadow-md hover:scale-105"
+                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-500 scale-110"
+                        : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm hover:shadow-md hover:scale-105"
                         }`}
                     >
                       {pageNum}

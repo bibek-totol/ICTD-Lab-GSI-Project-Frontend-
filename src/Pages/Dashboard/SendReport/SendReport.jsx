@@ -22,10 +22,12 @@ const SendReport = () => {
 
     // Compute locked jurisdiction params for non-SuperAdmin
     const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
-    const lockedUpazila = isUpazilaAdmin ? (userUpazila || null) : null;
+    const lockedDistrict = (!isSuperAdmin && !isDivisionAdmin) ? (userDistrict || null) : null;
+    const lockedUpazila = (isUpazilaAdmin) ? (userUpazila || null) : null;
 
     const [filters, setFilters] = useState({
         division: lockedDivision || "All",
+        district: lockedDistrict || "All",
         upazila: lockedUpazila || "All",
         labType: "All",
     });
@@ -38,6 +40,7 @@ const SendReport = () => {
     const [error, setError] = useState(null);
     const [filterOptions, setFilterOptions] = useState({
         divisions: [],
+        districts: [],
         upazilas: [],
         labTypes: [],
     });
@@ -48,12 +51,16 @@ const SendReport = () => {
     useEffect(() => {
         const fetchFilterOptions = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/labs/filter-options`);
+                const token = localStorage.getItem("token");
+                const response = await fetch(`${API_BASE_URL}/labs/filter-options`, {
+                    headers: { "Authorization": token ? `Bearer ${token}` : "" }
+                });
                 const result = await response.json();
 
                 if (result.success) {
                     setFilterOptions({
                         divisions: result.data.divisions || [],
+                        districts: result.data.districts || [],
                         upazilas: result.data.upazilas || [],
                         labTypes: result.data.labTypes || [],
                     });
@@ -76,15 +83,19 @@ const SendReport = () => {
 
                 // Apply locked jurisdiction for non-SuperAdmin
                 const divisionParam = lockedDivision || (filters.division !== "All" ? filters.division : null);
+                const districtParam = lockedDistrict || (filters.district !== "All" ? filters.district : null);
                 const upazilaParam = lockedUpazila || (filters.upazila !== "All" ? filters.upazila : null);
 
                 if (divisionParam) params.append("division", divisionParam);
+                if (districtParam) params.append("district", districtParam);
                 if (upazilaParam) params.append("upazila", upazilaParam);
                 if (filters.labType !== "All") params.append("labType", filters.labType);
                 if (searchTerm) params.append("search", searchTerm);
 
+                const token = localStorage.getItem("token");
                 const response = await fetch(
                     `${API_BASE_URL}/lab-reports?${params.toString()}`,
+                    { headers: { "Authorization": token ? `Bearer ${token}` : "" } }
                 );
                 const result = await response.json();
 
@@ -102,7 +113,7 @@ const SendReport = () => {
         };
 
         fetchReports();
-    }, [filters, searchTerm]);
+    }, [filters, searchTerm, lockedDivision, lockedDistrict, lockedUpazila]);
 
 
     // Format mobile number
@@ -136,8 +147,9 @@ const SendReport = () => {
 
     const handleResetFilters = () => {
         setFilters({
-            division: "All",
-            upazila: "All",
+            division: lockedDivision || "All",
+            district: lockedDistrict || "All",
+            upazila: lockedUpazila || "All",
             labType: "All",
         });
         setSearchTerm("");
@@ -165,6 +177,7 @@ const SendReport = () => {
             "Lab Type": report.labType === "sof" ? "SOF" : "ICTDL & SOF",
             Institute: report.institute,
             Division: report.division,
+            District: report.district, // Added District to export
             Upazila: report.upazila,
             "Basic Robotics": report.basicRobotics,
             "Advanced Robotics": report.advancedRobotics,
@@ -211,8 +224,10 @@ const SendReport = () => {
                             });
 
                             try {
+                                const token = localStorage.getItem("token");
                                 const response = await fetch(`${API_BASE_URL}/lab-reports/${reportId}`, {
                                     method: "DELETE",
+                                    headers: { "Authorization": token ? `Bearer ${token}` : "" }
                                 });
                                 const result = await response.json();
 
@@ -346,53 +361,80 @@ const SendReport = () => {
                     </div>
 
                     {/* Filters Row */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-emerald-100">
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                                বিভাগ (Division)
-                            </label>
-                            <select
-                                value={filters.division}
-                                onChange={(e) => {
-                                    setFilters({ ...filters, division: e.target.value });
-                                    setCurrentPage(1);
-                                }}
-                                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
-                            >
-                                <option value="All">সকল বিভাগ</option>
-                                {filterOptions.divisions.map((division) => (
-                                    <option
-                                        className="text-black"
-                                        key={division}
-                                        value={division}
-                                    >
-                                        {division}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                    <div className={`grid grid-cols-1 ${isSuperAdmin ? "sm:grid-cols-2 md:grid-cols-4" : "sm:grid-cols-2"} gap-4 pt-4 border-t border-emerald-100`}>
+                        {/* Division - Only show for SuperAdmin */}
+                        {isSuperAdmin && (
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                                    বিভাগ (Division)
+                                </label>
+                                <select
+                                    value={filters.division}
+                                    onChange={(e) => {
+                                        setFilters({ ...filters, division: e.target.value, district: "All", upazila: "All" });
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+                                >
+                                    <option value="All">সকল বিভাগ</option>
+                                    {filterOptions.divisions.map((division) => (
+                                        <option className="text-black" key={division} value={division}>
+                                            {division}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                                উপজেলা (Upazila)
-                            </label>
-                            <select
-                                value={filters.upazila}
-                                onChange={(e) => {
-                                    setFilters({ ...filters, upazila: e.target.value });
-                                    setCurrentPage(1);
-                                }}
-                                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
-                            >
-                                <option value="All">সকল উপজেলা</option>
-                                {filterOptions.upazilas.map((upazila) => (
-                                    <option className="text-black" key={upazila} value={upazila}>
-                                        {upazila}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {/* District - Only show for SuperAdmin */}
+                        {isSuperAdmin && (
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                                    জেলা (District)
+                                </label>
+                                <select
+                                    value={filters.district}
+                                    onChange={(e) => {
+                                        setFilters({ ...filters, district: e.target.value, upazila: "All" });
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+                                >
+                                    <option value="All">সকল জেলা</option>
+                                    {filterOptions.districts.map((district) => (
+                                        <option className="text-black" key={district} value={district}>
+                                            {district}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
+                        {/* Upazila - Only show for SuperAdmin */}
+                        {isSuperAdmin && (
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                                    উপজেলা (Upazila)
+                                </label>
+                                <select
+                                    value={filters.upazila}
+                                    onChange={(e) => {
+                                        setFilters({ ...filters, upazila: e.target.value });
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+                                >
+                                    <option value="All">সকল উপজেলা</option>
+                                    {filterOptions.upazilas.map((upazila) => (
+                                        <option className="text-black" key={upazila} value={upazila}>
+                                            {upazila}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Lab Type */}
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                                 ল্যাব টাইপ (Lab Type)
@@ -418,10 +460,11 @@ const SendReport = () => {
                             </select>
                         </div>
 
-                        <div className="flex items-end">
+                        {/* Clear Filters */}
+                        <div className={`${isSuperAdmin ? "sm:col-span-2 md:col-span-4" : "sm:col-span-2"} flex justify-end`}>
                             <button
                                 onClick={handleResetFilters}
-                                className="cursor-pointer hover:scale-105 w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm hover:shadow transition-all text-sm font-medium flex items-center justify-center gap-2 border border-emerald-100"
+                                className="cursor-pointer hover:scale-105 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm hover:shadow transition-all text-sm font-medium flex items-center justify-center gap-2 border border-emerald-100"
                             >
                                 <HiOutlineFilter className="w-5 h-5" />
                                 Clear Filters
@@ -501,7 +544,7 @@ const SendReport = () => {
                                                         {report.institute}
                                                     </span>
                                                     <span className="text-xs text-emerald-500 mt-1">
-                                                        {report.upazila}, {report.division}
+                                                        {report.upazila}, {report.district}, {report.division}
                                                     </span>
                                                 </div>
                                             </td>
