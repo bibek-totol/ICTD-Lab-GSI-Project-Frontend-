@@ -220,23 +220,54 @@ const Profile = () => {
               </div>
 
               <div className="px-6 pb-8 relative text-center">
-                <div className="relative inline-block -mt-16 mb-4">
-                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden relative bg-emerald-600 mx-auto flex items-center justify-center group">
+                <div className="relative inline-block -mt-16 mb-6">
+                  <div
+                    onClick={() => {
+                      if (!isEditing) {
+                        setIsEditing(true);
+                        setTimeout(() => fileInputRef.current?.click(), 200);
+                      } else {
+                        fileInputRef.current?.click();
+                      }
+                    }}
+                    className={`w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden relative bg-emerald-600 mx-auto flex items-center justify-center group transition-all duration-300 cursor-pointer ${isEditing ? "ring-4 ring-emerald-500/20 scale-105" : "hover:scale-105 hover:ring-4 hover:ring-emerald-500/10"
+                      }`}
+                  >
                     {(previewUrl || (user?.imageUrl && !user.imageUrl.includes("iconpacks"))) ? (
                       <img src={previewUrl || user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-4xl font-bold text-white">{initials}</span>
+                      <span className="text-4xl font-bold text-white transition-transform group-hover:scale-110">{initials}</span>
                     )}
 
                     {isEditing && (
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      >
-                        <HiOutlineCamera className="w-10 h-10 text-white" />
+                      <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center transition-all group-hover:bg-black/50">
+                        <HiOutlineCamera className="w-8 h-8 text-white mb-1" />
+                        <span className="text-[10px] text-white font-bold uppercase tracking-tighter">Update</span>
                       </div>
                     )}
                   </div>
+
+                  {/* Enhanced Upload Badge */}
+                  {isEditing && (
+                    <motion.button
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-1 right-1 w-10 h-10 bg-emerald-600 text-white rounded-full shadow-lg border-2 border-white flex items-center justify-center z-20 hover:bg-emerald-700 transition-colors"
+                      title="Click to upload photo"
+                    >
+                      <HiOutlineCamera className="w-6 h-6" />
+                    </motion.button>
+                  )}
+
+                  {!isEditing && (
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full border border-emerald-100 shadow-sm text-[10px] font-bold text-emerald-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                      Profile Photo
+                    </div>
+                  )}
+
                   <input
                     type="file"
                     ref={fileInputRef}
