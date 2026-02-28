@@ -17,6 +17,7 @@ import {
 import { FaChartPie, FaBell } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, Languages } from "lucide-react";
+import toast from "react-hot-toast";
 import lo from "../assets/favicon.png";
 import { useLanguage } from "../contexts/LanguageContext";
 import { AuthContext } from "../contexts/AuthContext";
@@ -59,6 +60,10 @@ const DashboardLayout = () => {
     if (isUpazilaAdmin && user?.upazila) return `Upz: ${user.upazila}`;
     return "";
   })();
+
+  const roleLabel = isDistrictAdmin && user?.district
+    ? `District Admin(${user.district})`
+    : displayRole;
 
   // Build menu items based on role
   const buildMenuItems = () => {
@@ -130,8 +135,63 @@ const DashboardLayout = () => {
   const menuItems = buildMenuItems();
 
   const handleLogout = () => {
-    logout();
-    navigate("/");
+    toast((t) => (
+      <div className="flex flex-col gap-4 p-1 min-w-[280px]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+            <HiOutlineLogout className="w-6 h-6 text-red-500" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-800">
+              {language === "bn" ? "লগআউট নিশ্চিত করুন" : "Confirm Logout"}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {language === "bn" ? "আপনি কি নিশ্চিত যে আপনি লগআউট করতে চান?" : "Are you sure you want to logout?"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-3 justify-end items-center mt-2">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all duration-200 border border-slate-200 cursor-pointer"
+          >
+            {language === "bn" ? "না" : "Cancel"}
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              logout();
+              navigate("/");
+              toast.success(
+                language === "bn" ? "সফলভাবে লগআউট হয়েছে" : "Logged out successfully",
+                {
+                  icon: '👋',
+                  style: {
+                    borderRadius: '12px',
+                    background: '#064e3b',
+                    color: '#fff',
+                  },
+                }
+              );
+            }}
+            className="px-5 py-2 text-xs font-bold bg-red-600 text-white hover:bg-red-700 rounded-xl shadow-md shadow-red-200 hover:shadow-lg transition-all duration-200 cursor-pointer"
+          >
+            {language === "bn" ? "হ্যাঁ, লগআউট করুন" : "Yes, logout"}
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: Infinity, // Wait for user action
+      position: "top-center",
+      style: {
+        padding: '16px',
+        borderRadius: '20px',
+        background: '#fff',
+        border: '1px solid #f1f5f9',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      },
+    });
   };
 
   return (
@@ -202,7 +262,7 @@ const DashboardLayout = () => {
               <div className="overflow-hidden">
                 <p className="text-xs font-bold text-emerald-900 truncate">{displayName}</p>
                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${roleBadgeColors[displayRole] || roleBadgeColors.LabAdmin}`}>
-                  {displayRole}
+                  {roleLabel}
                 </span>
               </div>
             </div>
@@ -399,7 +459,7 @@ const DashboardLayout = () => {
                 <p className="font-semibold text-emerald-900 text-sm">{displayName}</p>
                 <div className="flex items-center justify-end gap-1">
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${roleBadgeColors[displayRole] || roleBadgeColors.LabAdmin}`}>
-                    {displayRole}
+                    {roleLabel}
                   </span>
                 </div>
               </div>

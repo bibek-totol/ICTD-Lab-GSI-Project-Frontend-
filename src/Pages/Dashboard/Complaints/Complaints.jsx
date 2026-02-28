@@ -80,7 +80,20 @@ const Complaints = () => {
   const fetchComplaints = async () => {
     setLoading(true);
     try {
-      const response = await ComplaintService.getComplaints();
+      const params = {};
+
+      const divisionParam = lockedDivision || (filters.division !== "All" ? filters.division : null);
+      const districtParam = lockedDistrict || (filters.district !== "All" ? filters.district : null);
+      const upazilaParam = lockedUpazila || (filters.upazila !== "All" ? filters.upazila : null);
+
+      if (divisionParam) params.division = divisionParam;
+      if (districtParam) params.district = districtParam;
+      if (upazilaParam) params.upazila = upazilaParam;
+      if (filters.category) params.category = filters.category;
+      if (filters.status) params.status = filters.status;
+      if (search) params.search = search;
+
+      const response = await ComplaintService.getComplaints(params);
       if (response.success) {
         setData(response.data);
       }
@@ -106,7 +119,7 @@ const Complaints = () => {
   useEffect(() => {
     fetchComplaints();
     fetchLabs();
-  }, []);
+  }, [filters, search, lockedDivision, lockedDistrict, lockedUpazila]);
 
   const handleReset = () => {
     setSearch("");
@@ -455,6 +468,19 @@ const Complaints = () => {
               Manage and track all technical complaints efficiently
             </p>
             <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3"></div>
+            {lockedDistrict && isDistrictAdmin ? (
+              <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+                <FaFilter className="w-4 h-4" />
+                District Admin({lockedDistrict})
+              </div>
+            ) : lockedDivision && (
+              <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+                <FaFilter className="w-4 h-4" />
+                {lockedDivision} Division Admin
+                {lockedDistrict && ` — ${lockedDistrict} District`}
+                {lockedUpazila && ` — ${lockedUpazila} Upazila`}
+              </div>
+            )}
           </div>
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
             <button
@@ -507,8 +533,8 @@ const Complaints = () => {
             </div>
           )}
 
-          {/* District - Only show for SuperAdmin */}
-          {isSuperAdmin && (
+          {/* District - Show for SuperAdmin and DivisionAdmin */}
+          {(isSuperAdmin || isDivisionAdmin) && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
                 <FaFilter size={10} /> District
@@ -528,8 +554,8 @@ const Complaints = () => {
             </div>
           )}
 
-          {/* Upazila - Only show for SuperAdmin */}
-          {isSuperAdmin && (
+          {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
+          {(isSuperAdmin || isDivisionAdmin) && (
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
                 <FaFilter size={10} /> Upazila

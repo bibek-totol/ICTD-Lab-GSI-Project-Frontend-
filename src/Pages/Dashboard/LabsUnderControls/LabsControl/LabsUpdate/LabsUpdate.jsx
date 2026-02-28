@@ -14,12 +14,14 @@ import {
 } from "react-icons/hi";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../../../../contexts/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LabsUpdate = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isSuperAdmin } = useAuth();
 
   const {
     register,
@@ -250,15 +252,15 @@ const LabsUpdate = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">বিভাগ</label>
-                  <input type="text" {...register("division")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                  <input type="text" {...register("division")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">জেলা</label>
-                  <input type="text" {...register("district")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                  <input type="text" {...register("district")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা</label>
-                  <input type="text" {...register("upazila")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                  <input type="text" {...register("upazila")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">আসন (Seat)</label>

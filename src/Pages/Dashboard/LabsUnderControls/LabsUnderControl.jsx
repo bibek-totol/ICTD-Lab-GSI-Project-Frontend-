@@ -116,7 +116,7 @@ const LabsUnderControl = () => {
     };
 
     fetchLabs();
-  }, [filters, searchTerm]);
+  }, [filters, searchTerm, lockedDivision, lockedDistrict, lockedUpazila]);
 
 
   // Format mobile number
@@ -228,7 +228,12 @@ const LabsUnderControl = () => {
             বাংলাদেশের ডিজিটাল ল্যাব ম্যানেজমেন্ট সম্পর্কে মনোন করুন
           </p>
           <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3"></div>
-          {lockedDivision && (
+          {lockedDistrict && isDistrictAdmin ? (
+            <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+              <HiOutlineFilter className="w-4 h-4" />
+              District Admin ({lockedDistrict})
+            </div>
+          ) : lockedDivision && (
             <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
               <HiOutlineFilter className="w-4 h-4" />
               {lockedDivision} Division Admin
@@ -329,8 +334,8 @@ const LabsUnderControl = () => {
               </div>
             )}
 
-            {/* District - Only show for SuperAdmin */}
-            {isSuperAdmin && (
+            {/* District - Show for SuperAdmin and DivisionAdmin */}
+            {(isSuperAdmin || isDivisionAdmin) && (
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                   জেলা (District)
@@ -353,8 +358,8 @@ const LabsUnderControl = () => {
               </div>
             )}
 
-            {/* Upazila - Only show for SuperAdmin */}
-            {isSuperAdmin && (
+            {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
+            {(isSuperAdmin || isDivisionAdmin) && (
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                   উপজেলা (Upazila)
@@ -486,7 +491,7 @@ const LabsUnderControl = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col text-sm">
-                          {isSuperAdmin && (
+                          {(isSuperAdmin || isDivisionAdmin || isDistrictAdmin) && (
                             <>
                               <span className="text-emerald-800 font-medium">
                                 {lab.upazila}

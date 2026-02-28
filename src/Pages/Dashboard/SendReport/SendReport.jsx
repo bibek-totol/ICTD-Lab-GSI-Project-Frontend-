@@ -301,6 +301,19 @@ const SendReport = () => {
                         সকল ল্যাব থেকে জমা দেওয়া IT সরঞ্জাম প্রতিবেদন
                     </p>
                     <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3"></div>
+                    {lockedDistrict && isDistrictAdmin ? (
+                        <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+                            <HiOutlineFilter className="w-4 h-4" />
+                            District Admin({lockedDistrict})
+                        </div>
+                    ) : lockedDivision && (
+                        <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+                            <HiOutlineFilter className="w-4 h-4" />
+                            {lockedDivision} Division Admin
+                            {lockedDistrict && ` — ${lockedDistrict} District`}
+                            {lockedUpazila && ` — ${lockedUpazila} Upazila`}
+                        </div>
+                    )}
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -386,8 +399,8 @@ const SendReport = () => {
                             </div>
                         )}
 
-                        {/* District - Only show for SuperAdmin */}
-                        {isSuperAdmin && (
+                        {/* District - Show for SuperAdmin and DivisionAdmin */}
+                        {(isSuperAdmin || isDivisionAdmin) && (
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                                     জেলা (District)
@@ -410,8 +423,8 @@ const SendReport = () => {
                             </div>
                         )}
 
-                        {/* Upazila - Only show for SuperAdmin */}
-                        {isSuperAdmin && (
+                        {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
+                        {(isSuperAdmin || isDivisionAdmin) && (
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                                     উপজেলা (Upazila)

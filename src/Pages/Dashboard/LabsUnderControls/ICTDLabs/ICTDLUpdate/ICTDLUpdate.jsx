@@ -14,12 +14,14 @@ import {
 } from "react-icons/hi";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../../../../contexts/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ICTDLUpdate = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { isSuperAdmin } = useAuth();
 
     const {
         register,
@@ -240,15 +242,15 @@ const ICTDLUpdate = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-emerald-600 uppercase">বিভাগ</label>
-                                    <input type="text" {...register("division")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                                    <input type="text" {...register("division")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-emerald-600 uppercase">জেলা</label>
-                                    <input type="text" {...register("district")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                                    <input type="text" {...register("district")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা</label>
-                                    <input type="text" {...register("upazila")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                                    <input type="text" {...register("upazila")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
                                 </div>
                             </div>
                         </div>
@@ -296,7 +298,7 @@ const ICTDLUpdate = () => {
                                 <input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, 'lab')} className="w-full text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer" />
                                 <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
                                     {labImages.map((img, idx) => (
-                                        <div key={idx} className="relative w-32 h-32 flex-shrink-0 group"><img src={img.url} className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105" /><button onClick={() => removeImage('lab', idx)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"><HiOutlineX className="w-4 h-4" /></button></div>
+                                        <div key={idx} className="relative w-32 h-32 flex-shrink-0 group"><img src={img.url} className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105" /><button type="button" onClick={() => removeImage('lab', idx)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"><HiOutlineX className="w-4 h-4" /></button></div>
                                     ))}
                                 </div>
                             </div>
@@ -307,7 +309,7 @@ const ICTDLUpdate = () => {
                                 <input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, 'inst')} className="w-full text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer" />
                                 <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
                                     {institutionImages.map((img, idx) => (
-                                        <div key={idx} className="relative w-32 h-32 flex-shrink-0 group"><img src={img.url} className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105" /><button onClick={() => removeImage('inst', idx)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"><HiOutlineX className="w-4 h-4" /></button></div>
+                                        <div key={idx} className="relative w-32 h-32 flex-shrink-0 group"><img src={img.url} className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105" /><button type="button" onClick={() => removeImage('inst', idx)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"><HiOutlineX className="w-4 h-4" /></button></div>
                                     ))}
                                 </div>
                             </div>

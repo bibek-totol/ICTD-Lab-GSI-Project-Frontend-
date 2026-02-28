@@ -11,7 +11,7 @@ import { AuthContext } from "../../../../contexts/AuthContext";
 import api from "../../../../services/api";
 
 const ICTDLabs = () => {
-    const { isSuperAdmin, isDivisionAdmin, userDivision, userDistrict, userUpazila } = useContext(AuthContext);
+    const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, userDivision, userDistrict, userUpazila } = useContext(AuthContext);
 
     // Jurisdiction Locking
     const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
@@ -91,7 +91,12 @@ const ICTDLabs = () => {
                     <h1 className="text-4xl font-bold text-emerald-950">ICTDL ল্যাবসমূহ</h1>
                     <p className="text-emerald-600 mt-2 text-lg">সারা দেশের সকল আইসিটিডিএল ল্যাব ম্যানেজমেন্ট</p>
                     <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3"></div>
-                    {lockedDivision && (
+                    {lockedDistrict && isDistrictAdmin ? (
+                        <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+                            <HiOutlineFilter className="w-4 h-4" />
+                            District Admin({lockedDistrict})
+                        </div>
+                    ) : lockedDivision && (
                         <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
                             <HiOutlineFilter className="w-4 h-4" />
                             {lockedDivision} Division Admin
@@ -137,13 +142,13 @@ const ICTDLabs = () => {
                                 </select>
                             </div>
                         )}
-                        {/* District - Only show for SuperAdmin */}
-                        {isSuperAdmin && (
+                        {/* District - Show for SuperAdmin and DivisionAdmin */}
+                        {(isSuperAdmin || isDivisionAdmin) && (
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-emerald-600 uppercase">জেলা (District)</label>
                                 <select
                                     value={filters.district}
-                                    onChange={(e) => { setFilters({ ...filters, district: e.target.value }); setCurrentPage(1); }}
+                                    onChange={(e) => { setFilters({ ...filters, district: e.target.value, upazila: "All" }); setCurrentPage(1); }}
                                     className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-900 outline-none"
                                 >
                                     <option value="All">সকল জেলা</option>
@@ -151,8 +156,8 @@ const ICTDLabs = () => {
                                 </select>
                             </div>
                         )}
-                        {/* Upazila - Only show for SuperAdmin */}
-                        {isSuperAdmin && (
+                        {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
+                        {(isSuperAdmin || isDivisionAdmin) && (
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা (Upazila)</label>
                                 <select
@@ -214,7 +219,7 @@ const ICTDLabs = () => {
                                             <td className="px-6 py-4 font-semibold text-emerald-950">{lab.institute}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    {isSuperAdmin && (
+                                                    {(isSuperAdmin || isDivisionAdmin || isDistrictAdmin) && (
                                                         <>
                                                             <span className="font-medium">{lab.upazila}</span>
                                                             <span className="text-xs text-emerald-600">{lab.district}</span>
@@ -228,7 +233,7 @@ const ICTDLabs = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
                                                     <span className="font-medium">{lab.head}</span>
-                                                    <span className="text-xs text-emerald-50">{lab.mobile}</span>
+                                                    <span className="text-xs text-emerald-500">{lab.mobile}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
