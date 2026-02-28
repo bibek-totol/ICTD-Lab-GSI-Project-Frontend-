@@ -11,7 +11,6 @@ const ROLES = [
   { value: "DivisionAdmin", label: "Division Admin" },
   { value: "DistrictAdmin", label: "District Admin" },
   { value: "UpazilaAdmin", label: "Upazila Admin" },
-  { value: "LabAdmin", label: "Lab Admin" },
 ];
 
 const baseInput =
@@ -103,11 +102,11 @@ const AddUser = () => {
       const res = await axios.post(`${API}/users/manage`, payload, { withCredentials: true });
 
       if (res.data.success) {
-        toast.success(`User "${payload.email}" created successfully!`, { icon: "👤" });
+        toast.success(`Admin "${payload.email}" created successfully!`, { icon: "👤" });
         handleReset();
       }
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to create user";
+      const msg = err.response?.data?.message || "Failed to create admin";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -127,9 +126,9 @@ const AddUser = () => {
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center">
               <FaUserPlus className="text-emerald-700 text-2xl" />
             </div>
-            <h1 className="text-3xl font-bold text-emerald-900">Add User</h1>
+            <h1 className="text-3xl font-bold text-emerald-900">Add Admin</h1>
           </div>
-          <p className="text-emerald-700">Create a new user with role, designation and jurisdiction</p>
+          <p className="text-emerald-700">Create a new admin with role, designation and jurisdiction</p>
         </div>
 
         {/* Form */}
@@ -267,7 +266,7 @@ const AddUser = () => {
 
           {/* Info notice */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
-            <strong>Note:</strong> Created users are initially <strong>unverified</strong>. SuperAdmin can verify them and assign a password in the Manage User section.
+            <strong>Note:</strong> Created admins are initially <strong>unverified</strong>. SuperAdmin can verify them and assign a password in the Manage Admin section.
           </div>
 
           {/* Actions */}
@@ -287,7 +286,7 @@ const AddUser = () => {
               {submitting ? (
                 <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> Creating...</>
               ) : (
-                <><FaUserPlus /> Add User</>
+                <><FaUserPlus /> Add Admin</>
               )}
             </button>
           </div>

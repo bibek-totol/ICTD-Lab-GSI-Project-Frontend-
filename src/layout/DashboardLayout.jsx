@@ -114,13 +114,14 @@ const DashboardLayout = () => {
       {
         id: "userManagement",
         path: null,
-        name: "User Control",
+        name: "Admin Control",
         icon: <HiOutlineUserGroup className="w-5 h-5" />,
         hasDropdown: true,
         roles: ["SuperAdmin"],
         subItems: [
-          { path: "/dashboard/add-user", name: "Add User" },
-          { path: "/dashboard/manage-user", name: "Manage Users" },
+          { path: "/dashboard/add-user", name: "Add Admin" },
+          { path: "/dashboard/manage-user", name: "Manage Admins" },
+          { path: "/dashboard/manage-lab-admin", name: "Manage Lab Admin" },
         ],
       },
     ];

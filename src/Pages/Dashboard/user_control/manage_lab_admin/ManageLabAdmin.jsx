@@ -20,7 +20,7 @@ const roleBadge = {
   Anonymous: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
-const ManageUser = () => {
+const ManageLabAdmin = () => {
   const { user: currentUser } = useContext(AuthContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ const ManageUser = () => {
     setLoading(true);
     try {
       const res = await axios.get(`${API}/users/manage`, { withCredentials: true });
-      if (res.data.success) setUsers(res.data.data.filter(u => u.role !== "LabAdmin"));
+      if (res.data.success) setUsers(res.data.data.filter(u => u.role === "LabAdmin"));
     } catch (err) {
       toast.error("Failed to fetch users");
     } finally {
@@ -126,7 +126,17 @@ const ManageUser = () => {
     }
   };
 
-  
+  const handleVerifyAll = async (isVerified) => {
+    const loadingToast = toast.loading(`${isVerified ? "Verifying" : "Unverifying"} all users...`);
+    try {
+      const res = await axios.patch(`${API}/users/manage/verify-all`, { isVerified }, { withCredentials: true });
+      toast.success(res.data.message, { id: loadingToast });
+      fetchUsers();
+    } catch (err) {
+      toast.error("Failed to update all", { id: loadingToast });
+    }
+  };
+
   const togglePassword = (id) => {
     setShowPasswords(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -191,18 +201,32 @@ const ManageUser = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-emerald-950">Admin Management</h1>
-          <p className="text-emerald-600 mt-2">Manage all system admins — roles, permissions, and status</p>
+          <h1 className="text-4xl font-bold text-emerald-950">Lab Admin Management</h1>
+          <p className="text-emerald-600 mt-2">Manage all system lab admins — roles, permissions, and status</p>
           <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3" />
         </div>
 
-       
+        {/* Verification Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleVerifyAll(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-all shadow-md shadow-emerald-100"
+          >
+            <FaCheckCircle /> Verify All
+          </button>
+          <button
+            onClick={() => handleVerifyAll(false)}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl text-sm font-semibold hover:bg-amber-600 transition-all shadow-md shadow-amber-100"
+          >
+            <FaTimesCircle /> Unverify All
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "Total Admins", value: stats.total, icon: <FaUsers />, color: "emerald" },
+          { label: "Total Lab Admins", value: stats.total, icon: <FaUsers />, color: "emerald" },
           { label: "Verified", value: stats.verified, icon: <FaUserCheck />, color: "blue" },
           { label: "Unverified", value: stats.unverified, icon: <FaUserTimes />, color: "amber" },
         ].map(s => (
@@ -230,16 +254,7 @@ const ManageUser = () => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <select
-              value={roleFilter}
-              onChange={e => setRoleFilter(e.target.value)}
-              className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-900 outline-none"
-            >
-              <option value="">All Roles</option>
-              {Object.keys(roleBadge).filter(r => r !== "Anonymous" && r !== "LabAdmin").map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
+
 
             <select
               value={verifiedFilter}
@@ -256,7 +271,7 @@ const ManageUser = () => {
             </button>
           </div>
         </div>
-        <p className="text-xs text-emerald-500">{filtered.length} admins found</p>
+        <p className="text-xs text-emerald-500">{filtered.length} lab admins found</p>
       </div>
 
       {/* Table */}
@@ -274,10 +289,10 @@ const ManageUser = () => {
               {loading ? (
                 <tr><td colSpan={7} className="text-center py-12">
                   <FaSync className="animate-spin text-emerald-400 mx-auto mb-2" size={28} />
-                  <p className="text-emerald-500">Loading admins...</p>
+                  <p className="text-emerald-500">Loading lab admins...</p>
                 </td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-12 text-emerald-400">No admins found</td></tr>
+                <tr><td colSpan={7} className="text-center py-12 text-emerald-400">No lab admins found</td></tr>
               ) : (
                 paginatedUsers.map((u, idx) => (
                   <UserRow
@@ -308,7 +323,7 @@ const ManageUser = () => {
         {totalPages > 1 && (
           <div className="bg-emerald-50/50 px-5 py-4 border-t border-emerald-100 flex items-center justify-between">
             <span className="text-xs text-emerald-600 font-medium font-sans">
-              Showing {Math.min(filtered.length, (currentPage - 1) * pageSize + 1)}-{Math.min(filtered.length, currentPage * pageSize)} of {filtered.length} admins
+              Showing {Math.min(filtered.length, (currentPage - 1) * pageSize + 1)}-{Math.min(filtered.length, currentPage * pageSize)} of {filtered.length} lab admins
             </span>
             <div className="flex gap-1">
               <button
@@ -529,7 +544,7 @@ const EditUserModal = ({ user, onClose, onSave, geoData, geoLoading, updating, s
   </div>
 );
 
-export default ManageUser;
+export default ManageLabAdmin;
 
 const VerifyUserConfirmModal = ({ user, onClose, onConfirm }) => {
   const [password, setPassword] = useState("govt@doict.pass");

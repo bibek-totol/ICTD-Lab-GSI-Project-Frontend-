@@ -26,6 +26,7 @@ import AddUser from "../Pages/Dashboard/user_control/add-user/AddUser";
 import ICTDLabs from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLabs";
 import ICTDLUpdate from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLUpdate/ICTDLUpdate";
 import ManageUser from "../Pages/Dashboard/user_control/manege_user/ManageUser";
+import ManageLabAdmin from "../Pages/Dashboard/user_control/manage_lab_admin/ManageLabAdmin";
 
 const router = createBrowserRouter([
   {
@@ -133,6 +134,14 @@ const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ManageUser />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: "manage-lab-admin",
+        element: (
+          <SuperAdminRoute>
+            <ManageLabAdmin />
           </SuperAdminRoute>
         ),
       },
