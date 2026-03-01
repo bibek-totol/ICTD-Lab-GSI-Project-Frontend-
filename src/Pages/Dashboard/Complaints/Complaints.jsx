@@ -26,11 +26,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AuthContext } from "../../../contexts/AuthContext";
 
 const Complaints = () => {
-  const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, userDivision, userDistrict, userUpazila } = useContext(AuthContext);
+  const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, isLabAdmin, userDivision, userDistrict, userUpazila, user } = useContext(AuthContext);
 
   // Pre-set jurisdiction-locked filters for non-SuperAdmin
   const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
-  const lockedDistrict = (!isSuperAdmin && !isDivisionAdmin) ? (userDistrict || null) : null;
+  const lockedDistrict = (!isSuperAdmin && !isDivisionAdmin && !isLabAdmin) ? (userDistrict || null) : null;
   const lockedUpazila = (isUpazilaAdmin) ? (userUpazila || null) : null;
 
   const initialFilters = {
@@ -468,7 +468,12 @@ const Complaints = () => {
               Manage and track all technical complaints efficiently
             </p>
             <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3"></div>
-            {lockedDistrict && isDistrictAdmin ? (
+            {isLabAdmin ? (
+              <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+                <FaFilter className="w-4 h-4" />
+                Lab Admin ({user?.email})
+              </div>
+            ) : lockedDistrict && isDistrictAdmin ? (
               <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
                 <FaFilter className="w-4 h-4" />
                 District Admin({lockedDistrict})

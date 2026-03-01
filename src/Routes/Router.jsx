@@ -4,6 +4,7 @@ import ErrorPage from "../components/ErrorPage/ErrorPage";
 import Home from "../Pages/Home/Home/Home";
 import AllNotice from "../Pages/AllNotice/AllNotice";
 import Lab from "../Pages/Dashboard/lab/Lab";
+import LabPublic from "../Pages/Dashboard/lab/LabPublic";
 import LabDetails from "../Pages/LabDetails/LabDetails";
 import Login from "../Pages/login/Login";
 import PrivetRoute from "./PrivetRoute";
@@ -22,6 +23,7 @@ import FilesComplaints from "../Pages/Dashboard/LabsUnderControls/LabsControl/Fi
 import TraningUpdate from "../Pages/Dashboard/Traning/TraningUpdate/TraningUpdate";
 import SendReport from "../Pages/Dashboard/SendReport/SendReport";
 import SOFLabs from "../Pages/SOFLabs/SOFLabs";
+import SOFLabsPublic from "../Pages/SOFLabs/SOFLabsPublic";
 import AddUser from "../Pages/Dashboard/user_control/add-user/AddUser";
 import ICTDLabs from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLabs";
 import ICTDLUpdate from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLUpdate/ICTDLUpdate";
@@ -43,6 +45,10 @@ const router = createBrowserRouter([
         Component: Lab,
       },
       {
+        path: "labs-public",
+        Component: LabPublic,
+      },
+      {
         path: "all-notice",
         Component: AllNotice,
       },
@@ -53,6 +59,10 @@ const router = createBrowserRouter([
       {
         path: "soflabs",
         Component: SOFLabs,
+      },
+      {
+        path: "soflabs-public",
+        Component: SOFLabsPublic,
       },
     ],
   },

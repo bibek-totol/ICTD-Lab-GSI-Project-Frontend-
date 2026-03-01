@@ -54,7 +54,7 @@ const DashboardLayout = () => {
 
   // Jurisdiction subtitle for admins
   const jurisdictionLabel = (() => {
-    if (isSuperAdmin) return "সারা বাংলাদেশ";
+    if (isSuperAdmin) return language === "bn" ? "সারা বাংলাদেশ" : "All over Bangladesh";
     if (isDivisionAdmin && user?.division) return `Div: ${user.division}`;
     if (isDistrictAdmin && user?.district) return `Dist: ${user.district}`;
     if (isUpazilaAdmin && user?.upazila) return `Upz: ${user.upazila}`;
@@ -94,8 +94,8 @@ const DashboardLayout = () => {
         hasDropdown: true,
         roles: "all",
         subItems: [
-          { path: "/dashboard/labsUnderControl", name: "SOF Labs" },
-          { path: "/dashboard/ictdLabs", name: "ICTDL Labs" },
+          { path: "/dashboard/labsUnderControl", name: t("SOF Labs") },
+          { path: "/dashboard/ictdLabs", name: t("ICTDL Labs") },
         ],
       },
       {
@@ -114,14 +114,14 @@ const DashboardLayout = () => {
       {
         id: "userManagement",
         path: null,
-        name: "Admin Control",
+        name: t("admin_control"),
         icon: <HiOutlineUserGroup className="w-5 h-5" />,
         hasDropdown: true,
         roles: ["SuperAdmin"],
         subItems: [
-          { path: "/dashboard/add-user", name: "Add Admin" },
-          { path: "/dashboard/manage-user", name: "Manage Admins" },
-          { path: "/dashboard/manage-lab-admin", name: "Manage Lab Admin" },
+          { path: "/dashboard/add-user", name: t("add_admin") },
+          { path: "/dashboard/manage-user", name: t("manage_admins") },
+          { path: "/dashboard/manage-lab-admin", name: t("manage_lab_admins") },
         ],
       },
     ];

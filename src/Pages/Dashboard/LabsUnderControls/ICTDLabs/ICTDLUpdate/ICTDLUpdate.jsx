@@ -280,7 +280,7 @@ const ICTDLUpdate = () => {
                         <div className="space-y-4">
                             <div><label className="text-xs font-bold text-emerald-600 uppercase">প্রতিষ্ঠান প্রধানের নাম</label><input type="text" {...register("head")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
                             <div><label className="text-xs font-bold text-emerald-600 uppercase">মোবাইল নম্বর</label><input type="text" {...register("mobile")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
-                            <div><label className="text-xs font-bold text-emerald-600 uppercase">ইমেইল</label><input type="email" {...register("email")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
+                            <div><label className="text-xs font-bold text-emerald-600 uppercase">ইমেইল</label><input type="email" {...register("email")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} /></div>
                         </div>
                     </div>
 

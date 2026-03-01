@@ -12,6 +12,11 @@
   "language": "Language",
   "Lab Details": "Lab Details",
   "login": "Login",
+  "admin_control": "Admin Control",
+  "add_admin": "Add Admin",
+  "manage_admins": "Manage Admins",
+  "manage_lab_admins": "Manage Lab Admins",
+  "ICTDL Labs": "ICTDL Labs",
   "banner_tag": "Government of Bangladesh Initiative",
   "banner_title": "Welcome to Quality Education Through Technology",
   "banner_desc": "Creating opportunities for students to become proficient in ICT, fostering self-reliance and preparing them for the digital economy.",
@@ -209,5 +214,6 @@
   "dashboard_welcome": "Welcome to ICTD Lab Dashboard",
   "dashboard_admin_user": "Admin User",
   "dashboard_copyright": "Copyright",
-  "dashboard_all_rights": "All rights reserved"
+  "dashboard_all_rights": "All rights reserved",
+  "latest_updates": "Latest Updates"
 }

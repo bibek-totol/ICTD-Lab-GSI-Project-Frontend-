@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import bnTranslations from '../components/languages/bn/bn.json';
-import enTranslations from '../components/languages/en/en.json';
+import { useTranslation } from 'react-i18next';
 
 const LanguageContext = createContext();
 
@@ -13,25 +12,21 @@ export const useLanguage = () => {
 };
 
 export const LanguageProvider = ({ children }) => {
-    // Get initial language from localStorage or default to 'bn'
+    const { t, i18n } = useTranslation();
+
+    // Get initial language from localStorage or i18next or default to 'bn'
     const [language, setLanguage] = useState(() => {
         const savedLanguage = localStorage.getItem('appLanguage');
-        return savedLanguage || 'bn';
+        return savedLanguage || i18n.language || 'bn';
     });
 
-    // Save language preference to localStorage whenever it changes
+    // Sync localStorage and i18next whenever state changes
     useEffect(() => {
         localStorage.setItem('appLanguage', language);
-    }, [language]);
-
-    const translations = {
-        bn: bnTranslations,
-        en: enTranslations,
-    };
-
-    const t = (key) => {
-        return translations[language][key] || key;
-    };
+        if (i18n.language !== language) {
+            i18n.changeLanguage(language);
+        }
+    }, [language, i18n]);
 
     const toggleLanguage = () => {
         setLanguage((prev) => (prev === 'bn' ? 'en' : 'bn'));
@@ -41,8 +36,7 @@ export const LanguageProvider = ({ children }) => {
         language,
         setLanguage,
         toggleLanguage,
-        t,
-        translations: translations[language],
+        t, // Use i18next's t function
     };
 
     return (

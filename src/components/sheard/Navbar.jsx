@@ -14,21 +14,19 @@ import {
 import logo from "../../assets/govt.png";
 import { Link, useLocation } from "react-router";
 import { AuthContext } from "../../contexts/AuthContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const Navbar = () => {
-  const { t, i18n } = useTranslation();
+  const { language, toggleLanguage } = useLanguage();
+  const { t } = useTranslation();
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const toggleLanguage = () => {
-    i18n.changeLanguage(i18n.language === "en" ? "bn" : "en");
-  };
-
   const navItems = [
     { icon: <FiHome />, label: t("home"), href: "/" },
-    { icon: <FiUsers />, label: t("ICTD Labs"), href: "/labs" },
-    { icon: <FiUsers />, label: t("SOF Labs"), href: "/soflabs" },
+    { icon: <FiUsers />, label: t("ICTDL Labs"), href: "/labs-public" },
+    { icon: <FiUsers />, label: t("SOF Labs"), href: "/soflabs-public" },
     { icon: <FiTarget />, label: t("notice"), href: "/all-notice" },
     { icon: <FiBell />, label: t("Lab Details"), href: "/labdetails" },
     // { icon: <FiInfo />, label: t("Dashboard"), href: "/dashboard" },
@@ -57,7 +55,7 @@ const Navbar = () => {
           <div className="flex-shrink-0 px-4 flex items-center gap-2 bg-white/80 py-1 rounded-r-full border border-emerald-200 border-l-0 shadow-sm">
             <FiBell className="text-red-500 animate-pulse" size={18} />
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
-              সর্বশেষ আপডেট
+              {t("latest_updates")}
             </span>
           </div>
 
@@ -143,7 +141,7 @@ const Navbar = () => {
             onClick={toggleLanguage}
             className="cursor-pointer hover:scale-105 px-4 py-2 bg-white hover:bg-emerald-50 text-emerald-700 hover:text-emerald-900 rounded-lg font-medium text-sm transition-all duration-300 border border-emerald-200 shadow-sm"
           >
-            {i18n.language === "bn" ? "বাংলা" : "English"}
+            {language === "bn" ? "English" : "বাংলা"}
           </button>
 
           {user ? (
@@ -161,7 +159,7 @@ const Navbar = () => {
                 title="Logout"
               >
                 <FiLogOut size={18} />
-                <span>Logout</span>
+                <span>{t("dashboard_logout")}</span>
               </button>
             </div>
           ) : (
@@ -212,7 +210,7 @@ const Navbar = () => {
                   }}
                   className="w-full bg-white hover:bg-red-50 text-red-600 border border-red-200 px-6 py-3 rounded-lg mt-2 transition-all duration-300 flex items-center justify-center gap-2 font-bold"
                 >
-                  <FiLogOut /> Logout
+                  <FiLogOut /> {t("dashboard_logout")}
                 </button>
               </>
             ) : (
@@ -230,7 +228,7 @@ const Navbar = () => {
               }}
               className="w-full px-4 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 hover:text-emerald-950 rounded-lg font-medium text-sm mt-2 border border-emerald-200 transition-all"
             >
-              {i18n.language === "en" ? "English" : "বাংলা"}
+              {language === "en" ? "বাংলা" : "English"}
             </button>
           </nav>
         </div>
