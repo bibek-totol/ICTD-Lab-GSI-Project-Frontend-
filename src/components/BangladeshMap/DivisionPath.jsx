@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 export const DivisionPath = ({
   division,
   isSelected,
@@ -6,6 +8,7 @@ export const DivisionPath = ({
   onMouseLeave,
   onClick,
 }) => {
+  const { t } = useTranslation();
   const getOpacity = () => {
     if (isSelected) return 1;
     if (isHovered) return 0.85;
@@ -31,7 +34,7 @@ export const DivisionPath = ({
             : "none",
       }}
     >
-      <title>{division.name}</title>
+      <title>{t(`division_${division.id}`)}</title>
     </path>
   );
 };

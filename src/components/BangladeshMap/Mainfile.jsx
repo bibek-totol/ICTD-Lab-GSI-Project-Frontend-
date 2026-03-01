@@ -1,11 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 import { bangladeshDivisions } from "../../data/bangladeshDivisions";
 import { DivisionPath } from "./DivisionPath";
 import { useNavigate } from "react-router";
 
-export const BangladeshMap = ({ onHover }) => {
+export const BangladeshMap = ({ onHover, divisions }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const displayDivisions = divisions || bangladeshDivisions;
   const [selectedDivision, setSelectedDivision] = useState(null);
   const [hoveredDivision, setHoveredDivision] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -167,7 +170,7 @@ export const BangladeshMap = ({ onHover }) => {
 
         {/* Division paths */}
         <g>
-          {bangladeshDivisions.map((division) => (
+          {displayDivisions.map((division) => (
             <DivisionPath
               key={division.id}
               division={division}
@@ -191,7 +194,7 @@ export const BangladeshMap = ({ onHover }) => {
 
         {/* Division labels */}
         <g>
-          {bangladeshDivisions.map((division) => (
+          {displayDivisions.map((division) => (
             <text
               key={`label-${division.id}`}
               x={division.labelX}
@@ -208,7 +211,7 @@ export const BangladeshMap = ({ onHover }) => {
                 transition: "opacity 0.3s ease",
               }}
             >
-              {division.name.toUpperCase()}
+              {t(`division_${division.id}`).toUpperCase()}
             </text>
           ))}
         </g>

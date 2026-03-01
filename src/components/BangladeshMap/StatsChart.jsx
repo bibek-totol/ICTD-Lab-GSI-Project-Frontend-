@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from "react-i18next";
 import {
     BarChart,
     Bar,
@@ -14,34 +15,35 @@ import { bangladeshDivisions } from '../../data/bangladeshDivisions';
 import { FaSchool, FaGraduationCap, FaBook, FaChartBar } from 'react-icons/fa';
 
 export const StatsChart = ({ division }) => {
+    const { t } = useTranslation();
     const activeDivision = division || bangladeshDivisions.find(d => d.id === 'dhaka') || bangladeshDivisions[0];
 
     const data = [
         {
-            name: 'School',
-            institutions: activeDivision.stats.school.institutions,
-            labs: activeDivision.stats.school.labs,
+            name: t("chart_school"),
+            ictdl: activeDivision.stats.school.institutions,
+            sof: activeDivision.stats.school.labs,
             icon: <FaSchool />,
             color: '#10b981'
         },
         {
-            name: 'College',
-            institutions: activeDivision.stats.college.institutions,
-            labs: activeDivision.stats.college.labs,
+            name: t("chart_college"),
+            ictdl: activeDivision.stats.college.institutions,
+            sof: activeDivision.stats.college.labs,
             icon: <FaGraduationCap />,
             color: '#3b82f6'
         },
         {
-            name: 'Madrasha',
-            institutions: activeDivision.stats.madrasha.institutions,
-            labs: activeDivision.stats.madrasha.labs,
+            name: t("chart_madrasha"),
+            ictdl: activeDivision.stats.madrasha.institutions,
+            sof: activeDivision.stats.madrasha.labs,
             icon: <FaBook />,
             color: '#f59e0b'
         },
         {
-            name: 'Total',
-            institutions: activeDivision.stats.total.institutions,
-            labs: activeDivision.stats.total.labs,
+            name: t("chart_total"),
+            ictdl: activeDivision.stats.total.institutions,
+            sof: activeDivision.stats.total.labs,
             icon: <FaChartBar />,
             color: '#ef4444'
         },
@@ -51,14 +53,14 @@ export const StatsChart = ({ division }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-emerald-950/90 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-emerald-500/30 animate-in fade-in zoom-in duration-300">
-                    <p className="text-sm font-bold text-white mb-2 border-b border-emerald-500/20 pb-1">{label} Statistics</p>
+                    <p className="text-sm font-bold text-white mb-2 border-b border-emerald-500/20 pb-1">{label} {t("chart_institutions")}</p>
                     <div className="space-y-1">
                         <p className="text-xs flex items-center justify-between gap-4">
-                            <span className="text-emerald-400 font-medium">Institutions:</span>
+                            <span className="text-emerald-400 font-medium">{t("chart_ictdl_labs")}:</span>
                             <span className="font-bold text-emerald-100">{payload[0].value.toLocaleString()}</span>
                         </p>
                         <p className="text-xs flex items-center justify-between gap-4">
-                            <span className="text-rose-400 font-medium">ICTD Labs:</span>
+                            <span className="text-rose-400 font-medium">{t("chart_sof_labs")}:</span>
                             <span className="font-bold text-emerald-100">{payload[1].value.toLocaleString()}</span>
                         </p>
                     </div>
@@ -77,9 +79,11 @@ export const StatsChart = ({ division }) => {
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <h2 className="text-2xl font-black text-black tracking-tight">
-                            {activeDivision.name} <span className="text-emerald-400">Division</span>
+                            {activeDivision.id === 'bangladesh' ? t("country_bangladesh") : t(`division_${activeDivision.id}`)} <span className="text-emerald-400">{activeDivision.id === 'bangladesh' ? t("chart_national") : t("chart_division")}</span>
                         </h2>
-                        <p className="text-sm text-emerald-400/80 font-medium">Infrastructure & Lab Distribution</p>
+                        <p className="text-sm text-emerald-400/80 font-medium">
+                            {activeDivision.id === 'bangladesh' ? t("chart_overall_distribution") : t("chart_resource_distribution")}
+                        </p>
                     </div>
                     <div className="bg-emerald-500/10 p-3 rounded-2xl">
                         <FaChartBar className="text-emerald-400 text-xl" />
@@ -89,11 +93,11 @@ export const StatsChart = ({ division }) => {
                 {/* Summary Mini Cards */}
                 <div className="grid grid-cols-2 gap-4 mb-8">
                     <div className="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-400 mb-1">Total Institutions</p>
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-400 mb-1">{t("chart_ictdl_labs")}</p>
                         <p className="text-xl font-black text-black">{activeDivision.stats.total.institutions.toLocaleString()}</p>
                     </div>
                     <div className="bg-rose-500/10 p-4 rounded-2xl border border-rose-500/20">
-                        <p className="text-[10px] uppercase tracking-wider font-bold text-rose-400 mb-1">Total ICTD Labs</p>
+                        <p className="text-[10px] uppercase tracking-wider font-bold text-rose-400 mb-1">{t("chart_sof_labs")}</p>
                         <p className="text-xl font-black text-black">{activeDivision.stats.total.labs.toLocaleString()}</p>
                     </div>
                 </div>
@@ -111,42 +115,42 @@ export const StatsChart = ({ division }) => {
                             dataKey="name"
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#a7f3d0', fontSize: 11, fontWeight: 700 }}
+                            tick={{ fill: '#064e3b', fontSize: 11, fontWeight: 700 }}
                             dy={10}
                         />
                         <YAxis
                             axisLine={false}
                             tickLine={false}
-                            tick={{ fill: '#6ee7b7', fontSize: 10 }}
+                            tick={{ fill: '#059669', fontSize: 10 }}
                         />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(16, 185, 129, 0.1)', radius: 12 }} />
                         <Legend
                             verticalAlign="top"
                             align="right"
                             iconType="circle"
-                            wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px', fontSize: '11px', fontWeight: 700, color: '#d1fae5' }}
+                            wrapperStyle={{ paddingTop: '0px', paddingBottom: '20px', fontSize: '11px', fontWeight: 700, color: '#065f46' }}
                         />
 
                         <Bar
-                            dataKey="institutions"
-                            name="Institutions"
+                            dataKey="ictdl"
+                            name={t("chart_ictdl_labs")}
                             fill="#34d399"
                             radius={[6, 6, 0, 0]}
                             barSize={32}
                             animationDuration={1500}
                         >
-                            <LabelList dataKey="institutions" position="top" style={{ fill: '#34d399', fontSize: 10, fontWeight: 800 }} offset={8} />
+                            <LabelList dataKey="ictdl" position="top" style={{ fill: '#059669', fontSize: 10, fontWeight: 800 }} offset={8} />
                         </Bar>
 
                         <Bar
-                            dataKey="labs"
-                            name="SRDL Labs"
+                            dataKey="sof"
+                            name={t("chart_sof_labs")}
                             fill="#fb7185"
                             radius={[6, 6, 0, 0]}
                             barSize={32}
                             animationDuration={2000}
                         >
-                            <LabelList dataKey="labs" position="top" style={{ fill: '#fb7185', fontSize: 10, fontWeight: 800 }} offset={8} />
+                            <LabelList dataKey="sof" position="top" style={{ fill: '#e11d48', fontSize: 10, fontWeight: 800 }} offset={8} />
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
