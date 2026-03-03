@@ -1,4 +1,5 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
+import axios from "axios";
 import { useTranslation } from "react-i18next";
 import {
   FiMenu,
@@ -16,12 +17,71 @@ import { Link, useLocation } from "react-router";
 import { AuthContext } from "../../contexts/AuthContext";
 import { useLanguage } from "../../contexts/LanguageContext";
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 const Navbar = () => {
   const { language, toggleLanguage } = useLanguage();
   const { t } = useTranslation();
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
+
+  const getFileUrl = (fileUrl) => {
+    if (!fileUrl) return null;
+    // For PDFs, use direct proxy endpoint to display inline
+    if (fileUrl.toLowerCase().includes(".pdf")) {
+      return `${API}/files/pdf?url=${encodeURIComponent(fileUrl)}`;
+    }
+    // For images, use direct URL
+    return fileUrl;
+  };
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await axios.get(`${API}/announcements/active`);
+        if (res.data.success && res.data.data.length > 0) {
+          setAnnouncements(res.data.data);
+        } else {
+          // Fallback static announcements if none in DB
+          setAnnouncements([
+            {
+              title:
+                "📍 বাংলাদেশের ৮টি বিভাগে ৯,০০১+ আইসিটি ল্যাব স্থাপিত হয়েছে",
+            },
+            { title: "🎓 ৩০,০০০+ শিক্ষার্থী আইসিটি শিক্ষায় উপকৃত হচ্ছেন" },
+            {
+              title:
+                "🗺️ জিওস্পেশিয়াল ডেটা সংগ্রহ ও ভিজুয়ালাইজেশন প্ল্যাটফর্ম",
+            },
+            {
+              title:
+                "💻 শিক্ষা প্রতিষ্ঠানে ডিজিটাল রূপান্তর ত্বরান্বিত করা হচ্ছে",
+            },
+            {
+              title: "📊 রিয়েল-টাইম ল্যাব মনিটরিং ও ডেটা ম্যানেজমেন্ট সিস্টেম",
+            },
+            {
+              title:
+                "🌐 স্থানীয় উন্নয়ন পরিকল্পনা ও দুর্যোগ ব্যবস্থাপনায় সহায়তা",
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch announcements", err);
+        // Fallback
+        setAnnouncements([
+          {
+            title:
+              "📍 বাংলাদেশের ৮টি বিভাগে ৯,০০১+ আইসিটি ল্যাব স্থাপিত হয়েছে",
+          },
+          { title: "🎓 ৩০,০০০+ শিক্ষার্থী আইসিটি শিক্ষায় উপকৃত হচ্ছেন" },
+        ]);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
 
   const navItems = [
     { icon: <FiHome />, label: t("home"), href: "/" },
@@ -32,17 +92,6 @@ const Navbar = () => {
     // { icon: <FiInfo />, label: t("Dashboard"), href: "/dashboard" },
   ];
 
-  // Marquee announcements - contextually relevant to ICTD Lab GSI Project
-  const announcements = [
-    "📍 বাংলাদেশের ৮টি বিভাগে ৯,০০১+ আইসিটি ল্যাব স্থাপিত হয়েছে",
-    "🎓 ৩০,০০০+ শিক্ষার্থী আইসিটি শিক্ষায় উপকৃত হচ্ছেন",
-    "🗺️ জিওস্পেশিয়াল ডেটা সংগ্রহ ও ভিজুয়ালাইজেশন প্ল্যাটফর্ম",
-    "💻 শিক্ষা প্রতিষ্ঠানে ডিজিটাল রূপান্তর ত্বরান্বিত করা হচ্ছে",
-    "📊 রিয়েল-টাইম ল্যাব মনিটরিং ও ডেটা ম্যানেজমেন্ট সিস্টেম",
-    "🌐 স্থানীয় উন্নয়ন পরিকল্পনা ও দুর্যোগ ব্যবস্থাপনায় সহায়তা",
-    "✉️ যোগাযোগ: info@ictd-lab.gov.bd | ☎️ হেল্পলাইন: +880-2-9898989",
-  ];
-
   return (
     <header className="bg-white/90 backdrop-blur-md border-b border-emerald-100 fixed w-full z-50 shadow-sm">
       {/* Running Marquee Banner */}
@@ -50,39 +99,74 @@ const Navbar = () => {
         {/* Decorative pattern overlay */}
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]" />
 
-        <div className="relative flex items-center">
+        <div className="relative flex items-center h-8">
           {/* Announcement Icon */}
-          <div className="flex-shrink-0 px-4 flex items-center gap-2 bg-white/80 py-1 rounded-r-full border border-emerald-200 border-l-0 shadow-sm">
-            <FiBell className="text-red-500 animate-pulse" size={18} />
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+          <div className="flex-shrink-0 px-4 flex items-center gap-2 bg-white/80 py-1.5 rounded-r-full border border-emerald-200 border-l-0 shadow-sm z-10 h-full">
+            <FiBell
+              className="text-red-500 animate-pulse flex-shrink-0"
+              size={18}
+            />
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 whitespace-nowrap">
               {t("latest_updates")}
             </span>
           </div>
 
           {/* Marquee Content */}
-          <div className="flex-1 overflow-hidden">
-            <div className="animate-marquee whitespace-nowrap inline-block">
-              {announcements.map((announcement, index) => (
-                <span key={index} className="inline-flex items-center mx-8">
-                  <span className="text-sm font-medium text-emerald-800">
-                    {announcement}
-                  </span>
-                  {index < announcements.length - 1 && (
-                    <span className="mx-8 text-red-400">●</span>
+          <div className="flex-1 overflow-hidden h-full flex items-center">
+            <div
+              className={`animate-marquee whitespace-nowrap inline-flex items-center ${announcements.length === 0 ? "opacity-0" : "opacity-100"}`}
+            >
+              {announcements.map((ann, index) => (
+                <span
+                  key={`a-${index}`}
+                  className="inline-flex items-center mx-6"
+                >
+                  {ann.fileUrl ? (
+                    <a
+                      href={getFileUrl(ann.fileUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-emerald-800 hover:text-blue-600 hover:underline inline-flex items-center gap-1.5 whitespace-nowrap transition-colors duration-200 group"
+                      title="Click to view attachment"
+                    >
+                      <span className="inline-block">{ann.title}</span>
+                      <FiTarget
+                        className="text-blue-500 flex-shrink-0 group-hover:scale-110 transition-transform"
+                        size={13}
+                      />
+                    </a>
+                  ) : (
+                    <span className="text-sm font-medium text-emerald-800 inline-block whitespace-nowrap">
+                      {ann.title}
+                    </span>
                   )}
+                  <span className="mx-6 text-red-400">●</span>
                 </span>
               ))}
               {/* Duplicate for seamless loop */}
-              {announcements.map((announcement, index) => (
+              {announcements.map((ann, index) => (
                 <span
                   key={`dup-${index}`}
-                  className="inline-flex items-center mx-8"
+                  className="inline-flex items-center mx-6"
                 >
-                  <span className="text-sm font-medium text-emerald-800">
-                    {announcement}
-                  </span>
-                  {index < announcements.length - 1 && (
-                    <span className="mx-8 text-red-400">●</span>
+                  {ann.fileUrl ? (
+                    <a
+                      href={getFileUrl(ann.fileUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-emerald-800 hover:text-blue-600 hover:underline inline-flex items-center gap-1.5 whitespace-nowrap transition-colors duration-200 group"
+                      title="Click to view attachment"
+                    >
+                      <span className="inline-block">{ann.title}</span>
+                      <FiTarget
+                        className="text-blue-500 flex-shrink-0 group-hover:scale-110 transition-transform"
+                        size={13}
+                      />
+                    </a>
+                  ) : (
+                    <span className="text-sm font-medium text-emerald-800 inline-block whitespace-nowrap">
+                      {ann.title}
+                    </span>
                   )}
                 </span>
               ))}
@@ -247,10 +331,19 @@ const Navbar = () => {
         
         .animate-marquee {
           animation: marquee 60s linear infinite;
+          display: inline-flex;
+          align-items: center;
         }
         
         .animate-marquee:hover {
           animation-play-state: paused;
+        }
+        
+        /* Ensure single line display */
+        .animate-marquee * {
+          white-space: nowrap !important;
+          display: inline-flex;
+          align-items: center;
         }
       `}</style>
     </header>

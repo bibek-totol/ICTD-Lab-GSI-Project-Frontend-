@@ -13,8 +13,21 @@ const fetchNotices = async () => {
   return res.json();
 };
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 const Notice = () => {
   const { t } = useTranslation();
+
+  // Helper function to get the correct URL for files
+  const getFileUrl = (fileUrl) => {
+    if (!fileUrl) return null;
+    // For PDFs, use direct proxy endpoint to display inline
+    if (fileUrl.toLowerCase().includes(".pdf")) {
+      return `${API}/files/pdf?url=${encodeURIComponent(fileUrl)}`;
+    }
+    // For images, use direct URL
+    return fileUrl;
+  };
 
   const { data: notices = [], isLoading } = useQuery({
     queryKey: ["latest-notices"],
@@ -128,13 +141,13 @@ const Notice = () => {
 
                 {/* Download */}
                 <a
-                  href={notice.file}
+                  href={getFileUrl(notice.file)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Download notice"
+                  aria-label="View notice"
                   className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-400 hover:bg-emerald-600 hover:text-white transition"
                 >
-                  <FaDownload className="text-xs" />
+                  <FaFilePdf className="text-xs" />
                 </a>
               </div>
             ))

@@ -122,6 +122,7 @@ const DashboardLayout = () => {
           { path: "/dashboard/add-user", name: t("add_admin") },
           { path: "/dashboard/manage-user", name: t("manage_admins") },
           { path: "/dashboard/manage-lab-admin", name: t("manage_lab_admins") },
+          { path: "/dashboard/manage-announcement", name: t("manage_announcements") },
         ],
       },
     ];

@@ -16,12 +16,25 @@ const fetchNotices = async () => {
   return res.json();
 };
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 const AllNotice = () => {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [entries, setEntries] = useState(10);
   const [page, setPage] = useState(1);
   const [showToast, setShowToast] = useState(false);
+
+  // Helper function to get the correct URL for files
+  const getFileUrl = (fileUrl) => {
+    if (!fileUrl) return null;
+    // For PDFs, use direct proxy endpoint to display inline
+    if (fileUrl.toLowerCase().includes(".pdf")) {
+      return `${API}/files/pdf?url=${encodeURIComponent(fileUrl)}`;
+    }
+    // For images, use direct URL
+    return fileUrl;
+  };
 
   const {
     data: notices = [],
@@ -158,12 +171,12 @@ const AllNotice = () => {
                     <td className="px-4 py-3 text-emerald-600 text-sm">{notice.date}</td>
                     <td className="px-4 py-3 text-center">
                       <a
-                        href={notice.file}
+                        href={getFileUrl(notice.file)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white transition shadow-sm bg-white"
                       >
-                        <FaDownload className="text-sm" />
+                        <FaFilePdf className="text-sm" />
                       </a>
                     </td>
                   </tr>

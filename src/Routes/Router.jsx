@@ -29,6 +29,7 @@ import ICTDLabs from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLabs";
 import ICTDLUpdate from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLUpdate/ICTDLUpdate";
 import ManageUser from "../Pages/Dashboard/user_control/manege_user/ManageUser";
 import ManageLabAdmin from "../Pages/Dashboard/user_control/manage_lab_admin/ManageLabAdmin";
+import ManageAnnouncement from "../Pages/Dashboard/ManageAnnouncement/ManageAnnouncement";
 
 const router = createBrowserRouter([
   {
@@ -152,6 +153,14 @@ const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ManageLabAdmin />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: "manage-announcement",
+        element: (
+          <SuperAdminRoute>
+            <ManageAnnouncement />
           </SuperAdminRoute>
         ),
       },
