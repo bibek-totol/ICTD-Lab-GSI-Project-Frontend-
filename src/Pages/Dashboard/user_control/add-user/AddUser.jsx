@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { FaUserPlus } from "react-icons/fa";
+import { FaUserPlus, FaCheckCircle, FaTimesCircle, FaSpinner } from "react-icons/fa";
 import { GrPowerReset } from "react-icons/gr";
 import { motion } from "framer-motion";
 
@@ -30,6 +30,10 @@ const AddUser = () => {
   });
 
   const [submitting, setSubmitting] = useState(false);
+  const [emailError, setEmailError] = useState(""); // inline email error
+  const [emailAvailable, setEmailAvailable] = useState(false); // green tick
+  const [checkingEmail, setCheckingEmail] = useState(false); // spinner
+  const emailCheckTimer = useRef(null);
   const [divisions, setDivisions] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [upazilas, setUpazilas] = useState([]);
@@ -53,6 +57,44 @@ const AddUser = () => {
 
   const handleReset = () => {
     setForm({ userName: "", designation: "", email: "", role: "", phone: "", division: "", district: "", upazila: "" });
+    setEmailError("");
+    setEmailAvailable(false);
+  };
+
+  // Check if email already exists in the database (called on blur)
+  const handleEmailBlur = async () => {
+    const email = form.email.trim().toLowerCase();
+    // Basic validation first
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("");
+      setEmailAvailable(false);
+      return;
+    }
+
+    setCheckingEmail(true);
+    setEmailError("");
+    setEmailAvailable(false);
+    try {
+      // We fetch all users and check client-side to avoid a dedicated endpoint
+      const res = await axios.get(`${API}/users/manage`, { withCredentials: true });
+      if (res.data.success) {
+        const exists = res.data.data.some(
+          (u) => u.email?.toLowerCase() === email
+        );
+        if (exists) {
+          setEmailError("This email is already registered in the system.");
+          setEmailAvailable(false);
+        } else {
+          setEmailError("");
+          setEmailAvailable(true);
+        }
+      }
+    } catch (err) {
+      // If we can't check, silently allow — backend will reject duplicates anyway
+      setEmailError("");
+    } finally {
+      setCheckingEmail(false);
+    }
   };
 
   // Determine if jurisdiction fields are required based on role
@@ -62,6 +104,12 @@ const AddUser = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Block submission if duplicate email detected
+    if (emailError) {
+      toast.error("Please fix the email error before submitting.");
+      return;
+    }
 
     if (!form.role) {
       toast.error("Role is required");
@@ -107,6 +155,11 @@ const AddUser = () => {
       }
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to create admin";
+      // If the backend also catches a duplicate (race condition), show inline error
+      if (err.response?.status === 409) {
+        setEmailError(msg);
+        setEmailAvailable(false);
+      }
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -152,15 +205,48 @@ const AddUser = () => {
             {/* Email */}
             <div>
               <label className="text-xs font-semibold text-emerald-700">Email <span className="text-red-500">*</span></label>
-              <input
-                type="email"
-                className={baseInput}
-                placeholder="Enter email address"
-                required
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  className={`${baseInput} ${emailError ? "border-red-400 focus:border-red-500 focus:ring-red-300 pr-10" : emailAvailable ? "border-emerald-500 pr-10" : "pr-10"}`}
+                  placeholder="Enter email address"
+                  required
+                  value={form.email}
+                  onChange={e => {
+                    setForm({ ...form, email: e.target.value });
+                    setEmailError("");
+                    setEmailAvailable(false);
+                  }}
+                  onBlur={handleEmailBlur}
+                />
+                {/* Status icon */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {checkingEmail && (
+                    <FaSpinner className="animate-spin text-emerald-400" size={16} />
+                  )}
+                  {!checkingEmail && emailAvailable && (
+                    <FaCheckCircle className="text-emerald-500" size={16} title="Email is available" />
+                  )}
+                  {!checkingEmail && emailError && (
+                    <FaTimesCircle className="text-red-500" size={16} title="Email already taken" />
+                  )}
+                </div>
+              </div>
+              {/* Inline error message */}
+              {emailError && (
+                <p className="mt-1.5 text-xs font-medium text-red-600 flex items-center gap-1.5">
+                  <FaTimesCircle size={11} />
+                  {emailError}
+                </p>
+              )}
+              {emailAvailable && (
+                <p className="mt-1.5 text-xs font-medium text-emerald-600 flex items-center gap-1.5">
+                  <FaCheckCircle size={11} />
+                  Email is available
+                </p>
+              )}
             </div>
+
 
 
             {/* Role */}
@@ -280,8 +366,11 @@ const AddUser = () => {
             </button>
             <button
               type="submit"
-              disabled={submitting}
-              className="px-10 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-70 text-white rounded-xl font-semibold flex items-center gap-2"
+              disabled={submitting || !!emailError || checkingEmail}
+              className={`px-10 py-3 disabled:opacity-70 text-white rounded-xl font-semibold flex items-center gap-2 transition-all ${emailError
+                  ? "bg-red-400 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-700"
+                }`}
             >
               {submitting ? (
                 <><span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" /> Creating...</>

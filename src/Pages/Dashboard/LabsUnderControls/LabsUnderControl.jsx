@@ -46,33 +46,42 @@ const LabsUnderControl = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentLab, setCurrentLab] = useState(null);
 
-  // Fetch filter options on mount
-  useEffect(() => {
-    const fetchFilterOptions = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE_URL}/labs/filter-options`, {
-          headers: {
-            "Authorization": token ? `Bearer ${token}` : "",
-          },
-        });
-        const result = await response.json();
+  // Fetch filter options dynamically
+  const fetchFilterOptions = async (queryDivision = null, queryDistrict = null) => {
+    try {
+      const token = localStorage.getItem("token");
+      const params = new URLSearchParams();
+      if (queryDivision && queryDivision !== "All") params.append("division", queryDivision);
+      if (queryDistrict && queryDistrict !== "All") params.append("district", queryDistrict);
 
-        if (result.success) {
-          setFilterOptions({
-            divisions: result.data.divisions || [],
-            districts: result.data.districts || [],
-            upazilas: result.data.upazilas || [],
-            labTypes: result.data.labTypes || [],
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching filter options:", error);
+      const response = await fetch(`${API_BASE_URL}/labs/filter-options?${params.toString()}`, {
+        headers: {
+          "Authorization": token ? `Bearer ${token}` : "",
+        },
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        setFilterOptions(result.data);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+    }
+  };
 
-    fetchFilterOptions();
-  }, []);
+  useEffect(() => {
+    // Initial fetch with current/locked jurisdictions
+    fetchFilterOptions(lockedDivision, lockedDistrict);
+  }, [lockedDivision, lockedDistrict]);
+
+  // Re-fetch options when selection changes
+  useEffect(() => {
+    if (filters.division !== "All" || filters.district !== "All") {
+      fetchFilterOptions(filters.division, filters.district);
+    } else {
+      fetchFilterOptions(lockedDivision, lockedDistrict);
+    }
+  }, [filters.division, filters.district]);
 
   // Fetch labs data
   useEffect(() => {
@@ -363,8 +372,8 @@ const LabsUnderControl = () => {
               </div>
             )}
 
-            {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
-            {(isSuperAdmin || isDivisionAdmin) && (
+            {/* Upazila - Show for SuperAdmin, DivisionAdmin AND DistrictAdmin */}
+            {(isSuperAdmin || isDivisionAdmin || isDistrictAdmin) && (
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                   উপজেলা (Upazila)
@@ -655,6 +664,7 @@ const LabsUnderControl = () => {
             onClose={handleCloseModal}
             instituteName={currentLab.institute}
             labId={currentLab.id}
+            labType="sof"
           />
         </div>
       )}

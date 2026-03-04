@@ -9,6 +9,8 @@ import { Link } from "react-router";
 import { toast } from "react-hot-toast";
 import { AuthContext } from "../../../../contexts/AuthContext";
 import api from "../../../../services/api";
+import { FaBookOpen } from "react-icons/fa";
+import ReportForm from "../ReportForm/ReportForm";
 
 const ICTDLabs = () => {
     const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isLabAdmin, userDivision, userDistrict, userUpazila, user } = useContext(AuthContext);
@@ -23,6 +25,8 @@ const ICTDLabs = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentLab, setCurrentLab] = useState(null);
     const [filters, setFilters] = useState({
         division: lockedDivision || "All",
         district: lockedDistrict || "All",
@@ -33,16 +37,29 @@ const ICTDLabs = () => {
     const entriesPerPage = 25;
 
     useEffect(() => {
-        fetchFilterOptions();
-    }, []);
+        fetchFilterOptions(lockedDivision, lockedDistrict);
+    }, [lockedDivision, lockedDistrict]);
+
+    // Re-fetch options when selection changes
+    useEffect(() => {
+        if (filters.division !== "All" || filters.district !== "All") {
+            fetchFilterOptions(filters.division, filters.district);
+        } else {
+            fetchFilterOptions(lockedDivision, lockedDistrict);
+        }
+    }, [filters.division, filters.district]);
 
     useEffect(() => {
         fetchLabs();
     }, [currentPage, filters, searchTerm]);
 
-    const fetchFilterOptions = async () => {
+    const fetchFilterOptions = async (queryDivision = null, queryDistrict = null) => {
         try {
-            const { data: result } = await api.get(`/ictdl/filter-options`);
+            const params = {};
+            if (queryDivision && queryDivision !== "All") params.division = queryDivision;
+            if (queryDistrict && queryDistrict !== "All") params.district = queryDistrict;
+
+            const { data: result } = await api.get(`/ictdl/filter-options`, { params });
             if (result.success) {
                 setFilterOptions({
                     divisions: result.data.divisions || [],
@@ -53,6 +70,16 @@ const ICTDLabs = () => {
         } catch (error) {
             console.error("Error fetching filter options:", error);
         }
+    };
+
+    const handleOpenModal = (lab) => {
+        setCurrentLab(lab);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setCurrentLab(null);
     };
 
     const fetchLabs = async () => {
@@ -161,8 +188,8 @@ const ICTDLabs = () => {
                                 </select>
                             </div>
                         )}
-                        {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
-                        {(isSuperAdmin || isDivisionAdmin) && (
+                        {/* Upazila - Show for SuperAdmin, DivisionAdmin and DistrictAdmin */}
+                        {(isSuperAdmin || isDivisionAdmin || isDistrictAdmin) && (
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা (Upazila)</label>
                                 <select
@@ -249,6 +276,13 @@ const ICTDLabs = () => {
                                                     >
                                                         <HiOutlinePencil className="w-5 h-5" />
                                                     </Link>
+                                                    <button
+                                                        onClick={() => handleOpenModal(lab)}
+                                                        className="cursor-pointer hover:scale-110 flex items-center gap-2 px-3 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm"
+                                                        title="Send Report"
+                                                    >
+                                                        <FaBookOpen className="w-5 h-5" />
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -308,6 +342,18 @@ const ICTDLabs = () => {
                     </div>
                 )}
             </div>
+
+            {/* Report Modal */}
+            {isModalOpen && currentLab && (
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm print:hidden">
+                    <ReportForm
+                        onClose={handleCloseModal}
+                        instituteName={currentLab.institute}
+                        labId={currentLab.id}
+                        labType="ictdl"
+                    />
+                </div>
+            )}
         </div>
     );
 };

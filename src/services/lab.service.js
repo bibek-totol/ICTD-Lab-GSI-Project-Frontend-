@@ -12,9 +12,21 @@ const getUnifiedLabs = async () => {
     return response.data;
 };
 
+const getFilterOptions = async (params) => {
+    const response = await axios.get(`${API_URL}/filter-options`, { params });
+    return response.data;
+};
+
+const getUnifiedFilterOptions = async (params) => {
+    const response = await axios.get(`${API_URL}/unified-filter-options`, { params });
+    return response.data;
+};
+
 const LabService = {
     getLabs,
     getUnifiedLabs,
+    getFilterOptions,
+    getUnifiedFilterOptions,
 };
 
 export default LabService;

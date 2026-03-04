@@ -34,9 +34,9 @@ const Complaints = () => {
   const lockedUpazila = (isUpazilaAdmin) ? (userUpazila || null) : null;
 
   const initialFilters = {
-    division: lockedDivision || "",
-    district: lockedDistrict || "",
-    upazila: lockedUpazila || "",
+    division: lockedDivision || "All",
+    district: lockedDistrict || "All",
+    upazila: lockedUpazila || "All",
     category: "",
     status: "",
     priority: "",
@@ -51,9 +51,9 @@ const Complaints = () => {
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const initialFormState = {
-    division: lockedDivision || "",
-    district: lockedDistrict || "",
-    upazila: lockedUpazila || "",
+    division: lockedDivision || "All",
+    district: lockedDistrict || "All",
+    upazila: lockedUpazila || "All",
     institute: "",
     category: "Equipment",
     subject: "",
@@ -73,8 +73,44 @@ const Complaints = () => {
 
   const [filters, setFilters] = useState(initialFilters);
 
+  const [filterOptions, setFilterOptions] = useState({
+    divisions: [],
+    districts: [],
+    upazilas: [],
+  });
+
   const [labSearch, setLabSearch] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Fetch filter options dynamically
+  const fetchFilterOptions = async (queryDivision = null, queryDistrict = null) => {
+    try {
+      const params = {};
+      if (queryDivision && queryDivision !== "All" && queryDivision !== "") params.division = queryDivision;
+      if (queryDistrict && queryDistrict !== "All" && queryDistrict !== "") params.district = queryDistrict;
+
+      const result = await LabService.getUnifiedFilterOptions(params);
+      if (result.success) {
+        setFilterOptions(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Initial fetch with current/locked jurisdictions
+    fetchFilterOptions(lockedDivision, lockedDistrict);
+  }, [lockedDivision, lockedDistrict]);
+
+  // Re-fetch options when selection changes
+  useEffect(() => {
+    if ((filters.division && filters.division !== "All") || (filters.district && filters.district !== "All")) {
+      fetchFilterOptions(filters.division, filters.district);
+    } else {
+      fetchFilterOptions(lockedDivision, lockedDistrict);
+    }
+  }, [filters.division, filters.district]);
 
   // Load data from backend
   const fetchComplaints = async () => {
@@ -280,15 +316,15 @@ const Complaints = () => {
         ? item.priority === filters.priority
         : true;
 
-      const matchesDivision = filters.division
+      const matchesDivision = filters.division && filters.division !== "All"
         ? item.division === filters.division
         : true;
 
-      const matchesDistrict = filters.district
-        ? item.district === filters.district
+      const matchesDistrict = filters.district && filters.district !== "All"
+        ? item.district === filters.district || (item.district === "N/A" && filters.district === "All")
         : true;
 
-      const matchesUpazila = filters.upazila
+      const matchesUpazila = filters.upazila && filters.upazila !== "All"
         ? item.upazila === filters.upazila
         : true;
 
@@ -304,14 +340,14 @@ const Complaints = () => {
     });
   }, [search, filters, data]);
 
-  // Dynamic filter options based on data
-  const filterOptions = useMemo(() => {
-    return {
-      divisions: [...new Set(data.map(item => item.division).filter(Boolean))].sort(),
-      districts: [...new Set(data.map(item => item.district).filter(Boolean))].sort(),
-      upazilas: [...new Set(data.map(item => item.upazila).filter(Boolean))].sort(),
-    };
-  }, [data]);
+  // Dynamic filter options based on data (Deprecated - now using fetchFilterOptions)
+  // const filterOptions = useMemo(() => {
+  //   return {
+  //     divisions: [...new Set(data.map(item => item.division).filter(Boolean))].sort(),
+  //     districts: [...new Set(data.map(item => item.district).filter(Boolean))].sort(),
+  //     upazilas: [...new Set(data.map(item => item.upazila).filter(Boolean))].sort(),
+  //   };
+  // }, [data]);
 
   const filteredLabs = useMemo(() => {
     if (!labSearch) return labs.slice(0, 100);
@@ -520,17 +556,17 @@ const Complaints = () => {
           {/* Division - Only show for SuperAdmin */}
           {isSuperAdmin && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-                <FaFilter size={10} /> Division
+              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide flex items-center gap-1">
+                বিভাগ (Division)
               </label>
               <select
                 value={filters.division}
                 onChange={(e) =>
-                  setFilters({ ...filters, division: e.target.value, district: "", upazila: "" })
+                  setFilters({ ...filters, division: e.target.value, district: "All", upazila: "All" })
                 }
                 className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
               >
-                <option value="">All Divisions</option>
+                <option value="All">সকল বিভাগ (All Divisions)</option>
                 {filterOptions.divisions.map((div) => (
                   <option key={div} value={div}>{div}</option>
                 ))}
@@ -541,17 +577,17 @@ const Complaints = () => {
           {/* District - Show for SuperAdmin and DivisionAdmin */}
           {(isSuperAdmin || isDivisionAdmin) && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-                <FaFilter size={10} /> District
+              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide flex items-center gap-1">
+                জেলা (District)
               </label>
               <select
                 value={filters.district}
                 onChange={(e) =>
-                  setFilters({ ...filters, district: e.target.value, upazila: "" })
+                  setFilters({ ...filters, district: e.target.value, upazila: "All" })
                 }
                 className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
               >
-                <option value="">All Districts</option>
+                <option value="All">সকল জেলা (All Districts)</option>
                 {filterOptions.districts.map((dist) => (
                   <option key={dist} value={dist}>{dist}</option>
                 ))}
@@ -559,11 +595,11 @@ const Complaints = () => {
             </div>
           )}
 
-          {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
-          {(isSuperAdmin || isDivisionAdmin) && (
+          {/* Upazila - Show for SuperAdmin, DivisionAdmin and DistrictAdmin */}
+          {(isSuperAdmin || isDivisionAdmin || isDistrictAdmin) && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-                <FaFilter size={10} /> Upazila
+              <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide flex items-center gap-1">
+                উপজেলা (Upazila)
               </label>
               <select
                 value={filters.upazila}
@@ -572,7 +608,7 @@ const Complaints = () => {
                 }
                 className="w-full px-3 py-2 bg-white border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900 outline-none hover:border-emerald-400"
               >
-                <option value="">All Upazilas</option>
+                <option value="All">সকল উপজেলা (All Upazilas)</option>
                 {filterOptions.upazilas.map((upz) => (
                   <option key={upz} value={upz}>{upz}</option>
                 ))}
@@ -892,8 +928,8 @@ const Complaints = () => {
                                           setFormData({
                                             ...formData,
                                             institute: lab.institute || "",
-                                            division: isICTDL ? "N/A" : (lab.division || ""),
-                                            district: isSRDSOF ? "N/A" : (lab.district || ""),
+                                            division: lab.division || "N/A",
+                                            district: lab.district || "N/A",
                                             upazila: lab.upazila || "N/A",
                                             labType: lab.type || "",
                                           });

@@ -13,7 +13,7 @@ import { GiRobotGolem } from "react-icons/gi";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const ReportForm = ({ onClose, instituteName, labId }) => {
+const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -30,6 +30,7 @@ const ReportForm = ({ onClose, instituteName, labId }) => {
 
       // Append basic data
       formData.append("labId", labId);
+      formData.append("labType", labType);
       formData.append("basicRobotics", parseInt(data.basicRobotics) || 0);
       formData.append("advancedRobotics", parseInt(data.advancedRobotics) || 0);
       formData.append("3dPrinter", parseInt(data["3dPrinter"]) || 0);

@@ -14,6 +14,7 @@ import {
 import { FaFileExcel } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { AuthContext } from "../../../contexts/AuthContext";
+import LabService from "../../../services/lab.service";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -47,31 +48,36 @@ const SendReport = () => {
     const [selectedReport, setSelectedReport] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Fetch filter options on mount
-    useEffect(() => {
-        const fetchFilterOptions = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                const response = await fetch(`${API_BASE_URL}/labs/filter-options`, {
-                    headers: { "Authorization": token ? `Bearer ${token}` : "" }
-                });
-                const result = await response.json();
+    // Fetch filter options dynamically
+    const fetchFilterOptions = async (queryDivision = null, queryDistrict = null) => {
+        try {
+            const params = {};
+            if (queryDivision && queryDivision !== "All") params.division = queryDivision;
+            if (queryDistrict && queryDistrict !== "All") params.district = queryDistrict;
 
-                if (result.success) {
-                    setFilterOptions({
-                        divisions: result.data.divisions || [],
-                        districts: result.data.districts || [],
-                        upazilas: result.data.upazilas || [],
-                        labTypes: result.data.labTypes || [],
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching filter options:", error);
+            const result = await LabService.getUnifiedFilterOptions(params);
+
+            if (result.success) {
+                setFilterOptions(result.data);
             }
-        };
+        } catch (error) {
+            console.error("Error fetching filter options:", error);
+        }
+    };
 
-        fetchFilterOptions();
-    }, []);
+    useEffect(() => {
+        // Initial fetch with current/locked jurisdictions
+        fetchFilterOptions(lockedDivision, lockedDistrict);
+    }, [lockedDivision, lockedDistrict]);
+
+    // Re-fetch options when selection changes
+    useEffect(() => {
+        if (filters.division !== "All" || filters.district !== "All") {
+            fetchFilterOptions(filters.division, filters.district);
+        } else {
+            fetchFilterOptions(lockedDivision, lockedDistrict);
+        }
+    }, [filters.division, filters.district]);
 
     // Fetch reports data
     useEffect(() => {
@@ -174,7 +180,7 @@ const SendReport = () => {
 
         // Export Logic
         const exportData = reportsData.map((report) => ({
-            "Lab Type": report.labType === "sof" ? "SOF" : "ICTDL & SOF",
+            "Lab Type": report.labType === "sof" ? "SOF" : report.labType === "ictdl" ? "ICTDL" : "ICTDL & SOF",
             Institute: report.institute,
             Division: report.division,
             District: report.district, // Added District to export
@@ -428,8 +434,8 @@ const SendReport = () => {
                             </div>
                         )}
 
-                        {/* Upazila - Show for SuperAdmin and DivisionAdmin only (Hidden for District Admin) */}
-                        {(isSuperAdmin || isDivisionAdmin) && (
+                        {/* Upazila - Show for SuperAdmin, DivisionAdmin and DistrictAdmin */}
+                        {(isSuperAdmin || isDivisionAdmin || isDistrictAdmin) && (
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
                                     উপজেলা (Upazila)
@@ -540,13 +546,13 @@ const SendReport = () => {
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col gap-1">
-                                                    <span
-                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium w-fit ${report.labType === "sof"
-                                                            ? "bg-blue-900/50 text-black border border-blue-500/30"
-                                                            : "bg-purple-900/50 text-black   border border-purple-500/30"
-                                                            }`}
-                                                    >
-                                                        {report.labType === "sof" ? "SOF" : "ICTDL & SOF"}
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${report.labType === "sof"
+                                                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                                        : report.labType === "ictdl"
+                                                            ? "bg-blue-100 text-blue-700 border-blue-200"
+                                                            : "bg-amber-100 text-amber-700 border-amber-200"
+                                                        }`}>
+                                                        {report.labType === "sof" ? "SOF" : report.labType === "ictdl" ? "ICTDL" : "ICTDL & SOF"}
                                                     </span>
                                                     <span className="text-xs text-emerald-400">
                                                         #{startIndex + index + 1}
