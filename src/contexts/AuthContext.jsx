@@ -13,8 +13,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(true);
         await AuthService.logout();
         setUser(null);
-        localStorage.removeItem("user"); // Ensure local storage is cleared
-        localStorage.removeItem("token"); // Ensure token is cleared
+        AuthService.clearAuthStorage(); // Ensure all auth keys (token, user, tokenExpiresAt, LoginPageState) are cleared
         setLoading(false);
     };
 
@@ -25,7 +24,7 @@ export const AuthProvider = ({ children }) => {
             (error) => {
                 if (error.response?.status === 401) {
                     // Unauthorized - token expired or invalid
-                    logout(); // Call the logout function
+                    logout();
                 }
                 return Promise.reject(error);
             }
@@ -33,6 +32,13 @@ export const AuthProvider = ({ children }) => {
 
         const fetchUser = async () => {
             setLoading(true);
+            // Security: if token is past 5h expiry, clear auth and require re-login
+            if (AuthService.clearAuthIfExpired()) {
+                setUser(null);
+                setLoading(false);
+                return;
+            }
+
             const cached = AuthService.getCurrentUser();
             if (cached) {
                 setUser(cached);
@@ -42,19 +48,16 @@ export const AuthProvider = ({ children }) => {
                 const freshUser = await AuthService.getMe();
                 if (freshUser) {
                     setUser(freshUser);
-                    localStorage.setItem("user", JSON.stringify(freshUser));
+                    localStorage.setItem(AuthService.AUTH_STORAGE_KEYS.USER, JSON.stringify(freshUser));
                 } else {
-                    // If backend returns success but no data (shouldn't happen with 401)
                     setUser(null);
-                    localStorage.removeItem("user");
+                    AuthService.clearAuthStorage();
                 }
             } catch (err) {
                 console.error("Auth rehydration failed:", err);
-                // Only clear if we actually get a 401 or 403
                 if (err.response?.status === 401 || err.response?.status === 403) {
                     setUser(null);
-                    localStorage.removeItem("user");
-                    localStorage.removeItem("token");
+                    AuthService.clearAuthStorage();
                 }
             } finally {
                 setLoading(false);
@@ -62,11 +65,18 @@ export const AuthProvider = ({ children }) => {
         };
         fetchUser();
 
-        // Cleanup function to eject the interceptor when the component unmounts
+        // Periodic check: auto-logout when token has exceeded 5h (security)
+        const intervalId = setInterval(() => {
+            if (AuthService.clearAuthIfExpired()) {
+                setUser(null);
+            }
+        }, 60 * 1000); // every 1 minute
+
         return () => {
             api.interceptors.response.eject(interceptor);
+            clearInterval(intervalId);
         };
-    }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
+    }, []);
 
     const login = async (email, password) => {
         const data = await AuthService.login(email, password);

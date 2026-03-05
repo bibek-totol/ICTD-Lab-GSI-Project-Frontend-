@@ -10,13 +10,20 @@ import {
 } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
-const fetchNotices = async () => {
-  const res = await fetch("/notices.json");
-  if (!res.ok) throw new Error("Failed to load notices");
-  return res.json();
-};
-
 const API = import.meta.env.VITE_API_BASE_URL;
+
+const fetchNotices = async () => {
+  const res = await fetch(`${API}/notices/active`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to load notices");
+  const json = await res.json();
+  if (!json.success || !Array.isArray(json.data)) return [];
+  return json.data.map((n) => ({
+    id: n.id,
+    title: n.title,
+    date: new Date(n.createdAt).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" }),
+    file: n.fileUrl,
+  }));
+};
 
 const AllNotice = () => {
   const { t } = useTranslation();
@@ -166,18 +173,27 @@ const AllNotice = () => {
                       {start + index + 1}
                     </td>
                     <td className="px-4 py-3 flex items-center gap-2 text-emerald-900 font-medium">
-                      <FaFilePdf className="text-rose-500" /> {notice.title}
+                      {notice.file && notice.file.toLowerCase().includes(".pdf") ? (
+                        <FaFilePdf className="text-rose-500" />
+                      ) : (
+                        <FaFilePdf className="text-emerald-500" />
+                      )}{" "}
+                      {notice.title}
                     </td>
                     <td className="px-4 py-3 text-emerald-600 text-sm">{notice.date}</td>
                     <td className="px-4 py-3 text-center">
-                      <a
-                        href={getFileUrl(notice.file)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white transition shadow-sm bg-white"
-                      >
-                        <FaFilePdf className="text-sm" />
-                      </a>
+                      {notice.file ? (
+                        <a
+                          href={getFileUrl(notice.file)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white transition shadow-sm bg-white"
+                        >
+                          <FaFilePdf className="text-sm" />
+                        </a>
+                      ) : (
+                        <span className="text-emerald-400 text-xs">—</span>
+                      )}
                     </td>
                   </tr>
                 ))

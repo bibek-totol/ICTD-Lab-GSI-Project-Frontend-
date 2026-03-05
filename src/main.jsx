@@ -11,13 +11,14 @@ import { Toaster } from "react-hot-toast";
 import { LanguageProvider } from "./contexts/LanguageContext.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import axios from "axios";
+import AuthService from "./services/auth.service.js";
 
-// Configure Axios global interceptor for Hybrid Auth (Cookie + Header fallback)
+// Global Axios: attach token only if not expired (5h security); always send language
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (!AuthService.isTokenExpired()) {
+      const token = localStorage.getItem(AuthService.AUTH_STORAGE_KEYS.TOKEN);
+      if (token) config.headers.Authorization = `Bearer ${token}`;
     }
     const lang = localStorage.getItem("appLanguage") || "bn";
     config.headers["Accept-Language"] = lang;

@@ -30,6 +30,7 @@ import ICTDLUpdate from "../Pages/Dashboard/LabsUnderControls/ICTDLabs/ICTDLUpda
 import ManageUser from "../Pages/Dashboard/user_control/manege_user/ManageUser";
 import ManageLabAdmin from "../Pages/Dashboard/user_control/manage_lab_admin/ManageLabAdmin";
 import ManageAnnouncement from "../Pages/Dashboard/ManageAnnouncement/ManageAnnouncement";
+import ManageNotice from "../Pages/Dashboard/ManageNotice/ManageNotice";
 
 const router = createBrowserRouter([
   {
@@ -161,6 +162,14 @@ const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ManageAnnouncement />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: "manage-notice",
+        element: (
+          <SuperAdminRoute>
+            <ManageNotice />
           </SuperAdminRoute>
         ),
       },

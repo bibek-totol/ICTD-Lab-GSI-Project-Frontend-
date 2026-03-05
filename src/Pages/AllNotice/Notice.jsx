@@ -7,13 +7,21 @@ import { FaArrowRight } from "react-icons/fa6";
 
 
 
-const fetchNotices = async () => {
-  const res = await fetch("/notices.json");
-  if (!res.ok) throw new Error("Failed to load notices");
-  return res.json();
-};
-
 const API = import.meta.env.VITE_API_BASE_URL;
+
+const fetchNotices = async () => {
+  const res = await fetch(`${API}/notices/active`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to load notices");
+  const json = await res.json();
+  if (!json.success || !Array.isArray(json.data)) return [];
+  return json.data.map((n) => ({
+    id: n.id,
+    title: n.title,
+    createdAt: n.createdAt,
+    date: new Date(n.createdAt).toLocaleDateString("en-BD", { year: "numeric", month: "short", day: "numeric" }),
+    file: n.fileUrl,
+  }));
+};
 
 const Notice = () => {
   const { t } = useTranslation();
@@ -36,7 +44,7 @@ const Notice = () => {
   });
 
   const latestNotices = [...notices]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
     .slice(0, 4);
 
 
@@ -139,16 +147,20 @@ const Notice = () => {
                   </p>
                 </div>
 
-                {/* Download */}
-                <a
-                  href={getFileUrl(notice.file)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="View notice"
-                  className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-400 hover:bg-emerald-600 hover:text-white transition"
-                >
-                  <FaFilePdf className="text-xs" />
-                </a>
+                {/* Download / View */}
+                {notice.file ? (
+                  <a
+                    href={getFileUrl(notice.file)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="View notice"
+                    className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-400 hover:bg-emerald-600 hover:text-white transition"
+                  >
+                    <FaFilePdf className="text-xs" />
+                  </a>
+                ) : (
+                  <span className="w-9 h-9 flex items-center justify-center rounded-full text-emerald-200" aria-hidden>—</span>
+                )}
               </div>
             ))
           )}
