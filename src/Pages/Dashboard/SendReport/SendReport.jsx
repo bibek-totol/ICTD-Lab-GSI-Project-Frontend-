@@ -25,8 +25,8 @@ const inspectionReportFields = [
     { label: "ল্যাব স্থাপনের তারিখ ও সাল", name: "labEstablishedAt" },
     { label: "কম্পিউটার সংখ্যা", name: "computerCount" },
     { label: "অন্যান্য সরঞ্জামাদি ও সংখ্যা", name: "otherEquipmentCount" },
-    { label: "ডিজিটাল ল্যাবসমূহের সকল কার্যক্রম পরিচালিত হচ্ছে কিনা?", name: "digitalLabStatus" },
-    { label: "ল্যাব রেনোভেশন/রুটের বিষয়ে ভেন্ডরদের জন্য বাসার চিহ্নিত কি? (পরিমাণ)", name: "renovationRouteStatus" },
+    { label: "ডিজিটাল ল্যাবসমূহের ক্লাস কার্যক্রম পরিচালিত হচ্ছে কিনা?", name: "digitalLabStatus" },
+    { label: "ল্যাব রেনোভেশন/ইন্টেরিয়র ডেকোরেশনের জন্য বরাদ্দ ছিল কিনা? (পরিমাণ)", name: "renovationRouteStatus" },
     { label: "ল্যাব ক্লাস রেজিস্টার আছে/নাই (না থাকলে কারণ)", name: "labClassRegister" },
     { label: "ল্যাবে ক্যামেরা আছে/নাই (না থাকলে কারণ)", name: "labCameraStatus" },
     { label: "ইন্টারনেট কানেকশন আছে/নাই (না থাকলে কারণ)", name: "internetConnectionStatus" },
@@ -439,18 +439,147 @@ const SendReport = () => {
         <div className="min-h-screen bg-emerald-50 p-6 space-y-6">
             <style>
                 {`
+          @page {
+            size: A4 portrait;
+            margin: 12mm;
+          }
           @media print {
+            body * {
+              visibility: hidden;
+            }
+            html,
+            body {
+              width: 210mm;
+              min-height: 297mm;
+              background: #ffffff !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .print-modal-wrapper,
+            .print-modal-wrapper * {
+              visibility: visible;
+            }
+            .print-modal-wrapper {
+              position: absolute !important;
+              inset: 0 !important;
+              display: block !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              overflow: visible !important;
+              backdrop-filter: none !important;
+            }
+            .print-modal {
+              position: static !important;
+              width: 100% !important;
+              max-width: none !important;
+              max-height: none !important;
+              overflow: visible !important;
+              box-shadow: none !important;
+              border: none !important;
+              border-radius: 0 !important;
+              color: #064e3b !important;
+              display: block !important;
+            }
+            .print-modal-content {
+              overflow: visible !important;
+              padding: 0 !important;
+              display: block !important;
+            }
+            .print-modal > div:first-child {
+              padding: 0 0 8mm 0 !important;
+              margin-bottom: 6mm !important;
+              border-bottom: 2px solid #047857 !important;
+              background: #ffffff !important;
+            }
+            .print-modal h2 {
+              font-size: 18pt !important;
+              line-height: 1.25 !important;
+              color: #022c22 !important;
+            }
+            .print-modal h3 {
+              font-size: 12pt !important;
+              margin-bottom: 4mm !important;
+              color: #065f46 !important;
+            }
+            .print-modal table {
+              width: 100% !important;
+              min-width: 0 !important;
+              border-collapse: collapse !important;
+              table-layout: fixed !important;
+              page-break-inside: auto;
+            }
+            .print-modal tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+            .print-modal th,
+            .print-modal td {
+              border: 1px solid #94a3b8 !important;
+              padding: 6px 8px !important;
+              vertical-align: top !important;
+              color: #022c22 !important;
+              background: #ffffff !important;
+              font-size: 9pt !important;
+              line-height: 1.35 !important;
+              white-space: normal !important;
+              word-break: break-word !important;
+            }
+            .print-modal th {
+              background: #ecfdf5 !important;
+              color: #065f46 !important;
+              font-weight: 700 !important;
+              width: 34% !important;
+            }
+            .print-modal .rounded-xl,
+            .print-modal .rounded-2xl,
+            .print-modal .rounded-lg {
+              border-radius: 0 !important;
+            }
+            .print-modal .shadow-sm,
+            .print-modal .shadow-lg,
+            .print-modal .shadow-2xl,
+            .print-modal .shadow-xl {
+              box-shadow: none !important;
+            }
+            .print-modal .bg-emerald-50\\/50,
+            .print-modal .bg-teal-50\\/50,
+            .print-modal .bg-white,
+            .print-modal .bg-emerald-50 {
+              background: #ffffff !important;
+            }
+            .print-modal .grid {
+              display: table !important;
+              width: 100% !important;
+              border-collapse: collapse !important;
+            }
+            .print-modal .grid > div {
+              display: table-row !important;
+              page-break-inside: avoid;
+            }
+            .print-modal .grid > div > span:first-child,
+            .print-modal .grid > div > span.text-emerald-500 {
+              display: table-cell !important;
+              width: 34% !important;
+              border: 1px solid #94a3b8 !important;
+              background: #ecfdf5 !important;
+              padding: 6px 8px !important;
+              font-weight: 700 !important;
+              color: #065f46 !important;
+            }
+            .print-modal .grid > div > span:last-child,
+            .print-modal .grid > div > span.text-emerald-950 {
+              display: table-cell !important;
+              border: 1px solid #94a3b8 !important;
+              padding: 6px 8px !important;
+            }
             .no-print {
               display: none !important;
             }
             .print-only {
               display: block !important;
             }
-            body {
-              background-color: white;
-            }
-            .p-6 {
-                padding: 0 !important;
+            .equipment-screen-sections {
+              display: none !important;
             }
           }
         `}
@@ -1012,8 +1141,8 @@ const SendReport = () => {
 
             {/* Details Modal */}
             {isModalOpen && selectedReport && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm print:hidden">
-                    <div className="bg-white border-2 border-emerald-100 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+                <div className="print-modal-wrapper fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+                    <div className="print-modal bg-white border-2 border-emerald-100 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
                         {/* Modal Header */}
                         <div className="p-6 border-b border-emerald-100 bg-emerald-50/50">
                             <div className="flex items-center justify-between">
@@ -1025,17 +1154,27 @@ const SendReport = () => {
                                         Report Details - {formatDate(selectedReport.createdAt)}
                                     </p>
                                 </div>
-                                <button
-                                    onClick={handleCloseModal}
-                                    className="p-2 text-emerald-600 hover:text-white hover:bg-rose-600 rounded-xl transition-all cursor-pointer"
-                                >
-                                    <HiOutlineXCircle className="w-6 h-6" />
-                                </button>
+                                <div className="flex items-center gap-3 no-print">
+                                    <button
+                                        onClick={() => window.print()}
+                                        className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:bg-emerald-50"
+                                        title="Print report"
+                                    >
+                                        <HiOutlinePrinter className="w-5 h-5" />
+                                        Print
+                                    </button>
+                                    <button
+                                        onClick={handleCloseModal}
+                                        className="p-2 text-emerald-600 hover:text-white hover:bg-rose-600 rounded-xl transition-all cursor-pointer"
+                                    >
+                                        <HiOutlineXCircle className="w-6 h-6" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         {/* Modal Content */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        <div className="print-modal-content flex-1 overflow-y-auto p-6 space-y-6">
                             {/* Lab Info */}
                             <div className="bg-emerald-50/50 backdrop-blur-sm rounded-xl p-5 border border-emerald-100">
                                 <h3 className="text-lg font-bold text-emerald-800 mb-4">
@@ -1046,6 +1185,12 @@ const SendReport = () => {
                                         <span className="text-emerald-500">Division:</span>
                                         <span className="text-emerald-950 ml-2 font-medium">
                                             {selectedReport.division}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-emerald-500">District:</span>
+                                        <span className="text-emerald-950 ml-2 font-medium">
+                                            {selectedReport.district}
                                         </span>
                                     </div>
                                     <div>
@@ -1126,6 +1271,65 @@ const SendReport = () => {
                                 );
                             })() : (
                                 <>
+                                    <div className="print-only hidden">
+                                        <h3 className="text-lg font-bold text-teal-800 mb-4">
+                                            IT Equipment & Functionality Report
+                                        </h3>
+                                        <table className="w-full text-sm">
+                                            <tbody>
+                                                <tr>
+                                                    <th className="text-left">Basic Robotics</th>
+                                                    <td>{selectedReport.basicRobotics ?? "-"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">Advanced Robotics</th>
+                                                    <td>{selectedReport.advancedRobotics ?? "-"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">3D Printer</th>
+                                                    <td>{selectedReport["3dPrinter"] ?? "-"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">VR Headset</th>
+                                                    <td>{selectedReport.vrHeadset ?? "-"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">Network Camera</th>
+                                                    <td>{selectedReport.networkCamera ?? "-"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">UPS</th>
+                                                    <td>{selectedReport.ups ?? "-"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">Functionality Status</th>
+                                                    <td>
+                                                        {selectedReport.isFunctional === "yes"
+                                                            ? "All equipment is functional"
+                                                            : "Equipment has issues"}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">Damage Details</th>
+                                                    <td>{selectedReport.damageDetails || "-"}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">Storage Images</th>
+                                                    <td>
+                                                        {selectedReport.storageImages?.length
+                                                            ? `${selectedReport.storageImages.length} image(s) attached`
+                                                            : "-"}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th className="text-left">Recommendations</th>
+                                                    <td>{selectedReport.recommendations || "-"}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div className="equipment-screen-sections space-y-6">
                             {/* Equipment Counts */}
                             <div className="bg-teal-50/50 backdrop-blur-sm rounded-xl p-5 border border-teal-100">
                                 <h3 className="text-lg font-bold text-teal-800 mb-4">
@@ -1248,6 +1452,7 @@ const SendReport = () => {
                                     </p>
                                 </div>
                             )}
+                                    </div>
                                 </>
                             )}
                         </div>
