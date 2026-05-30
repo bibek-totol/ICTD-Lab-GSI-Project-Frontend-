@@ -32,6 +32,7 @@ import ManageLabAdmin from "../Pages/Dashboard/user_control/manage_lab_admin/Man
 import ManageAnnouncement from "../Pages/Dashboard/ManageAnnouncement/ManageAnnouncement";
 import ManageNotice from "../Pages/Dashboard/ManageNotice/ManageNotice";
 import ManageVendor from "../Pages/Dashboard/ManageVendor/ManageVendor";
+import ReceivedMessage from "../Pages/Dashboard/ReceivedMessage/ReceivedMessage";
 
 const router = createBrowserRouter([
   {
@@ -187,6 +188,14 @@ const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ManageVendor />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: "received-message",
+        element: (
+          <SuperAdminRoute>
+            <ReceivedMessage />
           </SuperAdminRoute>
         ),
       },

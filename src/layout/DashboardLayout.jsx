@@ -134,6 +134,7 @@ const DashboardLayout = () => {
           { path: "/dashboard/manage-announcement", name: t("manage_announcements") },
           { path: "/dashboard/manage-notice", name: t("manage_notices") },
           { path: "/dashboard/manage-vendor", name: t("manage_vendors") },
+          { path: "/dashboard/received-message", name: t("received_message") },
         ],
       },
     ];

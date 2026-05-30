@@ -1,32 +1,82 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaFacebookF, FaTwitter, FaLinkedinIn } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Contact = () => {
     const { t } = useTranslation();
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+        setFormData((current) => ({ ...current, [name]: value }));
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setIsSubmitting(true);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/contact-messages`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                toast.success("Message sent successfully");
+                setFormData({
+                    firstName: "",
+                    lastName: "",
+                    email: "",
+                    phone: "",
+                    subject: "",
+                    message: "",
+                });
+            } else {
+                toast.error(result.message || "Failed to send message");
+            }
+        } catch (error) {
+            console.error("Failed to send contact message:", error);
+            toast.error("Failed to send message");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const contactInfo = [
         {
             icon: FaPhoneAlt,
             title: t("contact_phone"),
-            value: "+880 1234 567 890",
-            link: "tel:+8801234567890",
+            value: "+880 1323-228118",
+            link: "tel:+880 1323-228118",
             color: "text-emerald-400",
             bg: "bg-emerald-500/10"
         },
         {
             icon: FaEnvelope,
             title: t("contact_email"),
-            value: "info@ictd-lab.gov.bd",
-            link: "mailto:info@ictd-lab.gov.bd",
+            value: "info@ictdlab.gov.bd",
+            link: "mailto:info@ictdlab.gov.bd",
             color: "text-blue-400",
             bg: "bg-blue-500/10"
         },
         {
             icon: FaMapMarkerAlt,
             title: t("contact_address"),
-            value: "ICT Tower, Agargaon, Dhaka‑1207",
+            value: "E-14/X, ICT Tower, Agargaon, Dhaka-1207",
             link: "#",
             color: "text-purple-400",
             bg: "bg-purple-500/10"
@@ -128,12 +178,16 @@ const Contact = () => {
                                 {t("contact_form_title")}
                             </h3>
 
-                            <form className="space-y-6">
+                            <form className="space-y-6" onSubmit={handleSubmit}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-emerald-700 ml-1">{t("contact_label_fname")}</label>
                                         <input
+                                            name="firstName"
                                             type="text"
+                                            value={formData.firstName}
+                                            onChange={handleChange}
+                                            required
                                             placeholder="First Name"
                                             className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200 text-emerald-900 placeholder-emerald-300 focus:border-emerald-400 focus:bg-emerald-50 focus:ring-4 focus:ring-emerald-100 transition-all outline-none"
                                         />
@@ -141,7 +195,10 @@ const Contact = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-emerald-700 ml-1">{t("contact_label_lname")}</label>
                                         <input
+                                            name="lastName"
                                             type="text"
+                                            value={formData.lastName}
+                                            onChange={handleChange}
                                             placeholder="Last name"
                                             className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200 text-emerald-900 placeholder-emerald-300 focus:border-emerald-400 focus:bg-emerald-50 focus:ring-4 focus:ring-emerald-100 transition-all outline-none"
                                         />
@@ -152,7 +209,11 @@ const Contact = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-emerald-700 ml-1">Email Address</label>
                                         <input
+                                            name="email"
                                             type="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
                                             placeholder="your@example.com"
                                             className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200 text-emerald-900 placeholder-emerald-300 focus:border-emerald-400 focus:bg-emerald-50 focus:ring-4 focus:ring-emerald-100 transition-all outline-none"
                                         />
@@ -160,7 +221,10 @@ const Contact = () => {
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-emerald-700 ml-1">Phone Number</label>
                                         <input
+                                            name="phone"
                                             type="tel"
+                                            value={formData.phone}
+                                            onChange={handleChange}
                                             placeholder="+880..."
                                             className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200 text-emerald-900 placeholder-emerald-300 focus:border-emerald-400 focus:bg-emerald-50 focus:ring-4 focus:ring-emerald-100 transition-all outline-none"
                                         />
@@ -170,7 +234,11 @@ const Contact = () => {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-emerald-700 ml-1">Subject</label>
                                     <input
+                                        name="subject"
                                         type="text"
+                                        value={formData.subject}
+                                        onChange={handleChange}
+                                        required
                                         placeholder="How can we help?"
                                         className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200 text-emerald-900 placeholder-emerald-300 focus:border-emerald-400 focus:bg-emerald-50 focus:ring-4 focus:ring-emerald-100 transition-all outline-none"
                                     />
@@ -179,7 +247,11 @@ const Contact = () => {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-emerald-700 ml-1">Message</label>
                                     <textarea
+                                        name="message"
                                         rows="4"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        required
                                         placeholder="Write your message here..."
                                         className="w-full px-5 py-4 rounded-xl bg-white border border-emerald-200 text-emerald-900 placeholder-emerald-300 focus:border-emerald-400 focus:bg-emerald-50 focus:ring-4 focus:ring-emerald-100 transition-all outline-none resize-none"
                                     />
@@ -189,10 +261,11 @@ const Contact = () => {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     type="submit"
+                                    disabled={isSubmitting}
                                     className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-lg rounded-xl shadow-lg shadow-emerald-200/40 hover:shadow-emerald-500/20 hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
                                 >
                                     <FaPaperPlane className="text-sm" />
-                                    {t("contact_btn_send")}
+                                    {isSubmitting ? "Sending..." : t("contact_btn_send")}
                                 </motion.button>
                             </form>
                         </div>
