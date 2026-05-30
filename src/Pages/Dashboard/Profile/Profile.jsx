@@ -103,7 +103,7 @@ const Profile = () => {
 
   const handleSave = async () => {
     setLoading(true);
-    const updatePromise = new Promise(async (resolve, reject) => {
+    const updatePromise = (async () => {
       try {
         const body = new FormData();
         Object.keys(formData).forEach((key) => {
@@ -119,16 +119,15 @@ const Profile = () => {
           setIsEditing(false);
           setSelectedFile(null);
           setPreviewUrl(null);
-          resolve(res.message);
-        } else {
-          reject(res.message);
+          return res.message;
         }
+        throw res.message;
       } catch (err) {
-        reject(err.response?.data?.message || "Failed to update profile");
+        throw err.response?.data?.message || err || "Failed to update profile";
       } finally {
         setLoading(false);
       }
-    });
+    })();
 
     toast.promise(updatePromise, {
       loading: "Updating profile...",
