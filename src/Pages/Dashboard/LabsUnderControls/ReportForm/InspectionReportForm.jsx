@@ -9,6 +9,9 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const sofOperationLabel = "আইসিটিডি স্কুল অব ফিউচার এন্ড রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।";
+const ictdlOperationLabel = "আইসিটিডি ডিজিটাল ল্যাব যথাযথভাবে পরিচালিত না হলে তার কারণ।";
+
 const reportFields = [
   {
     label: "শিক্ষা প্রতিষ্ঠানের নাম ও ঠিকানা",
@@ -70,7 +73,7 @@ const reportFields = [
     placeholder: "কারণ/বিস্তারিত লিখুন",
   },
   {
-    label: "আইসিটিডি স্কুল অব ফিউচার এবং রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।",
+    label: ictdlOperationLabel,
     name: "sofRoboticsStatus",
     type: "textarea",
     placeholder: "কারণ লিখুন",
@@ -94,6 +97,11 @@ const formatReportValue = (field, data) => {
 const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labType = "sof" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const classReportFields = reportFields.map((field) => (
+    field.name === "sofRoboticsStatus"
+      ? { ...field, label: labType === "sof" ? sofOperationLabel : ictdlOperationLabel }
+      : field
+  ));
   const { register, handleSubmit } = useForm({
     defaultValues: {
       instituteAddress: instituteName || "",
@@ -107,7 +115,7 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
 
     try {
       const computerCount = parseInt(data.computerCount, 10) || 0;
-      const reportSummary = reportFields
+      const reportSummary = classReportFields
         .map((field) => `${field.label}: ${formatReportValue(field, data)}`)
         .join("\n");
 
@@ -188,7 +196,7 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
             <table className="min-w-[1180px] w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-emerald-100 text-emerald-950">
-                  {reportFields.map((field) => (
+                  {classReportFields.map((field) => (
                     <th
                       key={field.name}
                       className="w-[180px] border border-emerald-200 px-3 py-3 text-left align-top font-bold leading-6"
@@ -200,7 +208,7 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
               </thead>
               <tbody>
                 <tr>
-                  {reportFields.map((field) => (
+                  {classReportFields.map((field) => (
                     <td
                       key={field.name}
                       className="border border-emerald-200 p-2 align-top"

@@ -20,6 +20,15 @@ import LabService from "../../../services/lab.service";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const sofOperationLabel = "আইসিটিডি স্কুল অব ফিউচার এন্ড রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।";
+const ictdlOperationLabel = "আইসিটিডি ডিজিটাল ল্যাব যথাযথভাবে পরিচালিত না হলে তার কারণ।";
+const operationLabelHistory = [
+    sofOperationLabel,
+    ictdlOperationLabel,
+    "আইসিটিডি স্কুল অব ফিউচার এবং রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।",
+    "আইসিটিডি স্কুল অব ফিউচার এবং রোবোটিক্স কর্নার সরঞ্জামসমূহ পরিচালিত না হলে তার কারণ।",
+];
+
 const inspectionReportFields = [
     { label: "শিক্ষা প্রতিষ্ঠানের নাম ও ঠিকানা", name: "instituteAddress" },
     { label: "ল্যাব স্থাপনের তারিখ ও সাল", name: "labEstablishedAt" },
@@ -30,9 +39,21 @@ const inspectionReportFields = [
     { label: "ল্যাব ক্লাস রেজিস্টার আছে/নাই (না থাকলে কারণ)", name: "labClassRegister" },
     { label: "ল্যাবে ক্যামেরা আছে/নাই (না থাকলে কারণ)", name: "labCameraStatus" },
     { label: "ইন্টারনেট কানেকশন আছে/নাই (না থাকলে কারণ)", name: "internetConnectionStatus" },
-    { label: "আইসিটিডি স্কুল অব ফিউচার এবং রোবোটিক্স কর্নার সরঞ্জামসমূহ পরিচালিত না হলে তার কারণ।", name: "sofRoboticsStatus" },
+    { label: ictdlOperationLabel, name: "sofRoboticsStatus" },
     { label: "বর্তমান অবস্থা", name: "currentStatus" },
 ];
+
+const getInspectionReportFields = (labType) => inspectionReportFields.map((field) => (
+    field.name === "sofRoboticsStatus"
+        ? { ...field, label: labType === "sof" ? sofOperationLabel : ictdlOperationLabel }
+        : field
+));
+
+const getInspectionFieldLabels = (field) => (
+    field.name === "sofRoboticsStatus"
+        ? operationLabelHistory
+        : [field.label]
+);
 
 const getInspectionFieldType = (fieldName) => {
     if (fieldName === "computerCount") return "number";
@@ -187,7 +208,8 @@ const SendReport = () => {
     };
 
     const parseInspectionDetails = (report) => {
-        const directDetails = inspectionReportFields.reduce((details, field) => {
+        const fields = getInspectionReportFields(report.labType);
+        const directDetails = fields.reduce((details, field) => {
             if (report[field.name] !== undefined && report[field.name] !== null && report[field.name] !== "") {
                 details[field.name] = report[field.name];
             }
@@ -208,12 +230,14 @@ const SendReport = () => {
 
         const details = {};
         const summary = report.damageDetails || "";
-        inspectionReportFields.forEach((field, index) => {
-            const nextLabel = inspectionReportFields[index + 1]?.label;
-            const start = summary.indexOf(`${field.label}:`);
+        fields.forEach((field, index) => {
+            const labels = getInspectionFieldLabels(field);
+            const foundLabel = labels.find((label) => summary.includes(`${label}:`));
+            const nextLabel = fields[index + 1]?.label;
+            const start = foundLabel ? summary.indexOf(`${foundLabel}:`) : -1;
             if (start === -1) return;
 
-            const valueStart = start + field.label.length + 1;
+            const valueStart = start + foundLabel.length + 1;
             const valueEnd = nextLabel
                 ? summary.indexOf(`${nextLabel}:`, valueStart)
                 : summary.length;
@@ -228,7 +252,9 @@ const SendReport = () => {
     const isInspectionReport = (report) => {
         if (report.reportType === "class" || report.reportDetails) return true;
         const summary = report.damageDetails || "";
-        return inspectionReportFields.some((field) => summary.includes(`${field.label}:`));
+        return getInspectionReportFields(report.labType).some((field) => (
+            getInspectionFieldLabels(field).some((label) => summary.includes(`${label}:`))
+        ));
     };
 
     const getLabTypeLabel = (labType) => {
@@ -342,11 +368,12 @@ const SendReport = () => {
 
         try {
             const computerCount = parseInt(classReportForm.computerCount, 10) || 0;
+            const fields = getInspectionReportFields(editingClassReport.labType);
             const payload = {
                 ...classReportForm,
                 computerCount,
                 reportDetails: { ...classReportForm, computerCount },
-                reportSummary: inspectionReportFields
+                reportSummary: fields
                     .map((field) => `${field.label}: ${classReportForm[field.name] || ""}`)
                     .join("\n"),
             };
@@ -456,7 +483,10 @@ const SendReport = () => {
         });
     };
 
-    const renderClassReportsTable = (title, reports, keyPrefix, emptyMessage) => (
+    const renderClassReportsTable = (title, reports, keyPrefix, emptyMessage) => {
+        const fields = getInspectionReportFields(reports[0]?.labType || (keyPrefix.includes("sof") ? "sof" : "ictdl"));
+
+        return (
         <div className="bg-white backdrop-blur-xl rounded-xl shadow-sm border border-emerald-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/60">
                 <h2 className="text-xl font-bold text-emerald-950">
@@ -471,7 +501,7 @@ const SendReport = () => {
                             <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
                                 ক্রম / ল্যাব
                             </th>
-                            {inspectionReportFields.map((field) => (
+                            {fields.map((field) => (
                                 <th
                                     key={field.name}
                                     className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider align-top"
@@ -516,7 +546,7 @@ const SendReport = () => {
                                             </div>
                                         </td>
 
-                                        {inspectionReportFields.map((field) => (
+                                        {fields.map((field) => (
                                             <td
                                                 key={field.name}
                                                 className="px-4 py-4 align-top text-emerald-900 whitespace-pre-wrap min-w-[160px]"
@@ -573,7 +603,7 @@ const SendReport = () => {
                         ) : (
                             <tr>
                                 <td
-                                    colSpan={inspectionReportFields.length + 4}
+                                    colSpan={fields.length + 4}
                                     className="px-6 py-8 text-center text-emerald-600"
                                 >
                                     {emptyMessage}
@@ -584,7 +614,8 @@ const SendReport = () => {
                 </table>
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="min-h-screen bg-emerald-50 p-6 space-y-6">
@@ -1176,7 +1207,7 @@ const SendReport = () => {
                                 <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
                                     ক্রম / ল্যাব
                                 </th>
-                                {inspectionReportFields.map((field) => (
+                                {getInspectionReportFields("sof").map((field) => (
                                     <th
                                         key={field.name}
                                         className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider align-top"
@@ -1221,7 +1252,7 @@ const SendReport = () => {
                                                 </div>
                                             </td>
 
-                                            {inspectionReportFields.map((field) => (
+                                            {getInspectionReportFields(report.labType).map((field) => (
                                                 <td
                                                     key={field.name}
                                                     className="px-4 py-4 align-top text-emerald-900 whitespace-pre-wrap min-w-[160px]"
@@ -1292,7 +1323,7 @@ const SendReport = () => {
             )}
 
             {showIctdlClassReports && renderClassReportsTable(
-                "ক্লাস কার্যক্রম পরিচালনা রিপোর্ট ( আইসিটিডি ডিজিটাল ল্যাব)",
+                "ক্লাস কার্যক্রম পরিচালনা রিপোর্ট ( আইসিটিডি ল্যাব)",
                 ictdlClassReports,
                 "ictdl-class",
                 "No ICTDL class activity reports found matching criteria.",
@@ -1393,7 +1424,7 @@ const SendReport = () => {
                                         <div className="overflow-x-auto rounded-xl border border-emerald-100 bg-white">
                                             <table className="w-full min-w-[900px] text-sm">
                                                 <tbody className="divide-y divide-emerald-50">
-                                                    {inspectionReportFields.map((field) => {
+                                                    {getInspectionReportFields(selectedReport.labType).map((field) => {
                                                         const detailValue = details[`${field.name}Details`];
                                                         const value = details[field.name] || "-";
 
@@ -1653,7 +1684,7 @@ const SendReport = () => {
 
                         <form onSubmit={handleUpdateClassReport} className="flex-1 overflow-y-auto p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {inspectionReportFields.map((field) => {
+                                {getInspectionReportFields(editingClassReport.labType).map((field) => {
                                     const fieldType = getInspectionFieldType(field.name);
                                     const detailName = `${field.name}Details`;
                                     const choiceOptions = fieldType === "yesNo"
