@@ -122,7 +122,17 @@ const SendReport = () => {
                 if (divisionParam) params.append("division", divisionParam);
                 if (districtParam) params.append("district", districtParam);
                 if (upazilaParam) params.append("upazila", upazilaParam);
-                if (filters.labType !== "All") params.append("labType", filters.labType);
+                const reportTypeLabType = filters.reportType === "class_sof"
+                    ? "sof"
+                    : filters.reportType === "class_ictdl"
+                        ? "ictdl"
+                        : null;
+
+                if (reportTypeLabType) {
+                    params.append("labType", reportTypeLabType);
+                } else if (filters.labType !== "All") {
+                    params.append("labType", filters.labType);
+                }
                 if (searchTerm) params.append("search", searchTerm);
 
                 const token = localStorage.getItem("token");
@@ -221,16 +231,27 @@ const SendReport = () => {
         return inspectionReportFields.some((field) => summary.includes(`${field.label}:`));
     };
 
+    const getLabTypeLabel = (labType) => {
+        if (labType === "sof") return "SOF";
+        if (labType === "ictdl") return "ICTDL";
+        return "ICTDL & SOF";
+    };
+
     const showEquipmentReports = filters.reportType === "All" || filters.reportType === "equipment";
-    const showInspectionReports = filters.reportType === "All" || filters.reportType === "class" || filters.reportType === "inspection";
+    const showSofClassReports = filters.reportType === "All" || filters.reportType === "class_sof";
+    const showIctdlClassReports = filters.reportType === "All" || filters.reportType === "class_ictdl";
     const equipmentReports = showEquipmentReports
         ? reportsData.filter((report) => !isInspectionReport(report))
         : [];
-    const inspectionReports = showInspectionReports
-        ? reportsData.filter(isInspectionReport)
+    const classReports = reportsData.filter(isInspectionReport);
+    const sofClassReports = showSofClassReports
+        ? classReports.filter((report) => report.labType === "sof")
+        : [];
+    const ictdlClassReports = showIctdlClassReports
+        ? classReports.filter((report) => report.labType === "ictdl")
         : [];
     const shouldRenderEquipmentTable = showEquipmentReports
-        && (filters.reportType === "equipment" || loading || equipmentReports.length > 0 || inspectionReports.length === 0);
+        && (filters.reportType === "equipment" || loading || equipmentReports.length > 0 || classReports.length === 0);
 
     // Pagination Logic
     const totalEntries = equipmentReports.length;
@@ -271,7 +292,7 @@ const SendReport = () => {
 
         // Export Logic
         const exportData = reportsData.map((report) => ({
-            "Lab Type": report.labType === "sof" ? "SOF" : report.labType === "ictdl" ? "ICTDL" : "ICTDL & SOF",
+            "Lab Type": getLabTypeLabel(report.labType),
             Institute: report.institute,
             Division: report.division,
             District: report.district, // Added District to export
@@ -434,6 +455,136 @@ const SendReport = () => {
             },
         });
     };
+
+    const renderClassReportsTable = (title, reports, keyPrefix, emptyMessage) => (
+        <div className="bg-white backdrop-blur-xl rounded-xl shadow-sm border border-emerald-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/60">
+                <h2 className="text-xl font-bold text-emerald-950">
+                    {title}
+                </h2>
+            </div>
+
+            <div className="overflow-x-auto">
+                <table className="min-w-[1500px] w-full text-sm">
+                    <thead>
+                        <tr className="bg-emerald-50 border-b border-emerald-100 text-left">
+                            <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                                ক্রম / ল্যাব
+                            </th>
+                            {inspectionReportFields.map((field) => (
+                                <th
+                                    key={field.name}
+                                    className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider align-top"
+                                >
+                                    {field.label}
+                                </th>
+                            ))}
+                            <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                                জমার তারিখ
+                            </th>
+                            <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                                Submitted By
+                            </th>
+                            <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider text-center no-print">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-emerald-50">
+                        {reports.length > 0 ? (
+                            reports.map((report, index) => {
+                                const details = parseInspectionDetails(report);
+
+                                return (
+                                    <tr
+                                        key={`${keyPrefix}-${report.id}`}
+                                        className="hover:bg-emerald-50/50 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500"
+                                    >
+                                        <td className="px-4 py-4 align-top">
+                                            <div className="flex flex-col gap-1">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${report.labType === "sof"
+                                                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                                    : report.labType === "ictdl"
+                                                        ? "bg-blue-100 text-blue-700 border-blue-200"
+                                                        : "bg-amber-100 text-amber-700 border-amber-200"
+                                                    }`}>
+                                                    {getLabTypeLabel(report.labType)}
+                                                </span>
+                                                <span className="text-xs text-emerald-400">
+                                                    #{index + 1}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        {inspectionReportFields.map((field) => (
+                                            <td
+                                                key={field.name}
+                                                className="px-4 py-4 align-top text-emerald-900 whitespace-pre-wrap min-w-[160px]"
+                                            >
+                                                {details[field.name] || "-"}
+                                            </td>
+                                        ))}
+
+                                        <td className="px-4 py-4 align-top whitespace-nowrap text-emerald-800">
+                                            {formatDate(report.createdAt)}
+                                        </td>
+                                        <td className="px-4 py-4 align-top min-w-[180px]">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-semibold text-emerald-900">
+                                                    {report.submittedByName || "Unknown"}
+                                                </span>
+                                                {report.submittedByEmail && (
+                                                    <span className="text-xs text-emerald-500">
+                                                        {report.submittedByEmail}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4 align-top text-right no-print">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleViewDetails(report)}
+                                                    className="flex items-center gap-2 px-3 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm cursor-pointer"
+                                                    title="View Details"
+                                                >
+                                                    <HiOutlineEye className="w-5 h-5" />
+                                                    View
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEditClassReport(report)}
+                                                    className="flex items-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm cursor-pointer"
+                                                    title="Update Report"
+                                                >
+                                                    <HiOutlinePencilAlt className="w-5 h-5" />
+                                                    Update
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteReport(report.id)}
+                                                    className="flex items-center gap-2 px-3 py-2 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm cursor-pointer"
+                                                    title="Delete Report"
+                                                >
+                                                    <HiOutlineTrash className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        ) : (
+                            <tr>
+                                <td
+                                    colSpan={inspectionReportFields.length + 4}
+                                    className="px-6 py-8 text-center text-emerald-600"
+                                >
+                                    {emptyMessage}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-emerald-50 p-6 space-y-6">
@@ -784,7 +935,8 @@ const SendReport = () => {
                             >
                                 <option value="All">All Reports</option>
                                 <option value="equipment">IT Equipment & Functionality Report</option>
-                                <option value="class">Class activity management report</option>
+                                <option value="class_sof">Class Activity Management Report (SoF)</option>
+                                <option value="class_ictdl">Class Activity Management Report (ICTDL)</option>
                             </select>
                         </div>
 
@@ -857,7 +1009,7 @@ const SendReport = () => {
                                                             ? "bg-blue-100 text-blue-700 border-blue-200"
                                                             : "bg-amber-100 text-amber-700 border-amber-200"
                                                         }`}>
-                                                        {report.labType === "sof" ? "SOF" : report.labType === "ictdl" ? "ICTDL" : "ICTDL & SOF"}
+                                                        {getLabTypeLabel(report.labType)}
                                                     </span>
                                                     <span className="text-xs text-emerald-400">
                                                         #{startIndex + index + 1}
@@ -1008,12 +1160,12 @@ const SendReport = () => {
             </div>
             )}
 
-            {/* Inspection Reports Table */}
-            {showInspectionReports && (
+            {/* SOF Class Reports Table */}
+            {showSofClassReports && (
             <div className="bg-white backdrop-blur-xl rounded-xl shadow-sm border border-emerald-100 overflow-hidden">
                 <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/60">
                     <h2 className="text-xl font-bold text-emerald-950">
-                        ক্লাস কার্যক্রম পরিচালনা রিপোর্ট
+                        ক্লাস কার্যক্রম পরিচালনা রিপোর্ট (SoF)
                     </h2>
                 </div>
 
@@ -1044,13 +1196,13 @@ const SendReport = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-emerald-50">
-                            {inspectionReports.length > 0 ? (
-                                inspectionReports.map((report, index) => {
+                            {sofClassReports.length > 0 ? (
+                                sofClassReports.map((report, index) => {
                                     const details = parseInspectionDetails(report);
 
                                     return (
                                         <tr
-                                            key={`inspection-${report.id}`}
+                                            key={`sof-class-${report.id}`}
                                             className="hover:bg-emerald-50/50 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500"
                                         >
                                             <td className="px-4 py-4 align-top">
@@ -1061,7 +1213,7 @@ const SendReport = () => {
                                                             ? "bg-blue-100 text-blue-700 border-blue-200"
                                                             : "bg-amber-100 text-amber-700 border-amber-200"
                                                         }`}>
-                                                        {report.labType === "sof" ? "SOF" : report.labType === "ictdl" ? "ICTDL" : "ICTDL & SOF"}
+                                                        {getLabTypeLabel(report.labType)}
                                                     </span>
                                                     <span className="text-xs text-emerald-400">
                                                         #{index + 1}
@@ -1129,7 +1281,7 @@ const SendReport = () => {
                                         colSpan={inspectionReportFields.length + 4}
                                         className="px-6 py-8 text-center text-emerald-600"
                                     >
-                                        No inspection reports found matching criteria.
+                                        No SOF class activity reports found matching criteria.
                                     </td>
                                 </tr>
                             )}
@@ -1137,6 +1289,13 @@ const SendReport = () => {
                     </table>
                 </div>
             </div>
+            )}
+
+            {showIctdlClassReports && renderClassReportsTable(
+                "ক্লাস কার্যক্রম পরিচালনা রিপোর্ট ( আইসিটিডি ডিজিটাল ল্যাব)",
+                ictdlClassReports,
+                "ictdl-class",
+                "No ICTDL class activity reports found matching criteria.",
             )}
 
             {/* Details Modal */}
@@ -1202,9 +1361,7 @@ const SendReport = () => {
                                     <div>
                                         <span className="text-emerald-500">Lab Type:</span>
                                         <span className="text-emerald-950 ml-2 font-medium">
-                                            {selectedReport.labType === "sof"
-                                                ? "SOF"
-                                                : "ICTDL & SOF"}
+                                            {getLabTypeLabel(selectedReport.labType)}
                                         </span>
                                     </div>
                                     <div>
