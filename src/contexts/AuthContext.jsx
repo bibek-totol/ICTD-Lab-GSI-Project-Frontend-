@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import AuthService from "../services/auth.service";
 import api from "../services/api";
+import CircularLoader from "../components/sheard/CircularLoader";
 
 export const AuthContext = createContext();
 
@@ -131,7 +132,7 @@ export const AuthProvider = ({ children }) => {
                 setUser,
             }}
         >
-            {!loading && children}
+            {loading ? <CircularLoader /> : children}
         </AuthContext.Provider>
     );
 };

@@ -79,8 +79,7 @@ const AllNotice = () => {
         {/* Toast */}
         {showToast && (
           <div className="fixed top-24 right-4 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-xl text-sm font-medium z-50 animate-fade-in flex items-center gap-2">
-            <FaSyncAlt className="animate-spin" /> Notices refreshed
-            successfully
+            <FaSyncAlt className="animate-spin" /> {t("notice_refreshed")}
           </div>
         )}
 

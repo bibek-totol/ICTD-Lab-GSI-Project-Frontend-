@@ -172,7 +172,7 @@ const SOFLabsPublic = () => {
                         {t('SOF Labs')} {t('lab_list_title')}
                     </h1>
                     <p className="text-emerald-700 max-w-2xl mx-auto">
-                        {t('sof_lab_list_subtitle', 'সকল SOF ল্যাবের বিস্তারিত তথ্য, যোগাযোগ এবং অবস্থান অনুসন্ধান করুন।')}
+                        {t('sof_lab_list_subtitle', 'Search for detailed information, contacts, and locations of all SOF labs.')}
                     </p>
                 </div>
 

@@ -12,7 +12,6 @@ import {
   FaLocationArrow,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
-import institutionPic from "../../assets/banner/institutionpic.png";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 import { useTranslation } from "react-i18next";
@@ -485,11 +484,14 @@ const LabDetails = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6 sm:mb-8"
+          className="text-center mb-10 mt-16"
         >
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight px-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-emerald-950 mb-2 tracking-tight px-4">
             {t('lab_details_title')}
           </h1>
+          <p className="text-emerald-700 max-w-2xl mx-auto px-4">
+            {t('lab_details_subtitle')}
+          </p>
         </motion.div>
 
         {/* Main Content Grid */}
@@ -776,21 +778,7 @@ const LabDetails = () => {
                       eventHandlers={{
                         click: () => handleLabSelect(lab),
                       }}
-                    >
-                      {/* <Popup>
-                        <div className="min-w-[200px]">
-                          <PhotoProvider>
-                            <PhotoView src={staticLabImages}>
-                              <img
-                                src={institutionPic}
-                                alt={lab.institute}
-                                className="cursor-pointer w-full h-auto rounded-lg shadow-md"
-                              />
-                            </PhotoView>
-                          </PhotoProvider>
-                        </div>
-                      </Popup> */}
-                    </Marker>
+                    />
                   );
                 })}
               </MapContainer>

@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { FaDownload, FaFilePdf } from "react-icons/fa";
+import { FaEnvelope, FaFilePdf, FaPhoneAlt, FaUserTie } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
-import Marquee from "react-fast-marquee";
 import { Link } from "react-router";
 import { FaArrowRight } from "react-icons/fa6";
 
 
 
 const API = import.meta.env.VITE_API_BASE_URL;
+const EMPLOYEE_PHONE_HREF = "+8801711474175";
+const EMPLOYEE_EMAIL = "project.director@ictdlab.gov.bd";
 
 const fetchNotices = async () => {
   const res = await fetch(`${API}/notices/active`, { credentials: "include" });
@@ -56,54 +57,49 @@ const Notice = () => {
 
       {/* ===== NOTICE SECTION ===== */}
       <div className="max-w-5xl mx-auto px-4">
+        <div className="mb-14 bg-white/90 border border-emerald-100 rounded-2xl shadow-xl shadow-emerald-100/60 overflow-hidden">
+          <div className="grid md:grid-cols-[220px_1fr]">
+            <div className="bg-emerald-900 p-6 flex items-center justify-center">
+              <img
+                src="/fatema-tul-jannat.png"
+                alt={t("employee_photo_alt")}
+                className="w-36 h-36 md:w-40 md:h-40 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+            </div>
 
-        {/* ===== BEAUTIFUL IMAGE MARQUEE SECTION ===== */}
-        <div className="mb-16 -mx-4 w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
-          {/* Professional Headline */}
-          <div className="text-center mb-8 px-4">
-            <h2 className="text-3xl md:text-5xl font-bold text-emerald-950 mb-3">
-              {t('notice_hero_title')}
-            </h2>
+            <div className="p-6 md:p-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-4">
+                <FaUserTie />
+                {t("employee_info_badge")}
+              </div>
 
-            <div className="w-32 h-1 bg-gradient-to-r from-emerald-500 to-green-500 mx-auto mt-4 rounded-full" />
-          </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-emerald-950">
+                {t("employee_name")}
+              </h2>
+              <p className="text-emerald-700 font-semibold mt-1">
+                {t("employee_designation")}
+              </p>
+              <p className="text-emerald-600 mt-1">
+                {t("employee_department")}
+              </p>
 
-          <div className="relative w-full">
-            <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-emerald-200 to-transparent" />
-
-            <Marquee pauseOnHover speed={60} gradient={false} className="w-full">
-              {[
-                'https://ucbd.edu.bd/wp-content/uploads/2025/08/DSC00690.avif',
-                'https://ucbd.edu.bd/wp-content/uploads/2025/08/ucbdcc2.avif',
-                'https://ucbd.edu.bd/wp-content/uploads/2025/08/DSC02243.avif',
-                'https://ucbd.edu.bd/wp-content/uploads/2025/08/ucbdcc1.avif',
-                'https://ucbd.edu.bd/wp-content/uploads/2025/08/ucbdcc4.avif',
-                'https://ucbd.edu.bd/wp-content/uploads/2025/08/DSC02298.avif'
-              ].map((src, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-center opacity-0 animate-fade-in-up"
-                  style={{
-                    animationDelay: `${index * 0.1}s`,
-                    animationFillMode: 'forwards'
-                  }}
+              <div className="grid sm:grid-cols-2 gap-3 mt-5">
+                <a
+                  href={`tel:${EMPLOYEE_PHONE_HREF}`}
+                  className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-800 hover:bg-emerald-100 transition"
                 >
-                  <div className="bg-white p-3 rounded-2xl border border-emerald-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 w-[600px] h-[400px] flex items-center justify-center">
-                    <img
-                      src={src}
-                      alt={`University Campus ${index + 1}`}
-                      className="w-full h-full object-cover rounded-xl opacity-90 hover:opacity-100 transition-all duration-300"
-                      onError={(e) => {
-                        console.log(`Image failed to load: ${src}`);
-                        // Show placeholder instead
-                        e.target.style.display = 'none';
-                        e.target.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center text-emerald-600 text-2xl font-bold">Campus ${index + 1}</div>`;
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </Marquee>
+                  <FaPhoneAlt className="text-emerald-600" />
+                  <span>{t("employee_phone")}</span>
+                </a>
+                <a
+                  href={`mailto:${EMPLOYEE_EMAIL}`}
+                  className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-sm text-emerald-800 hover:bg-emerald-100 transition"
+                >
+                  <FaEnvelope className="text-emerald-600" />
+                  <span>{t("employee_email")}</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 

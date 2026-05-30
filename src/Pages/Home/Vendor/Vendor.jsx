@@ -1,17 +1,50 @@
+import { useEffect, useMemo, useState } from "react";
 import { FaPhoneAlt, FaMapMarkerAlt, FaBuilding } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 const Vendor = () => {
     const { t } = useTranslation();
+    const [dbVendors, setDbVendors] = useState([]);
 
-    const vendors = [
-        { id: 1, phone: "01711-588054" },
-        { id: 2, phone: "01713-397560" },
-        { id: 3, phone: "01712-445566" },
-        { id: 4, phone: "01715-998877" },
-        { id: 5, phone: "01718-223344" },
-        { id: 6, phone: "01719-667788" },
-    ];
+    const fallbackVendors = useMemo(() => [
+        { id: 1, name: t("vendor_1_name"), address: t("vendor_1_address"), phone: "01711-588054", serial: 1, isActive: true },
+        { id: 2, name: t("vendor_2_name"), address: t("vendor_2_address"), phone: "01713-397560", serial: 2, isActive: true },
+        { id: 3, name: t("vendor_3_name"), address: t("vendor_3_address"), phone: "01712-445566", serial: 3, isActive: true },
+        { id: 4, name: t("vendor_4_name"), address: t("vendor_4_address"), phone: "01715-998877", serial: 4, isActive: true },
+        { id: 5, name: t("vendor_5_name"), address: t("vendor_5_address"), phone: "01718-223344", serial: 5, isActive: true },
+        { id: 6, name: t("vendor_6_name"), address: t("vendor_6_address"), phone: "01719-667788", serial: 6, isActive: true },
+    ], [t]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchVendors = async () => {
+            try {
+                const response = await fetch(`${API}/vendors/active`);
+                const result = await response.json();
+                if (isMounted && result?.success) {
+                    setDbVendors(result.data || []);
+                }
+            } catch (error) {
+                console.error("Failed to load vendors:", error);
+            }
+        };
+
+        fetchVendors();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const vendors = useMemo(() => {
+        const activeVendors = dbVendors
+            .filter((vendor) => vendor.isActive !== false)
+            .sort((a, b) => (Number(a.serial) || 0) - (Number(b.serial) || 0));
+
+        return activeVendors.length ? activeVendors : fallbackVendors;
+    }, [dbVendors, fallbackVendors]);
 
     return (
         <section className="py-12 bg-emerald-50" id="vendor">
@@ -59,7 +92,7 @@ const Vendor = () => {
                                 </div>
 
                                 <h3 className="text-base font-semibold text-emerald-900 leading-snug">
-                                    {t(`vendor_${vendor.id}_name`)}
+                                    {vendor.name}
                                 </h3>
                             </div>
 
@@ -67,7 +100,7 @@ const Vendor = () => {
                             <div className="flex items-start gap-3 mb-4 text-emerald-600">
                                 <FaMapMarkerAlt className="text-emerald-500 mt-1" />
                                 <p className="text-sm leading-relaxed">
-                                    {t(`vendor_${vendor.id}_address`)}
+                                    {vendor.address}
                                 </p>
                             </div>
 

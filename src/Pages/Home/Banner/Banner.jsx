@@ -12,7 +12,7 @@ import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import heroBg1 from "../../../assets/banner/heroBg1.jpg";
 import heroBg2 from "../../../assets/banner/heroBg2.jpg";
 import heroBg3 from "../../../assets/banner/heroBg3.jpg";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 
 const SLIDE_DURATION = 4000;
 
@@ -136,9 +136,6 @@ const Banner = () => {
     return () => clearTimeout(timerRef.current);
   }, [current, paused, slides.length]);
   
-
-  const navigate = useNavigate();
-
   return (
     <section
       className="relative h-[calc(100vh-4rem)] overflow-hidden select-none"
@@ -175,6 +172,7 @@ const Banner = () => {
       {/* CONTENT */}
       <div className="relative h-full flex items-center px-4 sm:px-6 lg:px-12">
         <div className="container mx-auto z-10">
+          <div className="max-w-3xl">
           <div className="max-w-xl sm:max-w-2xl text-center sm:text-left space-y-5">
             <motion.div
               key={current}
@@ -224,6 +222,7 @@ const Banner = () => {
                 />
               ))}
             </div>
+          </div>
           </div>
         </div>
 

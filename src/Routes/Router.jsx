@@ -31,6 +31,7 @@ import ManageUser from "../Pages/Dashboard/user_control/manege_user/ManageUser";
 import ManageLabAdmin from "../Pages/Dashboard/user_control/manage_lab_admin/ManageLabAdmin";
 import ManageAnnouncement from "../Pages/Dashboard/ManageAnnouncement/ManageAnnouncement";
 import ManageNotice from "../Pages/Dashboard/ManageNotice/ManageNotice";
+import ManageVendor from "../Pages/Dashboard/ManageVendor/ManageVendor";
 
 const router = createBrowserRouter([
   {
@@ -153,7 +154,15 @@ const router = createBrowserRouter([
         path: "manage-lab-admin",
         element: (
           <SuperAdminRoute>
-            <ManageLabAdmin />
+            <ManageLabAdmin labAdminType="sof" />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: "manage-ictd-admin",
+        element: (
+          <SuperAdminRoute>
+            <ManageLabAdmin labAdminType="ictd" />
           </SuperAdminRoute>
         ),
       },
@@ -170,6 +179,14 @@ const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ManageNotice />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: "manage-vendor",
+        element: (
+          <SuperAdminRoute>
+            <ManageVendor />
           </SuperAdminRoute>
         ),
       },

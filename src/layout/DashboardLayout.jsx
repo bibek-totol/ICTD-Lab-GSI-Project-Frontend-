@@ -6,13 +6,11 @@ import {
   HiOutlineDesktopComputer,
   HiOutlineAcademicCap,
   HiOutlineExclamationCircle,
-  HiOutlineLockClosed,
   HiOutlineLogout,
   HiMenuAlt3,
   HiX,
   HiChevronDown,
   HiOutlineUserGroup,
-  HiOutlineShieldCheck,
 } from "react-icons/hi";
 import { FaChartPie, FaBell } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
@@ -75,16 +73,16 @@ const DashboardLayout = () => {
         roles: "all",
       },
       {
-        path: "/dashboard/profile",
-        name: t("dashboard_profile"),
+        id: "profileManagement",
+        path: null,
+        name: t("profile_management"),
         icon: <HiOutlineUser className="w-5 h-5" />,
+        hasDropdown: true,
         roles: "all",
-      },
-      {
-        path: "/dashboard/changePassword",
-        name: t("dashboard_change_password"),
-        icon: <HiOutlineLockClosed className="w-5 h-5" />,
-        roles: "all",
+        subItems: [
+          { path: "/dashboard/profile", name: t("dashboard_profile") },
+          { path: "/dashboard/changePassword", name: t("dashboard_change_password") },
+        ],
       },
       {
         id: "labsControl",
@@ -121,9 +119,21 @@ const DashboardLayout = () => {
         subItems: [
           { path: "/dashboard/add-user", name: t("add_admin") },
           { path: "/dashboard/manage-user", name: t("manage_admins") },
-          { path: "/dashboard/manage-lab-admin", name: t("manage_lab_admins") },
+          { path: "/dashboard/manage-lab-admin", name: t("manage_sof_admins") },
+          { path: "/dashboard/manage-ictd-admin", name: t("manage_ictd_admins") },
+        ],
+      },
+      {
+        id: "contentManagement",
+        path: null,
+        name: t("content_management"),
+        icon: <HiOutlineAcademicCap className="w-5 h-5" />,
+        hasDropdown: true,
+        roles: ["SuperAdmin"],
+        subItems: [
           { path: "/dashboard/manage-announcement", name: t("manage_announcements") },
           { path: "/dashboard/manage-notice", name: t("manage_notices") },
+          { path: "/dashboard/manage-vendor", name: t("manage_vendors") },
         ],
       },
     ];

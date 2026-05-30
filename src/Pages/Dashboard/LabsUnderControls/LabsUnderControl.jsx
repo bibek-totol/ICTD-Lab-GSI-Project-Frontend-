@@ -8,12 +8,16 @@ import {
   HiOutlinePrinter,
   HiOutlineRefresh,
   HiOutlineTrash,
+  HiOutlineClipboardList,
+  HiCheckCircle,
 } from "react-icons/hi";
 import { FaBookOpen, FaFileCsv, FaFileExcel, FaShieldAlt } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { Link } from "react-router";
 import ReportForm from "./ReportForm/ReportForm";
+import InspectionReportForm from "./ReportForm/InspectionReportForm";
 import { AuthContext } from "../../../contexts/AuthContext";
+import { getBanglaJurisdictionNames } from "../../../utils/jurisdictionAliases";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -24,11 +28,22 @@ const LabsUnderControl = () => {
   const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
   const lockedDistrict = (!isSuperAdmin && !isDivisionAdmin && !isLabAdmin) ? (userDistrict || null) : null;
   const lockedUpazila = (isUpazilaAdmin) ? (userUpazila || null) : null;
+  const [jurisdictionParams, setJurisdictionParams] = useState({
+    division: lockedDivision,
+    district: lockedDistrict,
+    upazila: lockedUpazila,
+  });
+
+  const lockedDivisionParam = !isSuperAdmin ? (jurisdictionParams.division || lockedDivision) : null;
+  const lockedDistrictParam = (!isSuperAdmin && !isDivisionAdmin && !isLabAdmin)
+    ? (jurisdictionParams.district || lockedDistrict)
+    : null;
+  const lockedUpazilaParam = isUpazilaAdmin ? (jurisdictionParams.upazila || lockedUpazila) : null;
 
   const [filters, setFilters] = useState({
-    division: lockedDivision || "All",
-    district: lockedDistrict || "All",
-    upazila: lockedUpazila || "All",
+    division: lockedDivisionParam || "All",
+    district: lockedDistrictParam || "All",
+    upazila: lockedUpazilaParam || "All",
     labType: "All",
   });
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -44,7 +59,56 @@ const LabsUnderControl = () => {
     labTypes: [],
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState("equipment");
   const [currentLab, setCurrentLab] = useState(null);
+  const [submittedInspectionLabs, setSubmittedInspectionLabs] = useState(new Set());
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadJurisdictionAliases = async () => {
+      try {
+        const aliases = await getBanglaJurisdictionNames({
+          division: lockedDivision,
+          district: lockedDistrict,
+          upazila: lockedUpazila,
+        });
+
+        if (isMounted) {
+          setJurisdictionParams({
+            division: aliases.division || lockedDivision,
+            district: aliases.district || lockedDistrict,
+            upazila: aliases.upazila || lockedUpazila,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load jurisdiction aliases:", error);
+        if (isMounted) {
+          setJurisdictionParams({
+            division: lockedDivision,
+            district: lockedDistrict,
+            upazila: lockedUpazila,
+          });
+        }
+      }
+    };
+
+    loadJurisdictionAliases();
+    return () => {
+      isMounted = false;
+    };
+  }, [lockedDivision, lockedDistrict, lockedUpazila]);
+
+  useEffect(() => {
+    if (isSuperAdmin) return;
+    setFilters((prev) => ({
+      ...prev,
+      division: lockedDivisionParam || "All",
+      district: lockedDistrictParam || "All",
+      upazila: lockedUpazilaParam || "All",
+    }));
+    setCurrentPage(1);
+  }, [isSuperAdmin, lockedDivisionParam, lockedDistrictParam, lockedUpazilaParam]);
 
   // Fetch filter options dynamically
   const fetchFilterOptions = async (queryDivision = null, queryDistrict = null) => {
@@ -71,17 +135,17 @@ const LabsUnderControl = () => {
 
   useEffect(() => {
     // Initial fetch with current/locked jurisdictions
-    fetchFilterOptions(lockedDivision, lockedDistrict);
-  }, [lockedDivision, lockedDistrict]);
+    fetchFilterOptions(lockedDivisionParam, lockedDistrictParam);
+  }, [lockedDivisionParam, lockedDistrictParam]);
 
   // Re-fetch options when selection changes
   useEffect(() => {
     if (filters.division !== "All" || filters.district !== "All") {
       fetchFilterOptions(filters.division, filters.district);
     } else {
-      fetchFilterOptions(lockedDivision, lockedDistrict);
+      fetchFilterOptions(lockedDivisionParam, lockedDistrictParam);
     }
-  }, [filters.division, filters.district]);
+  }, [filters.division, filters.district, lockedDivisionParam, lockedDistrictParam]);
 
   // Fetch labs data
   useEffect(() => {
@@ -93,9 +157,9 @@ const LabsUnderControl = () => {
         const params = new URLSearchParams();
 
         // Always apply jurisdiction lock for non-SuperAdmin
-        const divisionParam = lockedDivision || (filters.division !== "All" ? filters.division : null);
-        const districtParam = lockedDistrict || (filters.district !== "All" ? filters.district : null);
-        const upazilaParam = lockedUpazila || (filters.upazila !== "All" ? filters.upazila : null);
+        const divisionParam = lockedDivisionParam || (filters.division !== "All" ? filters.division : null);
+        const districtParam = lockedDistrictParam || (filters.district !== "All" ? filters.district : null);
+        const upazilaParam = lockedUpazilaParam || (filters.upazila !== "All" ? filters.upazila : null);
 
         if (divisionParam) params.append("division", divisionParam);
         if (districtParam) params.append("district", districtParam);
@@ -125,7 +189,7 @@ const LabsUnderControl = () => {
     };
 
     fetchLabs();
-  }, [filters, searchTerm, lockedDivision, lockedDistrict, lockedUpazila]);
+  }, [filters, searchTerm, lockedDivisionParam, lockedDistrictParam, lockedUpazilaParam]);
 
 
   // Format mobile number
@@ -146,9 +210,9 @@ const LabsUnderControl = () => {
 
   const handleResetFilters = () => {
     setFilters({
-      division: lockedDivision || "All",
-      district: lockedDistrict || "All",
-      upazila: lockedUpazila || "All",
+      division: lockedDivisionParam || "All",
+      district: lockedDistrictParam || "All",
+      upazila: lockedUpazilaParam || "All",
       labType: "All",
     });
     setSearchTerm("");
@@ -194,14 +258,24 @@ const LabsUnderControl = () => {
     }
   };
 
-  const handleOpenModal = (lab) => {
+  const handleOpenModal = (lab, type = "equipment") => {
     setCurrentLab(lab);
+    setModalType(type);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setModalType("equipment");
     setCurrentLab(null);
+  };
+
+  const handleInspectionSubmitted = ({ labId }) => {
+    setSubmittedInspectionLabs((prev) => {
+      const next = new Set(prev);
+      next.add(String(labId));
+      return next;
+    });
   };
 
 
@@ -231,10 +305,10 @@ const LabsUnderControl = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
         <div>
           <h1 className="text-4xl font-bold text-emerald-950">
-            ডিজিটাল ল্যাব{" "}
+            আইসিটিডি ল্যাব{" "}
           </h1>
           <p className="text-emerald-600 mt-2 text-lg">
-            বাংলাদেশের ডিজিটাল ল্যাব ম্যানেজমেন্ট সম্পর্কে মনোন করুন
+            আইসিটিডি ল্যাব এর তথ্য ম্যানেজমেন্ট পোর্টাল
           </p>
           <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3"></div>
           {isLabAdmin ? (
@@ -566,9 +640,22 @@ const LabsUnderControl = () => {
                           <button
                             onClick={() => handleOpenModal(lab)}
                             className="cursor-pointer hover:scale-110 flex items-center gap-2 px-3 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm"
-                            title="Send Report"
+                            title="Send Equipment Report"
                           >
                             <FaBookOpen className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenModal(lab, "inspection")}
+                            className={`relative cursor-pointer hover:scale-110 flex items-center gap-2 px-3 py-2 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm ${submittedInspectionLabs.has(String(lab.id))
+                              ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200"
+                              : "text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200"
+                              }`}
+                            title="Send Inspection Report"
+                          >
+                            <HiOutlineClipboardList className="w-5 h-5" />
+                            {submittedInspectionLabs.has(String(lab.id)) && (
+                              <HiCheckCircle className="absolute -right-1.5 -top-1.5 h-4 w-4 rounded-full bg-white text-emerald-600" />
+                            )}
                           </button>
 
                         </div>
@@ -660,12 +747,22 @@ const LabsUnderControl = () => {
       {/* Report Modal */}
       {isModalOpen && currentLab && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm print:hidden">
-          <ReportForm
-            onClose={handleCloseModal}
-            instituteName={currentLab.institute}
-            labId={currentLab.id}
-            labType="sof"
-          />
+          {modalType === "inspection" ? (
+            <InspectionReportForm
+              onClose={handleCloseModal}
+              onSubmitted={handleInspectionSubmitted}
+              instituteName={currentLab.institute}
+              labId={currentLab.id}
+              labType={currentLab.labType === "sof" ? "sof" : "ictdl"}
+            />
+          ) : (
+            <ReportForm
+              onClose={handleCloseModal}
+              instituteName={currentLab.institute}
+              labId={currentLab.id}
+              labType={currentLab.labType === "sof" ? "sof" : "ictdl"}
+            />
+          )}
         </div>
       )}
     </div>

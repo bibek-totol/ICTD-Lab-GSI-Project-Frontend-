@@ -4,6 +4,8 @@ import {
     HiOutlinePencil,
     HiOutlineRefresh,
     HiOutlineFilter,
+    HiOutlineClipboardList,
+    HiCheckCircle,
 } from "react-icons/hi";
 import { Link } from "react-router";
 import { toast } from "react-hot-toast";
@@ -11,14 +13,27 @@ import { AuthContext } from "../../../../contexts/AuthContext";
 import api from "../../../../services/api";
 import { FaBookOpen } from "react-icons/fa";
 import ReportForm from "../ReportForm/ReportForm";
+import InspectionReportForm from "../ReportForm/InspectionReportForm";
+import { getBanglaJurisdictionNames } from "../../../../utils/jurisdictionAliases";
 
 const ICTDLabs = () => {
-    const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isLabAdmin, userDivision, userDistrict, userUpazila, user } = useContext(AuthContext);
+    const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, isLabAdmin, userDivision, userDistrict, userUpazila, user } = useContext(AuthContext);
 
     // Jurisdiction Locking
     const lockedDivision = !isSuperAdmin ? (userDivision || null) : null;
     const lockedDistrict = (!isSuperAdmin && !isDivisionAdmin && !isLabAdmin) ? (userDistrict || null) : null;
-    const lockedUpazila = (userUpazila) ? (userUpazila || null) : null;
+    const lockedUpazila = isUpazilaAdmin ? (userUpazila || null) : null;
+    const [jurisdictionParams, setJurisdictionParams] = useState({
+        division: lockedDivision,
+        district: lockedDistrict,
+        upazila: lockedUpazila,
+    });
+
+    const lockedDivisionParam = !isSuperAdmin ? (jurisdictionParams.division || lockedDivision) : null;
+    const lockedDistrictParam = (!isSuperAdmin && !isDivisionAdmin && !isLabAdmin)
+        ? (jurisdictionParams.district || lockedDistrict)
+        : null;
+    const lockedUpazilaParam = isUpazilaAdmin ? (jurisdictionParams.upazila || lockedUpazila) : null;
 
     const [labs, setLabs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -26,32 +41,81 @@ const ICTDLabs = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalType, setModalType] = useState("equipment");
     const [currentLab, setCurrentLab] = useState(null);
+    const [submittedInspectionLabs, setSubmittedInspectionLabs] = useState(new Set());
     const [filters, setFilters] = useState({
-        division: lockedDivision || "All",
-        district: lockedDistrict || "All",
-        upazila: lockedUpazila || "All"
+        division: lockedDivisionParam || "All",
+        district: lockedDistrictParam || "All",
+        upazila: lockedUpazilaParam || "All"
     });
     const [filterOptions, setFilterOptions] = useState({ divisions: [], districts: [], upazilas: [] });
 
     const entriesPerPage = 25;
 
     useEffect(() => {
-        fetchFilterOptions(lockedDivision, lockedDistrict);
-    }, [lockedDivision, lockedDistrict]);
+        let isMounted = true;
+
+        const loadJurisdictionAliases = async () => {
+            try {
+                const aliases = await getBanglaJurisdictionNames({
+                    division: lockedDivision,
+                    district: lockedDistrict,
+                    upazila: lockedUpazila,
+                });
+
+                if (isMounted) {
+                    setJurisdictionParams({
+                        division: aliases.division || lockedDivision,
+                        district: aliases.district || lockedDistrict,
+                        upazila: aliases.upazila || lockedUpazila,
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load jurisdiction aliases:", error);
+                if (isMounted) {
+                    setJurisdictionParams({
+                        division: lockedDivision,
+                        district: lockedDistrict,
+                        upazila: lockedUpazila,
+                    });
+                }
+            }
+        };
+
+        loadJurisdictionAliases();
+        return () => {
+            isMounted = false;
+        };
+    }, [lockedDivision, lockedDistrict, lockedUpazila]);
+
+    useEffect(() => {
+        if (isSuperAdmin) return;
+        setFilters((prev) => ({
+            ...prev,
+            division: lockedDivisionParam || "All",
+            district: lockedDistrictParam || "All",
+            upazila: lockedUpazilaParam || "All",
+        }));
+        setCurrentPage(1);
+    }, [isSuperAdmin, lockedDivisionParam, lockedDistrictParam, lockedUpazilaParam]);
+
+    useEffect(() => {
+        fetchFilterOptions(lockedDivisionParam, lockedDistrictParam);
+    }, [lockedDivisionParam, lockedDistrictParam]);
 
     // Re-fetch options when selection changes
     useEffect(() => {
         if (filters.division !== "All" || filters.district !== "All") {
             fetchFilterOptions(filters.division, filters.district);
         } else {
-            fetchFilterOptions(lockedDivision, lockedDistrict);
+            fetchFilterOptions(lockedDivisionParam, lockedDistrictParam);
         }
-    }, [filters.division, filters.district]);
+    }, [filters.division, filters.district, lockedDivisionParam, lockedDistrictParam]);
 
     useEffect(() => {
         fetchLabs();
-    }, [currentPage, filters, searchTerm]);
+    }, [currentPage, filters, searchTerm, lockedDivisionParam, lockedDistrictParam, lockedUpazilaParam]);
 
     const fetchFilterOptions = async (queryDivision = null, queryDistrict = null) => {
         try {
@@ -72,28 +136,44 @@ const ICTDLabs = () => {
         }
     };
 
-    const handleOpenModal = (lab) => {
+    const handleOpenModal = (lab, type = "equipment") => {
         setCurrentLab(lab);
+        setModalType(type);
         setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        setModalType("equipment");
         setCurrentLab(null);
+    };
+
+    const handleInspectionSubmitted = ({ labId }) => {
+        setSubmittedInspectionLabs((prev) => {
+            const next = new Set(prev);
+            next.add(String(labId));
+            return next;
+        });
     };
 
     const fetchLabs = async () => {
         setLoading(true);
         try {
+            const params = {
+                page: currentPage,
+                limit: entriesPerPage,
+            };
+            const divisionParam = lockedDivisionParam || (filters.division !== "All" ? filters.division : null);
+            const districtParam = lockedDistrictParam || (filters.district !== "All" ? filters.district : null);
+            const upazilaParam = lockedUpazilaParam || (filters.upazila !== "All" ? filters.upazila : null);
+
+            if (divisionParam) params.division = divisionParam;
+            if (districtParam) params.district = districtParam;
+            if (upazilaParam) params.upazila = upazilaParam;
+            if (searchTerm) params.search = searchTerm;
+
             const response = await api.get(`/ictdl`, {
-                params: {
-                    page: currentPage,
-                    limit: entriesPerPage,
-                    division: filters.division,
-                    district: filters.district,
-                    upazila: filters.upazila,
-                    search: searchTerm,
-                }
+                params
             });
             const result = response.data;
             if (result.success) {
@@ -207,9 +287,9 @@ const ICTDLabs = () => {
                             <button
                                 onClick={() => {
                                     setFilters({
-                                        division: lockedDivision || "All",
-                                        district: lockedDistrict || "All",
-                                        upazila: lockedUpazila || "All"
+                                        division: lockedDivisionParam || "All",
+                                        district: lockedDistrictParam || "All",
+                                        upazila: lockedUpazilaParam || "All"
                                     });
                                     setSearchTerm("");
                                     setCurrentPage(1);
@@ -279,9 +359,22 @@ const ICTDLabs = () => {
                                                     <button
                                                         onClick={() => handleOpenModal(lab)}
                                                         className="cursor-pointer hover:scale-110 flex items-center gap-2 px-3 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm"
-                                                        title="Send Report"
+                                                        title="Send Equipment Report"
                                                     >
                                                         <FaBookOpen className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleOpenModal(lab, "inspection")}
+                                                        className={`relative cursor-pointer hover:scale-110 flex items-center gap-2 px-3 py-2 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm ${submittedInspectionLabs.has(String(lab.id))
+                                                            ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200"
+                                                            : "text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200"
+                                                            }`}
+                                                        title="Send Inspection Report"
+                                                    >
+                                                        <HiOutlineClipboardList className="w-5 h-5" />
+                                                        {submittedInspectionLabs.has(String(lab.id)) && (
+                                                            <HiCheckCircle className="absolute -right-1.5 -top-1.5 h-4 w-4 rounded-full bg-white text-emerald-600" />
+                                                        )}
                                                     </button>
                                                 </div>
                                             </td>
@@ -346,12 +439,22 @@ const ICTDLabs = () => {
             {/* Report Modal */}
             {isModalOpen && currentLab && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm print:hidden">
-                    <ReportForm
-                        onClose={handleCloseModal}
-                        instituteName={currentLab.institute}
-                        labId={currentLab.id}
-                        labType="ictdl"
-                    />
+                    {modalType === "inspection" ? (
+                        <InspectionReportForm
+                            onClose={handleCloseModal}
+                            onSubmitted={handleInspectionSubmitted}
+                            instituteName={currentLab.institute}
+                            labId={currentLab.id}
+                            labType="ictdl"
+                        />
+                    ) : (
+                        <ReportForm
+                            onClose={handleCloseModal}
+                            instituteName={currentLab.institute}
+                            labId={currentLab.id}
+                            labType="ictdl"
+                        />
+                    )}
                 </div>
             )}
         </div>

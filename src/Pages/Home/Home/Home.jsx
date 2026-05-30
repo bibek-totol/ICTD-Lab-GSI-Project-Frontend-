@@ -8,6 +8,7 @@ import About from "../About/About";
 import { BangladeshMap } from "../../../components/BangladeshMap/Mainfile";
 import { StatsChart } from "../../../components/BangladeshMap/StatsChart";
 import Notice from "../../AllNotice/Notice";
+import LatestUpdatesMarquee from "../../../components/sheard/LatestUpdatesMarquee";
 
 import { bangladeshDivisions } from "../../../data/bangladeshDivisions";
 
@@ -135,6 +136,10 @@ const Home = () => {
     <div>
       <section id="home">
         <Banner />
+      </section>
+
+      <section className="bg-emerald-50">
+        <LatestUpdatesMarquee />
       </section>
 
       <section id="notice">

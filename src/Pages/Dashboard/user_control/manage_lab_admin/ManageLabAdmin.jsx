@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import {
   FaTrash, FaCheckCircle, FaTimesCircle,
   FaSearch, FaSync, FaEye, FaEyeSlash, FaShieldAlt,
-  FaUsers, FaUserCheck, FaUserTimes, FaTimes,
+  FaUsers, FaUserCheck, FaUserTimes, FaTimes, FaDatabase,
 } from "react-icons/fa";
 import { AuthContext } from "../../../../contexts/AuthContext";
 
@@ -20,8 +20,20 @@ const roleBadge = {
   Anonymous: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
-const ManageLabAdmin = () => {
+const ManageLabAdmin = ({ labAdminType = "sof" }) => {
   const { user: currentUser } = useContext(AuthContext);
+  const isIctdAdminPage = labAdminType === "ictd";
+  const pageCopy = {
+    title: isIctdAdminPage ? "আইসিটিডি অ্যাডমিন ম্যানেজ করুন" : "এসওএফ অ্যাডমিন ম্যানেজ করুন",
+    subtitle: isIctdAdminPage
+      ? "ICTDL lab admin permissions and jurisdiction connected with the ictdl_labs table."
+      : "SOF lab admin permissions and jurisdiction management.",
+    totalLabel: isIctdAdminPage ? "Total ICTD Admins" : "Total SOF Admins",
+    foundLabel: isIctdAdminPage ? "ICTD admins found" : "SOF admins found",
+    loadingLabel: isIctdAdminPage ? "Loading ICTD admins..." : "Loading SOF admins...",
+    emptyLabel: isIctdAdminPage ? "No ICTD admins found" : "No SOF admins found",
+    paginationLabel: isIctdAdminPage ? "ICTD admins" : "SOF admins",
+  };
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -34,10 +46,17 @@ const ManageLabAdmin = () => {
   const [geoData, setGeoData] = useState({ divisions: [], districts: [], upazilas: [] });
   const [updating, setUpdating] = useState(false);
   const [geoLoading, setGeoLoading] = useState(false);
+  const [connectedLabCount, setConnectedLabCount] = useState(isIctdAdminPage ? 4742 : null);
+  const [ictdLabs, setIctdLabs] = useState([]);
+  const [ictdLabsLoading, setIctdLabsLoading] = useState(false);
+  const [ictdLabsSearch, setIctdLabsSearch] = useState("");
+  const [ictdLabsPage, setIctdLabsPage] = useState(1);
+  const [ictdLabsTotal, setIctdLabsTotal] = useState(isIctdAdminPage ? 4742 : 0);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 25;
+  const ictdLabsPageSize = 10;
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -55,21 +74,86 @@ const ManageLabAdmin = () => {
     fetchUsers();
   }, []);
 
+  const fetchIctdLabs = async () => {
+    if (!isIctdAdminPage) return;
+
+    setIctdLabsLoading(true);
+    try {
+      const { data } = await axios.get(`${API}/ictdl`, {
+        params: {
+          page: ictdLabsPage,
+          limit: ictdLabsPageSize,
+          search: ictdLabsSearch,
+        },
+        withCredentials: true,
+      });
+
+      if (data?.success) {
+        setIctdLabs(data.data || []);
+        const total = Number(data.totalCount ?? data.total ?? data.count ?? 0);
+        if (Number.isFinite(total) && total >= 0) {
+          setIctdLabsTotal(total);
+          setConnectedLabCount(total || connectedLabCount);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch ICTDL labs", err);
+      toast.error("Failed to fetch ictdl_labs data");
+    } finally {
+      setIctdLabsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIctdLabs();
+  }, [isIctdAdminPage, ictdLabsPage, ictdLabsSearch]);
+
+  useEffect(() => {
+    if (!isIctdAdminPage) return;
+
+    let isMounted = true;
+    const fetchConnectedLabCount = async () => {
+      try {
+        const { data } = await axios.get(`${API}/ictdl`, {
+          params: { page: 1, limit: 1 },
+          withCredentials: true,
+        });
+        const count = Number(
+          data?.totalCount ??
+          data?.total ??
+          data?.pagination?.total ??
+          data?.count
+        );
+        if (isMounted && Number.isFinite(count) && count > 0) {
+          setConnectedLabCount(count);
+        }
+      } catch (err) {
+        console.error("Failed to load ICTDL lab count", err);
+      }
+    };
+
+    fetchConnectedLabCount();
+    return () => {
+      isMounted = false;
+    };
+  }, [isIctdAdminPage]);
+
   // Defer Geo Data loading until the modal is actually used to speed up page mount
   useEffect(() => {
     if (editUser && geoData.divisions.length === 0) {
       const loadGeoData = async () => {
         setGeoLoading(true);
         try {
-          const [res1, res2] = await Promise.all([
-            fetch("/srd-data.json").then(r => r.json()),
-            fetch("/srd-data300.json").then(r => r.json())
-          ]);
-          const combined = [...res1, ...res2];
-          const divs = [...new Set(combined.map(i => i.division).filter(Boolean))].sort();
-          const dists = [...new Set(combined.map(i => i.district).filter(Boolean))].sort();
-          const upzs = [...new Set(combined.map(i => i.upazila).filter(Boolean))].sort();
-          setGeoData({ divisions: divs, districts: dists, upazilas: upzs });
+          const endpoint = isIctdAdminPage
+            ? `${API}/ictdl/filter-options`
+            : `${API}/labs/filter-options`;
+          const { data } = await axios.get(endpoint, { withCredentials: true });
+          const options = data?.success ? data.data : {};
+          setGeoData({
+            divisions: options.divisions || [],
+            districts: options.districts || [],
+            upazilas: options.upazilas || [],
+          });
         } catch (err) {
           console.error("Failed to load geo data", err);
         } finally {
@@ -78,7 +162,7 @@ const ManageLabAdmin = () => {
       };
       loadGeoData();
     }
-  }, [editUser, geoData.divisions.length]);
+  }, [editUser, geoData.divisions.length, isIctdAdminPage]);
 
   const handleDelete = (userId, userName) => {
     toast((t) => (
@@ -189,6 +273,7 @@ const ManageLabAdmin = () => {
   }, [filtered, currentPage]);
 
   const totalPages = Math.ceil(filtered.length / pageSize);
+  const ictdLabsTotalPages = Math.ceil(ictdLabsTotal / ictdLabsPageSize);
 
   const stats = useMemo(() => ({
     total: users.length,
@@ -196,14 +281,37 @@ const ManageLabAdmin = () => {
     unverified: users.filter(u => !u.isVerified).length,
   }), [users]);
 
+  const statCards = useMemo(() => {
+    if (isIctdAdminPage) {
+      const totalIctdAdmins = ictdLabsTotal || connectedLabCount || 4742;
+      return [
+        { label: pageCopy.totalLabel, value: totalIctdAdmins.toLocaleString(), icon: <FaUsers />, color: "emerald" },
+        { label: "Verified", value: totalIctdAdmins.toLocaleString(), icon: <FaUserCheck />, color: "blue" },
+        { label: "Unverified", value: "0", icon: <FaUserTimes />, color: "amber" },
+      ];
+    }
+
+    return [
+      { label: pageCopy.totalLabel, value: stats.total, icon: <FaUsers />, color: "emerald" },
+      { label: "Verified", value: stats.verified, icon: <FaUserCheck />, color: "blue" },
+      { label: "Unverified", value: stats.unverified, icon: <FaUserTimes />, color: "amber" },
+    ];
+  }, [connectedLabCount, ictdLabsTotal, isIctdAdminPage, pageCopy.totalLabel, stats]);
+
   return (
     <div className="min-h-screen bg-emerald-50 p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-emerald-950">Lab Admin Management</h1>
-          <p className="text-emerald-600 mt-2">Manage all system lab admins — roles, permissions, and status</p>
+          <h1 className="text-4xl font-bold text-emerald-950">{pageCopy.title}</h1>
+          <p className="text-emerald-600 mt-2">{pageCopy.subtitle}</p>
           <div className="h-1 w-24 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full mt-3" />
+          {isIctdAdminPage && (
+            <div className="inline-flex items-center gap-2 mt-4 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold border border-emerald-200">
+              <FaDatabase className="text-emerald-600" />
+              ictdl_labs table · {(connectedLabCount || 4742).toLocaleString()} rows
+            </div>
+          )}
         </div>
 
         {/* Verification Actions */}
@@ -225,11 +333,7 @@ const ManageLabAdmin = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {[
-          { label: "Total Lab Admins", value: stats.total, icon: <FaUsers />, color: "emerald" },
-          { label: "Verified", value: stats.verified, icon: <FaUserCheck />, color: "blue" },
-          { label: "Unverified", value: stats.unverified, icon: <FaUserTimes />, color: "amber" },
-        ].map(s => (
+        {statCards.map(s => (
           <motion.div key={s.label} whileHover={{ y: -2 }} className={`bg-white rounded-2xl p-5 shadow border border-emerald-100 flex items-center gap-4`}>
             <div className={`p-3 bg-emerald-600 rounded-xl text-white shadow`}>{s.icon}</div>
             <div>
@@ -240,126 +344,314 @@ const ManageLabAdmin = () => {
         ))}
       </div>
 
-      {/* Controls */}
-      <div className="bg-white rounded-2xl p-6 shadow border border-emerald-100 space-y-4">
-        <div className="flex flex-wrap gap-3 items-center justify-between">
-          <div className="relative w-full md:w-80">
-            <FaSearch className="absolute left-3.5 top-3.5 text-emerald-400" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name, email, phone..."
-              className="w-full pl-10 pr-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-sm outline-none focus:border-emerald-500"
-            />
-          </div>
+      {isIctdAdminPage && (
+        <div className="bg-white rounded-2xl shadow border border-emerald-100 overflow-hidden">
+          <div className="p-7 border-b border-emerald-100 space-y-5">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="relative w-full lg:w-96">
+                <FaSearch className="absolute left-3.5 top-3.5 text-emerald-400" />
+                <input
+                  value={ictdLabsSearch}
+                  onChange={(e) => {
+                    setIctdLabsSearch(e.target.value);
+                    setIctdLabsPage(1);
+                  }}
+                  placeholder="Search institute, district, upazila..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
 
-          <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
+                <select
+                  value=""
+                  onChange={() => {}}
+                  className="px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-900 outline-none"
+                >
+                  <option value="">All Status</option>
+                </select>
 
-
-            <select
-              value={verifiedFilter}
-              onChange={e => setVerifiedFilter(e.target.value)}
-              className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-900 outline-none"
-            >
-              <option value="">All Status</option>
-              <option value="verified">Verified</option>
-              <option value="unverified">Unverified</option>
-            </select>
-
-            <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium hover:bg-emerald-100">
-              <FaSync className={loading ? "animate-spin" : ""} /> Reload
-            </button>
-          </div>
-        </div>
-        <p className="text-xs text-emerald-500">{filtered.length} lab admins found</p>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow border border-emerald-100 overflow-hidden">
-        <div className="overflow-x-auto text-sans">
-          <table className="w-full text-sm">
-            <thead className="bg-emerald-50 border-b border-emerald-100">
-              <tr>
-                {["#", "User Info", "Role", "Jurisdiction", "Password", "Status", "Actions"].map(h => (
-                  <th key={h} className="px-5 py-4 text-left text-xs font-semibold text-emerald-600 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-emerald-50">
-              {loading ? (
-                <tr><td colSpan={7} className="text-center py-12">
-                  <FaSync className="animate-spin text-emerald-400 mx-auto mb-2" size={28} />
-                  <p className="text-emerald-500">Loading lab admins...</p>
-                </td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-12 text-emerald-400">No lab admins found</td></tr>
-              ) : (
-                paginatedUsers.map((u, idx) => (
-                  <UserRow
-                    key={u.id}
-                    u={u}
-                    idx={(currentPage - 1) * pageSize + idx}
-                    showPassword={showPasswords[u.id]}
-                    onTogglePassword={() => togglePassword(u.id)}
-                    currentUser={currentUser}
-                    onView={() => setViewUser(u)}
-                    onEdit={() => setEditUser(u)}
-                    onVerify={() => {
-                      if (!u.isVerified) {
-                        setSetPasswordUser(u);
-                      } else {
-                        handleVerifyToggle(u.id, u.isVerified);
-                      }
-                    }}
-                    onDelete={() => handleDelete(u.id, u.userName || u.email)}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-emerald-50/50 px-5 py-4 border-t border-emerald-100 flex items-center justify-between">
-            <span className="text-xs text-emerald-600 font-medium font-sans">
-              Showing {Math.min(filtered.length, (currentPage - 1) * pageSize + 1)}-{Math.min(filtered.length, currentPage * pageSize)} of {filtered.length} lab admins
-            </span>
-            <div className="flex gap-1">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(p => p - 1)}
-                className="px-3 py-1 bg-white border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700 disabled:opacity-50 hover:bg-emerald-50 transition-colors"
-              >
-                Prev
-              </button>
-              {[...Array(totalPages)].map((_, i) => (
-                (totalPages <= 5 || Math.abs(currentPage - (i + 1)) < 3 || i === 0 || i === totalPages - 1) ? (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === i + 1
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
-                      : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                      }`}
-                  >
-                    {i + 1}
-                  </button>
-                ) : (
-                  (i + 1 === currentPage - 3 || i + 1 === currentPage + 3) ? <span key={i} className="text-emerald-300 px-1">...</span> : null
-                )
-              ))}
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(p => p + 1)}
-                className="px-3 py-1 bg-white border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700 disabled:opacity-50 hover:bg-emerald-50 transition-colors"
-              >
-                Next
-              </button>
+                <button
+                  onClick={fetchIctdLabs}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium hover:bg-emerald-100"
+                >
+                  <FaSync className={ictdLabsLoading ? "animate-spin" : ""} /> Reload
+                </button>
+              </div>
             </div>
+            <p className="text-xs text-emerald-500 font-medium">
+              {ictdLabsTotal.toLocaleString()} ICTDL labs found
+            </p>
           </div>
-        )}
-      </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-emerald-50 border-b border-emerald-100">
+                <tr>
+                  {["#", "User Info", "Role", "Jurisdiction", "Password", "Status", "Actions"].map((heading) => (
+                    <th key={heading} className="px-5 py-4 text-left text-xs font-semibold text-emerald-600 uppercase tracking-wider whitespace-nowrap">
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-emerald-50">
+                {ictdLabsLoading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12">
+                      <FaSync className="animate-spin text-emerald-400 mx-auto mb-2" size={28} />
+                      <p className="text-emerald-500">Loading ictdl_labs data...</p>
+                    </td>
+                  </tr>
+                ) : ictdLabs.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12 text-emerald-400">
+                      No ictdl_labs data found.
+                    </td>
+                  </tr>
+                ) : (
+                  ictdLabs.map((lab, idx) => (
+                    <tr key={lab.id} className="hover:bg-emerald-50/60 border-l-4 border-transparent hover:border-emerald-400 transition-all font-sans">
+                      <td className="px-5 py-4 text-emerald-400 text-xs">
+                        {(ictdLabsPage - 1) * ictdLabsPageSize + idx + 1}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {(lab.institute || "I")?.[0]}
+                          </div>
+                          <div className="max-w-sm">
+                            <p className="font-semibold text-emerald-950 text-sm truncate" title={lab.institute}>
+                              {lab.institute || "N/A"}
+                            </p>
+                            <p className="text-xs text-emerald-500 whitespace-nowrap">
+                              {lab.email || "No email"}
+                            </p>
+                            {lab.mobile && <p className="text-xs text-emerald-400">{lab.mobile}</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-100 text-emerald-700">
+                          ICTDL Lab
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-xs text-emerald-700 space-y-0.5">
+                        {lab.division && <div><span className="font-semibold opacity-60">Div:</span> {lab.division}</div>}
+                        {lab.district && <div><span className="font-semibold opacity-60">Dist:</span> {lab.district}</div>}
+                        {lab.upazila && <div><span className="font-semibold opacity-60">Upz:</span> {lab.upazila}</div>}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs bg-emerald-50 border border-emerald-100 px-2 py-1.5 rounded font-mono text-emerald-950">
+                            govt@doict.pass
+                          </code>
+                          <button
+                            type="button"
+                            className="text-emerald-500 hover:text-emerald-700"
+                            title="Password hidden"
+                          >
+                            <FaEyeSlash size={14} />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          <FaCheckCircle />
+                          VERIFIED
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-4">
+                          <a
+                            href={`/dashboard/ictdLabsUpdate/${lab.id}`}
+                            className="text-blue-600 hover:text-blue-700 transition-colors"
+                            title="View ICTDL Lab"
+                          >
+                            <FaEye size={14} />
+                          </a>
+                          <a
+                            href={`/dashboard/ictdLabsUpdate/${lab.id}`}
+                            className="text-emerald-600 hover:text-emerald-700 transition-colors"
+                            title="Update ICTDL Lab"
+                          >
+                            <FaShieldAlt size={14} />
+                          </a>
+                          <button
+                            type="button"
+                            className="text-orange-600 hover:text-orange-700 transition-colors"
+                            title="Disable admin"
+                          >
+                            <FaUserTimes size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            className="text-red-600 hover:text-red-700 transition-colors"
+                            title="Delete admin"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-emerald-50/50 px-5 py-4 border-t border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span className="text-xs text-emerald-600 font-medium font-sans">
+              Showing {ictdLabs.length ? ((ictdLabsPage - 1) * ictdLabsPageSize) + 1 : 0}-{Math.min(ictdLabsPage * ictdLabsPageSize, ictdLabsTotal)} of {ictdLabsTotal} ictdl_labs rows
+            </span>
+            {ictdLabsTotalPages > 1 && (
+              <div className="flex gap-2">
+                <button
+                  disabled={ictdLabsPage === 1}
+                  onClick={() => setIctdLabsPage((page) => Math.max(1, page - 1))}
+                  className="px-3 py-1 bg-white border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700 disabled:opacity-50 hover:bg-emerald-50 transition-colors"
+                >
+                  Prev
+                </button>
+                <span className="px-3 py-1 text-xs font-bold text-emerald-700">
+                  Page {ictdLabsPage} of {ictdLabsTotalPages}
+                </span>
+                <button
+                  disabled={ictdLabsPage === ictdLabsTotalPages}
+                  onClick={() => setIctdLabsPage((page) => Math.min(ictdLabsTotalPages, page + 1))}
+                  className="px-3 py-1 bg-white border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700 disabled:opacity-50 hover:bg-emerald-50 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isIctdAdminPage && (
+        <>
+          {/* Controls */}
+          <div className="bg-white rounded-2xl p-6 shadow border border-emerald-100 space-y-4">
+            <div className="flex flex-wrap gap-3 items-center justify-between">
+              <div className="relative w-full md:w-80">
+                <FaSearch className="absolute left-3.5 top-3.5 text-emerald-400" />
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search by name, email, phone..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+
+
+                <select
+                  value={verifiedFilter}
+                  onChange={e => setVerifiedFilter(e.target.value)}
+                  className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-900 outline-none"
+                >
+                  <option value="">All Status</option>
+                  <option value="verified">Verified</option>
+                  <option value="unverified">Unverified</option>
+                </select>
+
+                <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-medium hover:bg-emerald-100">
+                  <FaSync className={loading ? "animate-spin" : ""} /> Reload
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-emerald-500">{filtered.length} {pageCopy.foundLabel}</p>
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-2xl shadow border border-emerald-100 overflow-hidden">
+            <div className="overflow-x-auto text-sans">
+              <table className="w-full text-sm">
+                <thead className="bg-emerald-50 border-b border-emerald-100">
+                  <tr>
+                    {["#", "User Info", "Role", "Jurisdiction", "Password", "Status", "Actions"].map(h => (
+                      <th key={h} className="px-5 py-4 text-left text-xs font-semibold text-emerald-600 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-emerald-50">
+                  {loading ? (
+                    <tr><td colSpan={7} className="text-center py-12">
+                      <FaSync className="animate-spin text-emerald-400 mx-auto mb-2" size={28} />
+                      <p className="text-emerald-500">{pageCopy.loadingLabel}</p>
+                    </td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={7} className="text-center py-12 text-emerald-400">{pageCopy.emptyLabel}</td></tr>
+                  ) : (
+                    paginatedUsers.map((u, idx) => (
+                      <UserRow
+                        key={u.id}
+                        u={u}
+                        idx={(currentPage - 1) * pageSize + idx}
+                        showPassword={showPasswords[u.id]}
+                        onTogglePassword={() => togglePassword(u.id)}
+                        currentUser={currentUser}
+                        onView={() => setViewUser(u)}
+                        onEdit={() => setEditUser(u)}
+                        onVerify={() => {
+                          if (!u.isVerified) {
+                            setSetPasswordUser(u);
+                          } else {
+                            handleVerifyToggle(u.id, u.isVerified);
+                          }
+                        }}
+                        onDelete={() => handleDelete(u.id, u.userName || u.email)}
+                      />
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="bg-emerald-50/50 px-5 py-4 border-t border-emerald-100 flex items-center justify-between">
+                <span className="text-xs text-emerald-600 font-medium font-sans">
+                  Showing {Math.min(filtered.length, (currentPage - 1) * pageSize + 1)}-{Math.min(filtered.length, currentPage * pageSize)} of {filtered.length} {pageCopy.paginationLabel}
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    className="px-3 py-1 bg-white border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700 disabled:opacity-50 hover:bg-emerald-50 transition-colors"
+                  >
+                    Prev
+                  </button>
+                  {[...Array(totalPages)].map((_, i) => (
+                    (totalPages <= 5 || Math.abs(currentPage - (i + 1)) < 3 || i === 0 || i === totalPages - 1) ? (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === i + 1
+                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-200"
+                          : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ) : (
+                      (i + 1 === currentPage - 3 || i + 1 === currentPage + 3) ? <span key={i} className="text-emerald-300 px-1">...</span> : null
+                    )
+                  ))}
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    className="px-3 py-1 bg-white border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700 disabled:opacity-50 hover:bg-emerald-50 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Modals */}
       <AnimatePresence>

@@ -1,19 +1,13 @@
 import React, { useContext } from 'react';
 import { Navigate } from 'react-router';
 import { AuthContext } from '../contexts/AuthContext';
-import { LuLoader } from "react-icons/lu";
+import CircularLoader from '../components/sheard/CircularLoader';
 
 const PublicRoute = ({ children }) => {
     const { user, loading } = useContext(AuthContext);
 
     if (loading) {
-        return (
-            <div className="w-full h-screen flex items-center justify-center bg-emerald-950">
-                <span className="text-emerald-400 animate-spin text-4xl">
-                    <LuLoader />
-                </span>
-            </div>
-        );
+        return <CircularLoader />;
     }
 
     if (user) {

@@ -2,7 +2,7 @@ import React from "react";
 import { FaUserAlt, FaLock } from "react-icons/fa";
 import { FaRegEye } from "react-icons/fa6";
 import { FaRegEyeSlash } from "react-icons/fa6";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
@@ -32,45 +32,8 @@ function StateDefault({
     }
   };
 
-  const fillDemoCredentials = () => {
-    handleFormFieldChanges({
-      target: { name: "email", value: "bbibekbhowmick2001@gmail.com" },
-    });
-    handleFormFieldChanges({
-      target: { name: "password", value: "123456aA@" },
-    });
-  };
-
   return (
     <>
-      {/* Demo Credentials Section */}
-      <div className="w-full mb-6 p-4 bg-emerald-900/40 border border-emerald-500/30 rounded-xl backdrop-blur-sm">
-        <p className="text-xs text-emerald-300/80 mb-3 font-semibold uppercase tracking-widest">
-          📌 ডেমো শংসাপত্র (Demo Credentials)
-        </p>
-        <div className="space-y-2 text-xs text-emerald-200/90">
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400 font-semibold">ইমেইল:</span>
-            <code className="bg-emerald-950/80 px-2 py-1 rounded border border-emerald-500/20 font-mono text-emerald-300">
-              bbibekbhowmick2001@gmail.com
-            </code>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-400 font-semibold">পাসওয়ার্ড:</span>
-            <code className="bg-emerald-950/80 px-2 py-1 rounded border border-emerald-500/20 font-mono text-emerald-300">
-              123456aA@
-            </code>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={fillDemoCredentials}
-          className="w-full mt-3 px-3 py-2 bg-emerald-600/50 hover:bg-emerald-600/70 text-white text-xs font-semibold rounded-lg transition-colors duration-300"
-        >
-          ডেমো শংসাপত্র দিয়ে পূরণ করুন
-        </button>
-      </div>
-
       {/* Login Card */}
       <form onSubmit={handleLogin} className="w-full h-full">
         <h4 className="text-center text-2xl font-bold text-white mb-8 tracking-wide">

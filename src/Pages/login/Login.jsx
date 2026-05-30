@@ -96,7 +96,7 @@ const Login = () => {
             <img className="w-full h-full object-contain" src={lo} alt="" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-white to-emerald-200 drop-shadow-sm">
-            ICTD DIGITAL LAB
+            ICTD LAB
           </h1>
         </div>
 
@@ -153,11 +153,7 @@ const Login = () => {
           )}
         </div>
 
-        <p className="text-center text-sm md:text-base text-emerald-200/80 mt-4 leading-relaxed font-medium tracking-wide">
-          কারিগরি সহায়তায়: তথ্য ও যোগাযোগ প্রযুক্তি অধিদপ্তর,
-          <br />
-          তথ্য ও যোগাযোগ প্রযুক্তি বিভাগ
-        </p>
+        
 
         {/* Footer */}
         <div className="flex justify-center mt-8">

@@ -8,6 +8,8 @@ import {
     HiOutlineRefresh,
     HiOutlineTrash,
     HiOutlineEye,
+    HiOutlinePencilAlt,
+    HiOutlineSave,
     HiOutlineCheckCircle,
     HiOutlineXCircle,
 } from "react-icons/hi";
@@ -17,6 +19,27 @@ import { AuthContext } from "../../../contexts/AuthContext";
 import LabService from "../../../services/lab.service";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const inspectionReportFields = [
+    { label: "শিক্ষা প্রতিষ্ঠানের নাম ও ঠিকানা", name: "instituteAddress" },
+    { label: "ল্যাব স্থাপনের তারিখ ও সাল", name: "labEstablishedAt" },
+    { label: "কম্পিউটার সংখ্যা", name: "computerCount" },
+    { label: "অন্যান্য সরঞ্জামাদি ও সংখ্যা", name: "otherEquipmentCount" },
+    { label: "ডিজিটাল ল্যাবসমূহের সকল কার্যক্রম পরিচালিত হচ্ছে কিনা?", name: "digitalLabStatus" },
+    { label: "ল্যাব রেনোভেশন/রুটের বিষয়ে ভেন্ডরদের জন্য বাসার চিহ্নিত কি? (পরিমাণ)", name: "renovationRouteStatus" },
+    { label: "ল্যাব ক্লাস রেজিস্টার আছে/নাই (না থাকলে কারণ)", name: "labClassRegister" },
+    { label: "ল্যাবে ক্যামেরা আছে/নাই (না থাকলে কারণ)", name: "labCameraStatus" },
+    { label: "ইন্টারনেট কানেকশন আছে/নাই (না থাকলে কারণ)", name: "internetConnectionStatus" },
+    { label: "আইসিটিডি স্কুল অব ফিউচার এবং রোবোটিক্স কর্নার সরঞ্জামসমূহ পরিচালিত না হলে তার কারণ।", name: "sofRoboticsStatus" },
+    { label: "বর্তমান অবস্থা", name: "currentStatus" },
+];
+
+const getInspectionFieldType = (fieldName) => {
+    if (fieldName === "computerCount") return "number";
+    if (["digitalLabStatus", "renovationRouteStatus"].includes(fieldName)) return "yesNo";
+    if (["labClassRegister", "labCameraStatus", "internetConnectionStatus"].includes(fieldName)) return "exists";
+    return "textarea";
+};
 
 const SendReport = () => {
     const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, isLabAdmin, userDivision, userDistrict, userUpazila, user } = useContext(AuthContext);
@@ -31,6 +54,7 @@ const SendReport = () => {
         district: lockedDistrict || "All",
         upazila: lockedUpazila || "All",
         labType: "All",
+        reportType: "All",
     });
 
     const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -47,6 +71,9 @@ const SendReport = () => {
     });
     const [selectedReport, setSelectedReport] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingClassReport, setEditingClassReport] = useState(null);
+    const [classReportForm, setClassReportForm] = useState({});
+    const [isUpdatingClassReport, setIsUpdatingClassReport] = useState(false);
 
     // Fetch filter options dynamically
     const fetchFilterOptions = async (queryDivision = null, queryDistrict = null) => {
@@ -99,16 +126,23 @@ const SendReport = () => {
                 if (searchTerm) params.append("search", searchTerm);
 
                 const token = localStorage.getItem("token");
-                const response = await fetch(
-                    `${API_BASE_URL}/lab-reports?${params.toString()}`,
-                    { headers: { "Authorization": token ? `Bearer ${token}` : "" } }
-                );
-                const result = await response.json();
+                const headers = { "Authorization": token ? `Bearer ${token}` : "" };
+                const [equipmentResponse, classResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/lab-reports?${params.toString()}`, { headers }),
+                    fetch(`${API_BASE_URL}/class-reports?${params.toString()}`, { headers }),
+                ]);
+                const [equipmentResult, classResult] = await Promise.all([
+                    equipmentResponse.json(),
+                    classResponse.json(),
+                ]);
 
-                if (result.success) {
-                    setReportsData(result.data);
+                if (equipmentResult.success && classResult.success) {
+                    setReportsData([
+                        ...(equipmentResult.data || []).map((report) => ({ ...report, reportType: report.reportType || "equipment" })),
+                        ...(classResult.data || []).map((report) => ({ ...report, reportType: report.reportType || "class" })),
+                    ]);
                 } else {
-                    setError(result.message || "Failed to fetch reports");
+                    setError(equipmentResult.message || classResult.message || "Failed to fetch reports");
                 }
             } catch (error) {
                 console.error("Error fetching reports data:", error);
@@ -142,11 +176,67 @@ const SendReport = () => {
         });
     };
 
+    const parseInspectionDetails = (report) => {
+        const directDetails = inspectionReportFields.reduce((details, field) => {
+            if (report[field.name] !== undefined && report[field.name] !== null && report[field.name] !== "") {
+                details[field.name] = report[field.name];
+            }
+            return details;
+        }, {});
+
+        if (report.reportDetails && typeof report.reportDetails === "object") {
+            return { ...report.reportDetails, ...directDetails };
+        }
+
+        if (report.reportDetails && typeof report.reportDetails === "string") {
+            try {
+                return { ...JSON.parse(report.reportDetails), ...directDetails };
+            } catch (error) {
+                console.error("Error parsing inspection report details:", error);
+            }
+        }
+
+        const details = {};
+        const summary = report.damageDetails || "";
+        inspectionReportFields.forEach((field, index) => {
+            const nextLabel = inspectionReportFields[index + 1]?.label;
+            const start = summary.indexOf(`${field.label}:`);
+            if (start === -1) return;
+
+            const valueStart = start + field.label.length + 1;
+            const valueEnd = nextLabel
+                ? summary.indexOf(`${nextLabel}:`, valueStart)
+                : summary.length;
+            details[field.name] = summary
+                .slice(valueStart, valueEnd === -1 ? summary.length : valueEnd)
+                .trim();
+        });
+
+        return { ...details, ...directDetails };
+    };
+
+    const isInspectionReport = (report) => {
+        if (report.reportType === "class" || report.reportDetails) return true;
+        const summary = report.damageDetails || "";
+        return inspectionReportFields.some((field) => summary.includes(`${field.label}:`));
+    };
+
+    const showEquipmentReports = filters.reportType === "All" || filters.reportType === "equipment";
+    const showInspectionReports = filters.reportType === "All" || filters.reportType === "class" || filters.reportType === "inspection";
+    const equipmentReports = showEquipmentReports
+        ? reportsData.filter((report) => !isInspectionReport(report))
+        : [];
+    const inspectionReports = showInspectionReports
+        ? reportsData.filter(isInspectionReport)
+        : [];
+    const shouldRenderEquipmentTable = showEquipmentReports
+        && (filters.reportType === "equipment" || loading || equipmentReports.length > 0 || inspectionReports.length === 0);
+
     // Pagination Logic
-    const totalEntries = reportsData.length;
+    const totalEntries = equipmentReports.length;
     const totalPages = Math.ceil(totalEntries / entriesPerPage);
     const startIndex = (currentPage - 1) * entriesPerPage;
-    const currentEntries = reportsData.slice(
+    const currentEntries = equipmentReports.slice(
         startIndex,
         startIndex + entriesPerPage,
     );
@@ -157,6 +247,7 @@ const SendReport = () => {
             district: lockedDistrict || "All",
             upazila: lockedUpazila || "All",
             labType: "All",
+            reportType: "All",
         });
         setSearchTerm("");
         setCurrentPage(1);
@@ -209,6 +300,70 @@ const SendReport = () => {
         setIsModalOpen(true);
     };
 
+    const handleEditClassReport = (report) => {
+        const details = parseInspectionDetails(report);
+        setEditingClassReport(report);
+        setClassReportForm(details);
+    };
+
+    const handleClassReportFormChange = (name, value) => {
+        setClassReportForm((current) => ({ ...current, [name]: value }));
+    };
+
+    const handleUpdateClassReport = async (event) => {
+        event.preventDefault();
+        if (!editingClassReport) return;
+
+        setIsUpdatingClassReport(true);
+        const loadingToast = toast.loading("Updating class report...", {
+            style: { borderRadius: "10px", background: "#333", color: "#fff" },
+        });
+
+        try {
+            const computerCount = parseInt(classReportForm.computerCount, 10) || 0;
+            const payload = {
+                ...classReportForm,
+                computerCount,
+                reportDetails: { ...classReportForm, computerCount },
+                reportSummary: inspectionReportFields
+                    .map((field) => `${field.label}: ${classReportForm[field.name] || ""}`)
+                    .join("\n"),
+            };
+
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_BASE_URL}/class-reports/${editingClassReport.id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: token ? `Bearer ${token}` : "",
+                },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                setReportsData((current) => current.map((report) => (
+                    report.id === editingClassReport.id && report.reportType === "class"
+                        ? { ...report, ...result.data, reportType: "class" }
+                        : report
+                )));
+                if (selectedReport?.id === editingClassReport.id && selectedReport?.reportType === "class") {
+                    setSelectedReport({ ...selectedReport, ...result.data, reportType: "class" });
+                }
+                setEditingClassReport(null);
+                setClassReportForm({});
+                toast.success("Class report updated successfully", { id: loadingToast });
+            } else {
+                toast.error(result.message || "Failed to update class report", { id: loadingToast });
+            }
+        } catch (error) {
+            console.error("Error updating class report:", error);
+            toast.error("Failed to update class report", { id: loadingToast });
+        } finally {
+            setIsUpdatingClassReport(false);
+        }
+    };
+
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setSelectedReport(null);
@@ -231,7 +386,9 @@ const SendReport = () => {
 
                             try {
                                 const token = localStorage.getItem("token");
-                                const response = await fetch(`${API_BASE_URL}/lab-reports/${reportId}`, {
+                                const report = reportsData.find((item) => item.id === reportId);
+                                const endpoint = report?.reportType === "class" ? "class-reports" : "lab-reports";
+                                const response = await fetch(`${API_BASE_URL}/${endpoint}/${reportId}`, {
                                     method: "DELETE",
                                     headers: { "Authorization": token ? `Bearer ${token}` : "" }
                                 });
@@ -385,7 +542,7 @@ const SendReport = () => {
                     </div>
 
                     {/* Filters Row */}
-                    <div className={`grid grid-cols-1 ${isSuperAdmin ? "sm:grid-cols-2 md:grid-cols-4" : "sm:grid-cols-2"} gap-4 pt-4 border-t border-emerald-100`}>
+                    <div className={`grid grid-cols-1 ${isSuperAdmin ? "sm:grid-cols-2 md:grid-cols-5" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4 pt-4 border-t border-emerald-100`}>
                         {/* Division - Only show for SuperAdmin */}
                         {isSuperAdmin && (
                             <div className="space-y-1.5">
@@ -484,8 +641,26 @@ const SendReport = () => {
                             </select>
                         </div>
 
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                                Report Type
+                            </label>
+                            <select
+                                value={filters.reportType}
+                                onChange={(e) => {
+                                    setFilters({ ...filters, reportType: e.target.value });
+                                    setCurrentPage(1);
+                                }}
+                                className="w-full px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all text-emerald-900"
+                            >
+                                <option value="All">All Reports</option>
+                                <option value="equipment">IT Equipment & Functionality Report</option>
+                                <option value="class">Class activity management report</option>
+                            </select>
+                        </div>
+
                         {/* Clear Filters */}
-                        <div className={`${isSuperAdmin ? "sm:col-span-2 md:col-span-4" : "sm:col-span-2"} flex justify-end`}>
+                        <div className={`${isSuperAdmin ? "sm:col-span-2 md:col-span-5" : "sm:col-span-2 lg:col-span-3"} flex justify-end`}>
                             <button
                                 onClick={handleResetFilters}
                                 className="cursor-pointer hover:scale-105 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm hover:shadow transition-all text-sm font-medium flex items-center justify-center gap-2 border border-emerald-100"
@@ -506,6 +681,7 @@ const SendReport = () => {
             )}
 
             {/* Main Table Card */}
+            {shouldRenderEquipmentTable && (
             <div className="bg-white backdrop-blur-xl rounded-xl shadow-sm border border-emerald-100 overflow-hidden">
                 {loading ? (
                     <div className="p-8 text-center text-emerald-600">
@@ -701,6 +877,138 @@ const SendReport = () => {
                     )}
                 </div>
             </div>
+            )}
+
+            {/* Inspection Reports Table */}
+            {showInspectionReports && (
+            <div className="bg-white backdrop-blur-xl rounded-xl shadow-sm border border-emerald-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-emerald-100 bg-emerald-50/60">
+                    <h2 className="text-xl font-bold text-emerald-950">
+                        ক্লাস কার্যক্রম পরিচালনা রিপোর্ট
+                    </h2>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-[1500px] w-full text-sm">
+                        <thead>
+                            <tr className="bg-emerald-50 border-b border-emerald-100 text-left">
+                                <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                                    ক্রম / ল্যাব
+                                </th>
+                                {inspectionReportFields.map((field) => (
+                                    <th
+                                        key={field.name}
+                                        className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider align-top"
+                                    >
+                                        {field.label}
+                                    </th>
+                                ))}
+                                <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                                    জমার তারিখ
+                                </th>
+                                <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                                    Submitted By
+                                </th>
+                                <th className="px-4 py-4 text-xs font-semibold text-emerald-600 uppercase tracking-wider text-center no-print">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-emerald-50">
+                            {inspectionReports.length > 0 ? (
+                                inspectionReports.map((report, index) => {
+                                    const details = parseInspectionDetails(report);
+
+                                    return (
+                                        <tr
+                                            key={`inspection-${report.id}`}
+                                            className="hover:bg-emerald-50/50 transition-all duration-300 group border-l-4 border-transparent hover:border-emerald-500"
+                                        >
+                                            <td className="px-4 py-4 align-top">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${report.labType === "sof"
+                                                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                                                        : report.labType === "ictdl"
+                                                            ? "bg-blue-100 text-blue-700 border-blue-200"
+                                                            : "bg-amber-100 text-amber-700 border-amber-200"
+                                                        }`}>
+                                                        {report.labType === "sof" ? "SOF" : report.labType === "ictdl" ? "ICTDL" : "ICTDL & SOF"}
+                                                    </span>
+                                                    <span className="text-xs text-emerald-400">
+                                                        #{index + 1}
+                                                    </span>
+                                                </div>
+                                            </td>
+
+                                            {inspectionReportFields.map((field) => (
+                                                <td
+                                                    key={field.name}
+                                                    className="px-4 py-4 align-top text-emerald-900 whitespace-pre-wrap min-w-[160px]"
+                                                >
+                                                    {details[field.name] || "-"}
+                                                </td>
+                                            ))}
+
+                                            <td className="px-4 py-4 align-top whitespace-nowrap text-emerald-800">
+                                                {formatDate(report.createdAt)}
+                                            </td>
+                                            <td className="px-4 py-4 align-top min-w-[180px]">
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-semibold text-emerald-900">
+                                                        {report.submittedByName || "Unknown"}
+                                                    </span>
+                                                    {report.submittedByEmail && (
+                                                        <span className="text-xs text-emerald-500">
+                                                            {report.submittedByEmail}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-4 align-top text-right no-print">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleViewDetails(report)}
+                                                        className="flex items-center gap-2 px-3 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm cursor-pointer"
+                                                        title="View Details"
+                                                    >
+                                                        <HiOutlineEye className="w-5 h-5" />
+                                                        View
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEditClassReport(report)}
+                                                        className="flex items-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm cursor-pointer"
+                                                        title="Update Report"
+                                                    >
+                                                        <HiOutlinePencilAlt className="w-5 h-5" />
+                                                        Update
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteReport(report.id)}
+                                                        className="flex items-center gap-2 px-3 py-2 text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-all shadow-sm hover:shadow font-medium text-sm cursor-pointer"
+                                                        title="Delete Report"
+                                                    >
+                                                        <HiOutlineTrash className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={inspectionReportFields.length + 4}
+                                        className="px-6 py-8 text-center text-emerald-600"
+                                    >
+                                        No inspection reports found matching criteria.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            )}
 
             {/* Details Modal */}
             {isModalOpen && selectedReport && (
@@ -760,9 +1068,64 @@ const SendReport = () => {
                                             {selectedReport.head}
                                         </span>
                                     </div>
+                                    {selectedReport.reportType === "class" && (
+                                        <div className="col-span-2">
+                                            <span className="text-emerald-500">Submitted By:</span>
+                                            <span className="text-emerald-950 ml-2 font-medium">
+                                                {selectedReport.submittedByName || "Unknown"}
+                                                {selectedReport.submittedByEmail ? ` (${selectedReport.submittedByEmail})` : ""}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
+                            {selectedReport.reportType === "class" ? (() => {
+                                const details = parseInspectionDetails(selectedReport);
+
+                                return (
+                                    <div className="bg-teal-50/50 backdrop-blur-sm rounded-xl p-5 border border-teal-100">
+                                        <h3 className="text-lg font-bold text-teal-800 mb-4">
+                                            ক্লাস কার্যক্রম পরিচালনা রিপোর্ট
+                                        </h3>
+                                        <div className="overflow-x-auto rounded-xl border border-emerald-100 bg-white">
+                                            <table className="w-full min-w-[900px] text-sm">
+                                                <tbody className="divide-y divide-emerald-50">
+                                                    {inspectionReportFields.map((field) => {
+                                                        const detailValue = details[`${field.name}Details`];
+                                                        const value = details[field.name] || "-";
+
+                                                        return (
+                                                            <tr key={field.name} className="align-top">
+                                                                <th className="w-1/3 bg-emerald-50 px-4 py-3 text-left font-semibold text-emerald-700">
+                                                                    {field.label}
+                                                                </th>
+                                                                <td className="px-4 py-3 text-emerald-950 whitespace-pre-wrap">
+                                                                    <div>{value}</div>
+                                                                    {detailValue && (
+                                                                        <div className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700 border border-emerald-100">
+                                                                            {detailValue}
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    <tr className="align-top">
+                                                        <th className="w-1/3 bg-emerald-50 px-4 py-3 text-left font-semibold text-emerald-700">
+                                                            Submitted Date
+                                                        </th>
+                                                        <td className="px-4 py-3 text-emerald-950">
+                                                            {formatDate(selectedReport.createdAt)}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                );
+                            })() : (
+                                <>
                             {/* Equipment Counts */}
                             <div className="bg-teal-50/50 backdrop-blur-sm rounded-xl p-5 border border-teal-100">
                                 <h3 className="text-lg font-bold text-teal-800 mb-4">
@@ -885,6 +1248,8 @@ const SendReport = () => {
                                     </p>
                                 </div>
                             )}
+                                </>
+                            )}
                         </div>
 
                         {/* Modal Footer */}
@@ -896,6 +1261,119 @@ const SendReport = () => {
                                 Close
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {editingClassReport && (
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm print:hidden">
+                    <div className="bg-white border-2 border-emerald-100 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+                        <div className="p-6 border-b border-emerald-100 bg-emerald-50/60 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-2xl font-bold text-emerald-950">
+                                    Update Class Report
+                                </h2>
+                                <p className="text-sm text-emerald-600 mt-1">
+                                    {editingClassReport.institute}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setEditingClassReport(null);
+                                    setClassReportForm({});
+                                }}
+                                className="p-2 text-emerald-600 hover:text-white hover:bg-rose-600 rounded-xl transition-all cursor-pointer"
+                            >
+                                <HiOutlineXCircle className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleUpdateClassReport} className="flex-1 overflow-y-auto p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {inspectionReportFields.map((field) => {
+                                    const fieldType = getInspectionFieldType(field.name);
+                                    const detailName = `${field.name}Details`;
+                                    const choiceOptions = fieldType === "yesNo"
+                                        ? ["হ্যাঁ", "না"]
+                                        : fieldType === "exists"
+                                            ? ["আছে", "নাই"]
+                                            : [];
+
+                                    return (
+                                        <div key={field.name} className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4 space-y-3">
+                                            <label className="block text-sm font-semibold text-emerald-800 leading-6">
+                                                {field.label}
+                                            </label>
+
+                                            {fieldType === "number" ? (
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    value={classReportForm[field.name] || ""}
+                                                    onChange={(event) => handleClassReportFormChange(field.name, event.target.value)}
+                                                    className="w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-emerald-950 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                                />
+                                            ) : choiceOptions.length ? (
+                                                <>
+                                                    <div className="flex flex-wrap gap-3">
+                                                        {choiceOptions.map((option) => (
+                                                            <label key={option} className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-800">
+                                                                <input
+                                                                    type="radio"
+                                                                    name={field.name}
+                                                                    value={option}
+                                                                    checked={classReportForm[field.name] === option}
+                                                                    onChange={(event) => handleClassReportFormChange(field.name, event.target.value)}
+                                                                    className="h-4 w-4 accent-emerald-600"
+                                                                />
+                                                                {option}
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                    <textarea
+                                                        rows={3}
+                                                        value={classReportForm[detailName] || ""}
+                                                        onChange={(event) => handleClassReportFormChange(detailName, event.target.value)}
+                                                        placeholder="Details / reason"
+                                                        className="w-full resize-none rounded-lg border border-emerald-200 bg-white px-3 py-2 text-emerald-950 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                                    />
+                                                </>
+                                            ) : (
+                                                <textarea
+                                                    rows={4}
+                                                    value={classReportForm[field.name] || ""}
+                                                    onChange={(event) => handleClassReportFormChange(field.name, event.target.value)}
+                                                    className="w-full resize-none rounded-lg border border-emerald-200 bg-white px-3 py-2 text-emerald-950 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="sticky bottom-0 -mx-6 -mb-6 mt-6 p-5 bg-white/95 border-t border-emerald-100 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setEditingClassReport(null);
+                                        setClassReportForm({});
+                                    }}
+                                    disabled={isUpdatingClassReport}
+                                    className="px-6 py-3 rounded-xl border border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-semibold disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isUpdatingClassReport}
+                                    className="px-7 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-emerald-200 disabled:opacity-50"
+                                >
+                                    <HiOutlineSave className="w-5 h-5" />
+                                    {isUpdatingClassReport ? "Updating..." : "Update Report"}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
