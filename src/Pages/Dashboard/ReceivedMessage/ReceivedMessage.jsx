@@ -12,6 +12,14 @@ import {
 
 const API = import.meta.env.VITE_API_BASE_URL;
 
+const getAuthConfig = () => {
+  const token = localStorage.getItem("token");
+  return {
+    withCredentials: true,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  };
+};
+
 const ReceivedMessage = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,7 +28,7 @@ const ReceivedMessage = () => {
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${API}/contact-messages`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/contact-messages`, getAuthConfig());
       if (data.success) {
         setMessages(data.data || []);
       } else {
@@ -72,7 +80,7 @@ const ReceivedMessage = () => {
       const { data } = await axios.patch(
         `${API}/contact-messages/${message.id}`,
         { status: nextStatus },
-        { withCredentials: true },
+        getAuthConfig(),
       );
 
       if (data.success) {
@@ -100,7 +108,7 @@ const ReceivedMessage = () => {
             toast.dismiss(t.id);
             const toastId = toast.loading("Deleting message...");
             try {
-              await axios.delete(`${API}/contact-messages/${message.id}`, { withCredentials: true });
+              await axios.delete(`${API}/contact-messages/${message.id}`, getAuthConfig());
               setMessages((current) => current.filter((item) => item.id !== message.id));
               toast.success("Message deleted", { id: toastId });
             } catch (error) {
