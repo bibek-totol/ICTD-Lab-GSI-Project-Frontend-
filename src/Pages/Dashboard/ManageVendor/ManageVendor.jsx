@@ -17,6 +17,14 @@ import {
 
 const API = import.meta.env.VITE_API_BASE_URL;
 
+const getAuthConfig = () => {
+  const token = localStorage.getItem("token");
+  return {
+    withCredentials: true,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  };
+};
+
 const emptyVendor = {
   name: "",
   address: "",
@@ -41,7 +49,7 @@ const ManageVendor = () => {
   const fetchVendors = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get(`${API}/vendors`, { withCredentials: true });
+      const { data } = await axios.get(`${API}/vendors`, getAuthConfig());
       if (data?.success) {
         setVendors(data.data || []);
       }
@@ -106,8 +114,8 @@ const ManageVendor = () => {
       };
 
       const { data } = editingVendor
-        ? await axios.put(`${API}/vendors/update/${editingVendor.id}`, payload, { withCredentials: true })
-        : await axios.post(`${API}/vendors/create`, payload, { withCredentials: true });
+        ? await axios.put(`${API}/vendors/update/${editingVendor.id}`, payload, getAuthConfig())
+        : await axios.post(`${API}/vendors/create`, payload, getAuthConfig());
 
       if (data?.success) {
         toast.success(editingVendor ? "Vendor updated" : "Vendor created", { id: toastId });
@@ -129,7 +137,7 @@ const ManageVendor = () => {
       const { data } = await axios.put(
         `${API}/vendors/update/${vendor.id}`,
         { isActive: !vendor.isActive },
-        { withCredentials: true },
+        getAuthConfig(),
       );
 
       if (data?.success) {
@@ -159,9 +167,7 @@ const ManageVendor = () => {
                 toast.dismiss(t.id);
                 const toastId = toast.loading("Deleting vendor...");
                 try {
-                  await axios.delete(`${API}/vendors/delete/${vendor.id}`, {
-                    withCredentials: true,
-                  });
+                  await axios.delete(`${API}/vendors/delete/${vendor.id}`, getAuthConfig());
                   setVendors((prev) => prev.filter((item) => item.id !== vendor.id));
                   toast.success("Vendor deleted", { id: toastId });
                 } catch (err) {
