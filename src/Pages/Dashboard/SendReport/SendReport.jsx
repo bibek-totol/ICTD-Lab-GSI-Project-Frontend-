@@ -342,6 +342,111 @@ const SendReport = () => {
         }
     };
 
+    const createSafeFileName = (value) => (
+        String(value || "report")
+            .replace(/[\\/:*?"<>|]/g, "-")
+            .replace(/\s+/g, "_")
+            .slice(0, 90)
+    );
+
+    const getReportCellValue = (details, field) => {
+        const value = details[field.name] || "-";
+        const detailValue = details[`${field.name}Details`];
+        return detailValue ? `${value}\n${detailValue}` : value;
+    };
+
+    const classReportExportFormats = {
+        sof: {
+            title: "ছক(খ): আইসিটি স্কুল অব ফিউচার এন্ড রোবোটিক্স কর্নার",
+            sheetName: "স্কুল অব ফিউচার ও রোবোটিক্স",
+            operationLabel: "আইসিটিডি স্কুল অব ফিউচার এন্ড রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।",
+            filePrefix: "ক্লাস_কার্যক্রম_পরিচালনা_রিপোর্ট_SoF",
+        },
+        ictdl: {
+            title: "ছক(ক): আইসিটি ডিজিটাল ল্যাব",
+            sheetName: "আইসিটি ডিজিটাল ল্যাব",
+            operationLabel: "আইসিটিডি ডিজিটাল ল্যাব যথাযথভাবে পরিচালিত না হলে তার কারণ।",
+            filePrefix: "ক্লাস_কার্যক্রম_পরিচালনা_রিপোর্ট_ICTD",
+        },
+    };
+
+    const handleExportClassReport = (report) => {
+        const exportFormat = classReportExportFormats[report?.labType];
+        if (!report || report.reportType !== "class" || !exportFormat) return;
+
+        const details = parseInspectionDetails(report);
+        const fields = getInspectionReportFields(report.labType);
+        const instituteAddress = details.instituteAddress
+            || [
+                report.institute,
+                [report.upazila, report.district, report.division].filter(Boolean).join(", "),
+            ].filter(Boolean).join("\n");
+
+        const sheetData = [
+            [`বিভাগ: ${report.division || "...................."}`],
+            [`জেলা: ${report.district || "...................."}`],
+            [`উপজেলা: ${report.upazila || "...................."}`],
+            [],
+            [exportFormat.title],
+            [],
+            [
+                "ক্রমিক নং",
+                "শিক্ষা প্রতিষ্ঠানের নাম ও ঠিকানা",
+                "ল্যাব স্থাপনের তারিখ ও সাল",
+                "কম্পিউটার সংখ্যা",
+                "অন্যান্য সরঞ্জামাদি ও সংখ্যা",
+                "ডিজিটাল ল্যাবসমূহে ক্লাস কার্যক্রম পরিচালিত হচ্ছে কিনা?",
+                "ল্যাব রেনোভেশন/ইন্টেরিয়র ডেকোরেশনের জন্য বরাদ্দ ছিল কিনা? (পরিমাণ)",
+                "ল্যাব রেজিস্টার আছে/নাই (না থাকলে কারণ)",
+                "ল্যাবে ক্যামেরা আছে/নাই (না থাকলে কারণ)",
+                "ইন্টারনেট কানেকশন আছে/নাই (না থাকলে কারণ)",
+                exportFormat.operationLabel,
+                "বর্তমান অবস্থা",
+            ],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            [
+                1,
+                instituteAddress,
+                getReportCellValue(details, fields[1]),
+                getReportCellValue(details, fields[2]),
+                getReportCellValue(details, fields[3]),
+                getReportCellValue(details, fields[4]),
+                getReportCellValue(details, fields[5]),
+                getReportCellValue(details, fields[6]),
+                getReportCellValue(details, fields[7]),
+                getReportCellValue(details, fields[8]),
+                getReportCellValue(details, fields[9]),
+                getReportCellValue(details, fields[10]),
+            ],
+        ];
+
+        const workSheet = XLSX.utils.aoa_to_sheet(sheetData);
+        workSheet["!cols"] = [
+            { wch: 10 },
+            { wch: 30 },
+            ...Array.from({ length: 10 }, () => ({ wch: 22 })),
+        ];
+        workSheet["!rows"] = [
+            { hpt: 18 },
+            { hpt: 18 },
+            { hpt: 18 },
+            {},
+            { hpt: 25 },
+            {},
+            { hpt: 45 },
+            { hpt: 20 },
+            { hpt: 70 },
+        ];
+
+        const workBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workBook, workSheet, exportFormat.sheetName);
+        const fileDate = new Date().toISOString().split("T")[0];
+        XLSX.writeFile(
+            workBook,
+            `${exportFormat.filePrefix}_${createSafeFileName(report.institute)}_${fileDate}.xlsx`,
+        );
+    };
+
     const handleViewDetails = (report) => {
         setSelectedReport(report);
         setIsModalOpen(true);
@@ -1344,7 +1449,7 @@ const SendReport = () => {
                                         Report Details - {formatDate(selectedReport.createdAt)}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-3 no-print">
+                                <div className="flex flex-wrap items-center justify-end gap-3 no-print">
                                     <button
                                         onClick={() => window.print()}
                                         className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:bg-emerald-50"
@@ -1353,6 +1458,26 @@ const SendReport = () => {
                                         <HiOutlinePrinter className="w-5 h-5" />
                                         Print
                                     </button>
+                                    {selectedReport.reportType === "class" && selectedReport.labType === "sof" && (
+                                        <button
+                                            onClick={() => handleExportClassReport(selectedReport)}
+                                            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:bg-emerald-50"
+                                            title="Export ক্লাস কার্যক্রম পরিচালনা রিপোর্ট (SoF)"
+                                        >
+                                            <FaFileExcel className="w-5 h-5" />
+                                            Export SoF
+                                        </button>
+                                    )}
+                                    {selectedReport.reportType === "class" && selectedReport.labType === "ictdl" && (
+                                        <button
+                                            onClick={() => handleExportClassReport(selectedReport)}
+                                            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm transition-all hover:bg-emerald-50"
+                                            title="Export ক্লাস কার্যক্রম পরিচালনা রিপোর্ট ( আইসিটিডি ল্যাব)"
+                                        >
+                                            <FaFileExcel className="w-5 h-5" />
+                                            Export ICTD
+                                        </button>
+                                    )}
                                     <button
                                         onClick={handleCloseModal}
                                         className="p-2 text-emerald-600 hover:text-white hover:bg-rose-600 rounded-xl transition-all cursor-pointer"
