@@ -62,6 +62,25 @@ const getInspectionFieldType = (fieldName) => {
     return "textarea";
 };
 
+const fetchReportList = async (endpoint, params, headers, { optional = false } = {}) => {
+    const response = await fetch(`${API_BASE_URL}/${endpoint}?${params.toString()}`, { headers });
+    const contentType = response.headers.get("content-type") || "";
+    const result = contentType.includes("application/json")
+        ? await response.json()
+        : { success: false, message: await response.text() };
+
+    if (optional && response.status === 404) {
+        console.warn(`${endpoint} endpoint is not available on the deployed API yet.`);
+        return { success: true, data: [] };
+    }
+
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || `Failed to fetch ${endpoint}`);
+    }
+
+    return result;
+};
+
 const SendReport = () => {
     const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, isLabAdmin, userDivision, userDistrict, userUpazila, user } = useContext(AuthContext);
 
@@ -158,26 +177,25 @@ const SendReport = () => {
 
                 const token = localStorage.getItem("token");
                 const headers = { "Authorization": token ? `Bearer ${token}` : "" };
-                const [equipmentResponse, classResponse] = await Promise.all([
-                    fetch(`${API_BASE_URL}/lab-reports?${params.toString()}`, { headers }),
-                    fetch(`${API_BASE_URL}/class-reports?${params.toString()}`, { headers }),
-                ]);
+                const shouldFetchEquipmentReports = filters.reportType === "All" || filters.reportType === "equipment";
+                const shouldFetchClassReports = filters.reportType === "All" || filters.reportType === "class_sof" || filters.reportType === "class_ictdl";
+
                 const [equipmentResult, classResult] = await Promise.all([
-                    equipmentResponse.json(),
-                    classResponse.json(),
+                    shouldFetchEquipmentReports
+                        ? fetchReportList("lab-reports", params, headers)
+                        : Promise.resolve({ success: true, data: [] }),
+                    shouldFetchClassReports
+                        ? fetchReportList("class-reports", params, headers, { optional: true })
+                        : Promise.resolve({ success: true, data: [] }),
                 ]);
 
-                if (equipmentResult.success && classResult.success) {
-                    setReportsData([
-                        ...(equipmentResult.data || []).map((report) => ({ ...report, reportType: report.reportType || "equipment" })),
-                        ...(classResult.data || []).map((report) => ({ ...report, reportType: report.reportType || "class" })),
-                    ]);
-                } else {
-                    setError(equipmentResult.message || classResult.message || "Failed to fetch reports");
-                }
+                setReportsData([
+                    ...(equipmentResult.data || []).map((report) => ({ ...report, reportType: report.reportType || "equipment" })),
+                    ...(classResult.data || []).map((report) => ({ ...report, reportType: report.reportType || "class" })),
+                ]);
             } catch (error) {
                 console.error("Error fetching reports data:", error);
-                setError("Failed to load reports data. Please try again.");
+                setError(error.message || "Failed to load reports data. Please try again.");
             } finally {
                 setLoading(false);
             }
