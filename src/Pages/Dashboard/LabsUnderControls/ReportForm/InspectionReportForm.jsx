@@ -136,12 +136,17 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
         .join("\n");
 
       const payload = {
-        ...data,
         labId,
         labType,
-        computerCount,
-        reportSummary,
-        reportDetails: data,
+        basicRobotics: computerCount,
+        advancedRobotics: 0,
+        "3dPrinter": 0,
+        vrHeadset: 0,
+        networkCamera: 0,
+        ups: 0,
+        isFunctional: data.digitalLabStatus || null,
+        damageDetails: reportSummary,
+        recommendations: data.currentStatus || null,
       };
 
       const token = localStorage.getItem("token");
@@ -149,24 +154,7 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
-      let { response, result } = await postJsonReport("class-reports", payload, requestHeaders);
-
-      if (response.status === 404) {
-        const fallbackPayload = {
-          labId,
-          labType,
-          basicRobotics: computerCount,
-          advancedRobotics: 0,
-          "3dPrinter": 0,
-          vrHeadset: 0,
-          networkCamera: 0,
-          ups: 0,
-          isFunctional: data.digitalLabStatus || null,
-          damageDetails: reportSummary,
-          recommendations: data.currentStatus || null,
-        };
-        ({ response, result } = await postJsonReport("lab-reports", fallbackPayload, requestHeaders));
-      }
+      const { response, result } = await postJsonReport("lab-reports", payload, requestHeaders);
 
       if (!response.ok) {
         setSubmitError(result.message || `Failed to submit report (${response.status})`);
