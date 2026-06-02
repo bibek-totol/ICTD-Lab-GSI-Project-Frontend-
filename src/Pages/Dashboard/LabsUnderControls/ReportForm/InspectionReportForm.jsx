@@ -94,6 +94,22 @@ const formatReportValue = (field, data) => {
   return details ? `${value} - ${details}` : value;
 };
 
+const postJsonReport = async (endpoint, payload, headers) => {
+  const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+    method: "POST",
+    headers,
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  const result = contentType.includes("application/json")
+    ? await response.json()
+    : { message: await response.text() };
+
+  return { response, result };
+};
+
 const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labType = "sof" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -133,17 +149,24 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
-      const response = await fetch(`${API_BASE_URL}/class-reports`, {
-        method: "POST",
-        headers: requestHeaders,
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      let { response, result } = await postJsonReport("class-reports", payload, requestHeaders);
 
-      const contentType = response.headers.get("content-type") || "";
-      const result = contentType.includes("application/json")
-        ? await response.json()
-        : {};
+      if (response.status === 404) {
+        const fallbackPayload = {
+          labId,
+          labType,
+          basicRobotics: computerCount,
+          advancedRobotics: 0,
+          "3dPrinter": 0,
+          vrHeadset: 0,
+          networkCamera: 0,
+          ups: 0,
+          isFunctional: data.digitalLabStatus || null,
+          damageDetails: reportSummary,
+          recommendations: data.currentStatus || null,
+        };
+        ({ response, result } = await postJsonReport("lab-reports", fallbackPayload, requestHeaders));
+      }
 
       if (!response.ok) {
         setSubmitError(result.message || `Failed to submit report (${response.status})`);
