@@ -129,16 +129,26 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
       };
 
       const token = localStorage.getItem("token");
+      const requestHeaders = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
       const response = await fetch(`${API_BASE_URL}/class-reports`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
+        headers: requestHeaders,
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : {};
+
+      if (!response.ok) {
+        setSubmitError(result.message || `Failed to submit report (${response.status})`);
+        return;
+      }
 
       if (result.success) {
         toast.success("Report submitted successfully!", {

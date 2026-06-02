@@ -44,13 +44,23 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
       });
 
       const token = localStorage.getItem("token");
+      const requestHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await fetch(`${API_BASE_URL}/lab-reports`, {
         method: "POST",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
+        headers: requestHeaders,
+        credentials: "include",
         body: formData,
       });
 
-      const result = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json")
+        ? await response.json()
+        : {};
+
+      if (!response.ok) {
+        setSubmitError(result.message || `Failed to submit report (${response.status})`);
+        return;
+      }
 
       if (result.success) {
         toast.success("Report submitted successfully!", {
