@@ -5,7 +5,7 @@ import { FaUserPlus, FaCheckCircle, FaTimesCircle, FaSpinner } from "react-icons
 import { GrPowerReset } from "react-icons/gr";
 import { motion } from "framer-motion";
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
 
 const ROLES = [
   { value: "DivisionAdmin", label: "Division Admin" },

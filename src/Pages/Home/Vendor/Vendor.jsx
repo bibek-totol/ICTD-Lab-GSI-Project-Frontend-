@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FaPhoneAlt, FaMapMarkerAlt, FaBuilding } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
 
 const Vendor = () => {
     const { t } = useTranslation();

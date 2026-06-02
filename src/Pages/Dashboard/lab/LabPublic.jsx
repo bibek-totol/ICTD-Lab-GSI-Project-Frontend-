@@ -32,7 +32,7 @@ const LabPublic = () => {
     const fetchLabs = async () => {
         try {
             // PUBLIC ROUTE - NO TOKEN REQUIRED
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ictdl/public?limit=10000`);
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1"}/ictdl/public?limit=10000`);
             const data = await response.json();
             if (data.success) {
                 setLabs(data.data);

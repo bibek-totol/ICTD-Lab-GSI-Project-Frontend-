@@ -2,7 +2,7 @@ import axios from "axios";
 import AuthService from "./auth.service";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1",
   withCredentials: true,
 });
 

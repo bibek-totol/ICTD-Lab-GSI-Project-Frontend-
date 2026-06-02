@@ -30,7 +30,7 @@ const SOFLabsPublic = () => {
 
     const fetchLabs = () => {
         // PUBLIC ROUTE - NO TOKEN REQUIRED
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/labs/public`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1"}/labs/public`, {
             headers: {
                 "Accept-Language": localStorage.getItem("appLanguage") || "bn",
             },

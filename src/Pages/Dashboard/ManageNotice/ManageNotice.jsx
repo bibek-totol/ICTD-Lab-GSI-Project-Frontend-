@@ -17,7 +17,7 @@ import {
   FaFileImage,
 } from "react-icons/fa";
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
 
 const ManageNotice = () => {
   const [notices, setNotices] = useState([]);

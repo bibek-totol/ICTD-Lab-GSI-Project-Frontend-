@@ -6,7 +6,7 @@ import { FaArrowRight } from "react-icons/fa6";
 
 
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
 const EMPLOYEE_PHONE_HREF = "+8801711474175";
 const EMPLOYEE_EMAIL = "project.director@ictdlab.gov.bd";
 

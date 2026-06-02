@@ -7,7 +7,7 @@ import {
   HiOutlineX,
 } from "react-icons/hi";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
 
 const sofOperationLabel = "আইসিটিডি স্কুল অব ফিউচার এন্ড রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।";
 const ictdlOperationLabel = "আইসিটিডি ডিজিটাল ল্যাব যথাযথভাবে পরিচালিত না হলে তার কারণ।";

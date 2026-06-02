@@ -19,7 +19,7 @@ import InspectionReportForm from "./ReportForm/InspectionReportForm";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { getBanglaJurisdictionNames } from "../../../utils/jurisdictionAliases";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
 
 const LabsUnderControl = () => {
   const { isSuperAdmin, isDivisionAdmin, isDistrictAdmin, isUpazilaAdmin, isLabAdmin, userDivision, userDistrict, userUpazila, role, user } = useContext(AuthContext);

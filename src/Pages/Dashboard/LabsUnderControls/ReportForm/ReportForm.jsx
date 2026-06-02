@@ -11,7 +11,7 @@ import {
 import { RiRobot3Fill } from "react-icons/ri";
 import { GiRobotGolem } from "react-icons/gi";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
 
 const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);

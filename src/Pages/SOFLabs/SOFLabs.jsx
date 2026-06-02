@@ -30,7 +30,7 @@ const SOFLabs = () => {
 
   const fetchLabs = () => {
     const token = localStorage.getItem("token");
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/labs?labType=sof`, {
+    fetch(`${import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1"}/labs?labType=sof`, {
       headers: {
         "Authorization": token ? `Bearer ${token}` : "",
       },
