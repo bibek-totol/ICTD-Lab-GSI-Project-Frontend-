@@ -1,33 +1,33 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1" + "/complaints";
+const API_URL = `${import.meta.env.VITE_API_BASE_URL || 'https://ictd-lab-backend.vercel.app/api/v1'}/complaints`;
 
 const getComplaints = async (params) => {
-    const response = await axios.get(API_URL, { params });
-    return response.data;
+  const response = await axios.get(API_URL, { params });
+  return response.data;
 };
 
 const createComplaint = async (data) => {
-    // If data is regular object, axios handles it. If it's FormData, axios handles that too.
-    const response = await axios.post(API_URL, data);
-    return response.data;
+  // If data is regular object, axios handles it. If it's FormData, axios handles that too.
+  const response = await axios.post(API_URL, data);
+  return response.data;
 };
 
 const updateComplaint = async (id, data) => {
-    const response = await axios.put(`${API_URL}/${id}`, data);
-    return response.data;
+  const response = await axios.put(`${API_URL}/${id}`, data);
+  return response.data;
 };
 
 const deleteComplaint = async (id) => {
-    const response = await axios.delete(`${API_URL}/${id}`);
-    return response.data;
+  const response = await axios.delete(`${API_URL}/${id}`);
+  return response.data;
 };
 
 const ComplaintService = {
-    getComplaints,
-    createComplaint,
-    updateComplaint,
-    deleteComplaint,
+  getComplaints,
+  createComplaint,
+  updateComplaint,
+  deleteComplaint,
 };
 
 export default ComplaintService;

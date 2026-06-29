@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1" + "/users";
+const API_URL = `${import.meta.env.VITE_API_BASE_URL || 'https://ictd-lab-backend.vercel.app/api/v1'}/users`;
 
 /**
  * Update user profile
@@ -8,29 +8,29 @@ const API_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.v
  * @returns {Promise<Object>} - Updated user data
  */
 const updateProfile = async (formData) => {
-    const response = await axios.put(`${API_URL}/profile`, formData, {
-        withCredentials: true,
-        headers: {
-            "Content-Type": "multipart/form-data",
-        },
-    });
-    
-    // Update local storage if successful
-    if (response.data?.success && response.data?.data) {
-        localStorage.setItem("user", JSON.stringify(response.data.data));
-    }
-    
-    return response.data;
+  const response = await axios.put(`${API_URL}/profile`, formData, {
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  // Update local storage if successful
+  if (response.data?.success && response.data?.data) {
+    localStorage.setItem('user', JSON.stringify(response.data.data));
+  }
+
+  return response.data;
 };
 
 const UserService = {
-    updateProfile,
-    changePassword: async (passwords) => {
-        const response = await axios.patch(`${API_URL}/change-password`, passwords, {
-            withCredentials: true,
-        });
-        return response.data;
-    },
+  updateProfile,
+  changePassword: async (passwords) => {
+    const response = await axios.patch(`${API_URL}/change-password`, passwords, {
+      withCredentials: true,
+    });
+    return response.data;
+  },
 };
 
 export default UserService;
