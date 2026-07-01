@@ -1,19 +1,19 @@
-import React, { useState } from "react";
-import toast from "react-hot-toast";
-import { useForm } from "react-hook-form";
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
 import {
   HiCheck,
   HiOutlineChip,
   HiOutlineCube,
   HiOutlineDocumentText,
   HiOutlineX,
-} from "react-icons/hi";
-import { RiRobot3Fill } from "react-icons/ri";
-import { GiRobotGolem } from "react-icons/gi";
+} from 'react-icons/hi';
+import { RiRobot3Fill } from 'react-icons/ri';
+import { GiRobotGolem } from 'react-icons/gi';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
+const ReportForm = ({ onClose, instituteName, labId, labType = 'sof' }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -27,35 +27,33 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
     try {
       const formData = new FormData();
 
-      formData.append("labId", labId);
-      formData.append("labType", labType);
-      formData.append("basicRobotics", parseInt(data.basicRobotics) || 0);
-      formData.append("advancedRobotics", parseInt(data.advancedRobotics) || 0);
-      formData.append("3dPrinter", parseInt(data["3dPrinter"]) || 0);
-      formData.append("vrHeadset", parseInt(data.vrHeadset) || 0);
-      formData.append("networkCamera", parseInt(data.networkCamera) || 0);
-      formData.append("ups", parseInt(data.ups) || 0);
-      formData.append("isFunctional", data.isFunctional || "");
-      formData.append("damageDetails", data.damageDetails || "");
-      formData.append("recommendations", data.recommendations || "");
+      formData.append('labId', labId);
+      formData.append('labType', labType);
+      formData.append('basicRobotics', parseInt(data.basicRobotics) || 0);
+      formData.append('advancedRobotics', parseInt(data.advancedRobotics) || 0);
+      formData.append('3dPrinter', parseInt(data['3dPrinter']) || 0);
+      formData.append('vrHeadset', parseInt(data.vrHeadset) || 0);
+      formData.append('networkCamera', parseInt(data.networkCamera) || 0);
+      formData.append('ups', parseInt(data.ups) || 0);
+      formData.append('isFunctional', data.isFunctional || '');
+      formData.append('damageDetails', data.damageDetails || '');
+      formData.append('recommendations', data.recommendations || '');
 
       selectedFiles.forEach((file) => {
-        formData.append("storageImages", file);
+        formData.append('storageImages', file);
       });
 
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       const requestHeaders = token ? { Authorization: `Bearer ${token}` } : {};
       const response = await fetch(`${API_BASE_URL}/lab-reports`, {
-        method: "POST",
+        method: 'POST',
         headers: requestHeaders,
-        credentials: "include",
+        credentials: 'include',
         body: formData,
       });
 
-      const contentType = response.headers.get("content-type") || "";
-      const result = contentType.includes("application/json")
-        ? await response.json()
-        : {};
+      const contentType = response.headers.get('content-type') || '';
+      const result = contentType.includes('application/json') ? await response.json() : {};
 
       if (!response.ok) {
         setSubmitError(result.message || `Failed to submit report (${response.status})`);
@@ -63,17 +61,17 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
       }
 
       if (result.success) {
-        toast.success("Report submitted successfully!", {
-          style: { borderRadius: "10px", background: "#333", color: "#fff" },
+        toast.success('Report submitted successfully!', {
+          style: { borderRadius: '10px', background: '#333', color: '#fff' },
         });
         imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
         onClose();
       } else {
-        setSubmitError(result.message || "Failed to submit report");
+        setSubmitError(result.message || 'Failed to submit report');
       }
     } catch (error) {
-      console.error("Error submitting report:", error);
-      setSubmitError("Failed to submit report. Please try again.");
+      console.error('Error submitting report:', error);
+      setSubmitError('Failed to submit report. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +94,7 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-emerald-900 uppercase tracking-wide">
-              SOR: {instituteName || "NAME OF THE INSTITUTE"}
+              SOR: {instituteName || 'NAME OF THE INSTITUTE'}
             </h2>
             <p className="text-emerald-600 text-sm mt-1 flex items-center gap-2">
               <HiOutlineChip className="w-4 h-4" />
@@ -125,12 +123,20 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {[
-                { label: "Basic Robotics Instruments", name: "basicRobotics", icon: <RiRobot3Fill /> },
-                { label: "Advanced Robotics Instruments", name: "advancedRobotics", icon: <GiRobotGolem /> },
-                { label: "3D Printer & Filament", name: "3dPrinter", icon: "Printer" },
-                { label: "VR Headset with Controller", name: "vrHeadset", icon: "VR" },
-                { label: "IR Fixed Bullet Network Camera", name: "networkCamera", icon: "Camera" },
-                { label: "UPS", name: "ups", icon: "UPS" },
+                {
+                  label: 'Basic Robotics Instruments',
+                  name: 'basicRobotics',
+                  icon: <RiRobot3Fill />,
+                },
+                {
+                  label: 'Advanced Robotics Instruments',
+                  name: 'advancedRobotics',
+                  icon: <GiRobotGolem />,
+                },
+                { label: '3D Printer & Filament', name: '3dPrinter', icon: 'Printer' },
+                { label: 'VR Headset with Controller', name: 'vrHeadset', icon: 'VR' },
+                { label: 'IR Fixed Bullet Network Camera', name: 'networkCamera', icon: 'Camera' },
+                { label: 'UPS', name: 'ups', icon: 'UPS' },
               ].map((item) => (
                 <div
                   key={item.name}
@@ -164,7 +170,7 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
                   <input
                     type="radio"
                     value="yes"
-                    {...register("isFunctional")}
+                    {...register('isFunctional')}
                     className="peer appearance-none w-6 h-6 border-2 border-emerald-300 rounded-full checked:border-emerald-500 checked:bg-emerald-500 transition-all cursor-pointer"
                   />
                   <div className="absolute w-2.5 h-2.5 bg-white rounded-full scale-0 peer-checked:scale-100 transition-transform"></div>
@@ -178,7 +184,7 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
                   <input
                     type="radio"
                     value="no"
-                    {...register("isFunctional")}
+                    {...register('isFunctional')}
                     className="peer appearance-none w-6 h-6 border-2 border-red-300 rounded-full checked:border-red-500 checked:bg-red-500 transition-all cursor-pointer"
                   />
                   <div className="absolute w-2.5 h-2.5 bg-white rounded-full scale-0 peer-checked:scale-100 transition-transform"></div>
@@ -195,7 +201,7 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
               C. Details of damaged/inoperative equipment and possible causes
             </h3>
             <textarea
-              {...register("damageDetails")}
+              {...register('damageDetails')}
               className="w-full bg-emerald-50/50 border-2 border-emerald-200 rounded-xl p-5 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-500 transition-all resize-y min-h-[120px] placeholder-emerald-400 hover:border-emerald-300 shadow-inner font-medium leading-relaxed"
               placeholder="Describe any damaged equipment, symptoms, and possible causes..."
             />
@@ -259,7 +265,7 @@ const ReportForm = ({ onClose, instituteName, labId, labType = "sof" }) => {
               E. Problems encountered and necessary recommendations
             </h3>
             <textarea
-              {...register("recommendations")}
+              {...register('recommendations')}
               className="w-full bg-emerald-50/50 border-2 border-emerald-200 rounded-xl p-5 text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-500 transition-all resize-y min-h-[120px] placeholder-emerald-400 hover:border-emerald-300 shadow-inner font-medium leading-relaxed"
               placeholder="List problems, challenges, and recommendations for improvement..."
             />

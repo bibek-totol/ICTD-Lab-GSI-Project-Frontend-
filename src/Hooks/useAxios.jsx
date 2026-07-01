@@ -1,19 +1,19 @@
-import axios from "axios";
-import React from "react";
+import axios from 'axios';
+import React from 'react';
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 const useAxios = () => {

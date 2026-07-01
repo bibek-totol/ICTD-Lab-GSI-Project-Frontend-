@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
-import toast from "react-hot-toast";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
   FaTrash,
   FaEdit,
@@ -15,9 +15,9 @@ import {
   FaTimes,
   FaFilePdf,
   FaFileImage,
-} from "react-icons/fa";
+} from 'react-icons/fa';
 
-const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const ManageNotice = () => {
   const [notices, setNotices] = useState([]);
@@ -25,7 +25,7 @@ const ManageNotice = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
-    title: "",
+    title: '',
     serial: 0,
     isActive: true,
     file: null,
@@ -35,7 +35,7 @@ const ManageNotice = () => {
 
   const getFileUrl = (fileUrl) => {
     if (!fileUrl) return null;
-    if (fileUrl.toLowerCase().includes(".pdf")) {
+    if (fileUrl.toLowerCase().includes('.pdf')) {
       return `${API}/files/pdf?url=${encodeURIComponent(fileUrl)}`;
     }
     return fileUrl;
@@ -51,7 +51,7 @@ const ManageNotice = () => {
         setNotices(res.data.data);
       }
     } catch (err) {
-      toast.error("Failed to fetch notices");
+      toast.error('Failed to fetch notices');
     } finally {
       setLoading(false);
     }
@@ -74,11 +74,8 @@ const ManageNotice = () => {
     } else {
       setEditingItem(null);
       setFormData({
-        title: "",
-        serial:
-          notices.length > 0
-            ? Math.max(...notices.map((n) => n.serial)) + 1
-            : 1,
+        title: '',
+        serial: notices.length > 0 ? Math.max(...notices.map((n) => n.serial)) + 1 : 1,
         isActive: true,
         file: null,
         deleteFile: false,
@@ -91,7 +88,7 @@ const ManageNotice = () => {
     setIsModalOpen(false);
     setEditingItem(null);
     setFormData({
-      title: "",
+      title: '',
       serial: 0,
       isActive: true,
       file: null,
@@ -102,47 +99,42 @@ const ManageNotice = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const toastId = toast.loading(editingItem ? "Updating..." : "Creating...");
+    const toastId = toast.loading(editingItem ? 'Updating...' : 'Creating...');
 
     try {
       const data = new FormData();
-      data.append("title", formData.title);
-      data.append("serial", formData.serial);
-      data.append("isActive", formData.isActive);
+      data.append('title', formData.title);
+      data.append('serial', formData.serial);
+      data.append('isActive', formData.isActive);
       if (formData.file) {
-        data.append("file", formData.file);
+        data.append('file', formData.file);
       }
       if (formData.deleteFile) {
-        data.append("deleteFile", "true");
+        data.append('deleteFile', 'true');
       }
 
       let res;
       if (editingItem) {
-        res = await axios.put(
-          `${API}/notices/update/${editingItem.id}`,
-          data,
-          {
-            withCredentials: true,
-            headers: { "Content-Type": "multipart/form-data" },
-          },
-        );
+        res = await axios.put(`${API}/notices/update/${editingItem.id}`, data, {
+          withCredentials: true,
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       } else {
         res = await axios.post(`${API}/notices/create`, data, {
           withCredentials: true,
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
       if (res.data.success) {
-        toast.success(
-          editingItem ? "Updated successfully" : "Created successfully",
-          { id: toastId },
-        );
+        toast.success(editingItem ? 'Updated successfully' : 'Created successfully', {
+          id: toastId,
+        });
         fetchNotices();
         handleCloseModal();
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Operation failed", {
+      toast.error(err.response?.data?.message || 'Operation failed', {
         id: toastId,
       });
     } finally {
@@ -154,22 +146,20 @@ const ManageNotice = () => {
     toast(
       (t) => (
         <div className="flex flex-col gap-3 p-1">
-          <p className="font-bold text-emerald-950 text-sm">
-            Delete this notice?
-          </p>
+          <p className="font-bold text-emerald-950 text-sm">Delete this notice?</p>
           <div className="flex gap-2">
             <button
               onClick={async () => {
                 toast.dismiss(t.id);
-                const tid = toast.loading("Deleting...");
+                const tid = toast.loading('Deleting...');
                 try {
                   await axios.delete(`${API}/notices/delete/${id}`, {
                     withCredentials: true,
                   });
                   setNotices((prev) => prev.filter((n) => n.id !== id));
-                  toast.success("Deleted", { id: tid });
+                  toast.success('Deleted', { id: tid });
                 } catch (err) {
-                  toast.error("Delete failed", { id: tid });
+                  toast.error('Delete failed', { id: tid });
                 }
               }}
               className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold"
@@ -185,12 +175,12 @@ const ManageNotice = () => {
           </div>
         </div>
       ),
-      { duration: 6000, position: "top-center" },
+      { duration: 6000, position: 'top-center' },
     );
   };
 
   const toggleStatus = async (item) => {
-    const tid = toast.loading("Updating status...");
+    const tid = toast.loading('Updating status...');
     try {
       const res = await axios.put(
         `${API}/notices/update/${item.id}`,
@@ -202,36 +192,34 @@ const ManageNotice = () => {
 
       if (res.data.success) {
         setNotices((prev) =>
-          prev.map((n) =>
-            n.id === item.id ? { ...n, isActive: !item.isActive } : n,
-          ),
+          prev.map((n) => (n.id === item.id ? { ...n, isActive: !item.isActive } : n)),
         );
-        toast.success("Status updated", { id: tid });
+        toast.success('Status updated', { id: tid });
       }
     } catch (err) {
-      toast.error("Failed to update status", { id: tid });
+      toast.error('Failed to update status', { id: tid });
     }
   };
 
   const getFileType = (fileUrl) => {
     if (!fileUrl) return null;
     const url = fileUrl.toLowerCase();
-    if (url.includes(".pdf") || url.includes("pdf")) return "pdf";
+    if (url.includes('.pdf') || url.includes('pdf')) return 'pdf';
     if (
-      url.includes(".jpg") ||
-      url.includes(".jpeg") ||
-      url.includes(".png") ||
-      url.includes(".webp") ||
-      url.includes("image")
+      url.includes('.jpg') ||
+      url.includes('.jpeg') ||
+      url.includes('.png') ||
+      url.includes('.webp') ||
+      url.includes('image')
     )
-      return "image";
-    return "file";
+      return 'image';
+    return 'file';
   };
 
   const getFileIcon = (fileUrl) => {
     const type = getFileType(fileUrl);
-    if (type === "pdf") return <FaFilePdf className="text-red-500" />;
-    if (type === "image") return <FaFileImage className="text-blue-500" />;
+    if (type === 'pdf') return <FaFilePdf className="text-red-500" />;
+    if (type === 'image') return <FaFileImage className="text-blue-500" />;
     return <FaFileAlt className="text-emerald-500" />;
   };
 
@@ -240,9 +228,7 @@ const ManageNotice = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-emerald-950">
-            Manage Notices
-          </h1>
+          <h1 className="text-4xl font-bold text-emerald-950">Manage Notices</h1>
           <p className="text-emerald-600 mt-2">
             Create and manage notices for the notice board and All Notice page
           </p>
@@ -263,21 +249,11 @@ const ManageNotice = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-emerald-600 text-white">
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Serial
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  File
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Serial</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Title</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">File</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-50">
@@ -285,27 +261,19 @@ const ManageNotice = () => {
                 <tr>
                   <td colSpan={5} className="py-20 text-center">
                     <FaSync className="animate-spin text-emerald-600 mx-auto text-4xl mb-4" />
-                    <p className="text-emerald-500 font-medium">
-                      Fetching notices...
-                    </p>
+                    <p className="text-emerald-500 font-medium">Fetching notices...</p>
                   </td>
                 </tr>
               ) : notices.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="py-20 text-center text-emerald-400"
-                  >
+                  <td colSpan={5} className="py-20 text-center text-emerald-400">
                     <FaStickyNote className="mx-auto text-5xl mb-4 opacity-20" />
                     No notices found. Create one to get started!
                   </td>
                 </tr>
               ) : (
                 notices.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-emerald-50/50 transition-colors"
-                  >
+                  <tr key={item.id} className="hover:bg-emerald-50/50 transition-colors">
                     <td className="px-6 py-4 align-middle">
                       <div className="flex items-center gap-2 text-emerald-700 font-bold">
                         <FaSortAmountUp className="text-emerald-300" />
@@ -318,8 +286,7 @@ const ManageNotice = () => {
                           {item.title}
                         </p>
                         <p className="text-xs text-emerald-400 mt-1">
-                          Created:{" "}
-                          {new Date(item.createdAt).toLocaleDateString()}
+                          Created: {new Date(item.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </td>
@@ -333,11 +300,11 @@ const ManageNotice = () => {
                         >
                           {getFileIcon(item.fileUrl)}
                           <span className="group-hover:translate-x-0.5 transition-transform">
-                            {getFileType(item.fileUrl) === "pdf"
-                              ? "View PDF"
-                              : getFileType(item.fileUrl) === "image"
-                                ? "View Image"
-                                : "View File"}
+                            {getFileType(item.fileUrl) === 'pdf'
+                              ? 'View PDF'
+                              : getFileType(item.fileUrl) === 'image'
+                                ? 'View Image'
+                                : 'View File'}
                           </span>
                         </a>
                       ) : (
@@ -347,13 +314,14 @@ const ManageNotice = () => {
                     <td className="px-6 py-4 align-middle">
                       <button
                         onClick={() => toggleStatus(item)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${item.isActive
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
-                          } transition-all hover:scale-105`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                          item.isActive
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        } transition-all hover:scale-105`}
                       >
                         {item.isActive ? <FaCheckCircle /> : <FaTimesCircle />}
-                        {item.isActive ? "PUBLISHED" : "UNPUBLISHED"}
+                        {item.isActive ? 'PUBLISHED' : 'UNPUBLISHED'}
                       </button>
                     </td>
                     <td className="px-6 py-4 align-middle">
@@ -402,11 +370,9 @@ const ManageNotice = () => {
               <div className="bg-emerald-600 p-6 text-white flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-bold">
-                    {editingItem ? "Edit Notice" : "Create Notice"}
+                    {editingItem ? 'Edit Notice' : 'Create Notice'}
                   </h3>
-                  <p className="text-emerald-100 text-xs mt-1">
-                    Fill in the details below
-                  </p>
+                  <p className="text-emerald-100 text-xs mt-1">Fill in the details below</p>
                 </div>
                 <button
                   onClick={handleCloseModal}
@@ -424,9 +390,7 @@ const ManageNotice = () => {
                   <textarea
                     required
                     value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="w-full px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-sm outline-none focus:border-emerald-500 transition-all min-h-[100px]"
                     placeholder="Enter notice text..."
                   />
@@ -441,9 +405,7 @@ const ManageNotice = () => {
                       type="number"
                       required
                       value={formData.serial}
-                      onChange={(e) =>
-                        setFormData({ ...formData, serial: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, serial: e.target.value })}
                       className="w-full px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-sm outline-none focus:border-emerald-500"
                     />
                   </div>
@@ -456,7 +418,7 @@ const ManageNotice = () => {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          isActive: e.target.value === "true",
+                          isActive: e.target.value === 'true',
                         })
                       }
                       className="w-full px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-sm outline-none focus:border-emerald-500"
@@ -476,49 +438,43 @@ const ManageNotice = () => {
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png,.webp"
-                        onChange={(e) =>
-                          setFormData({ ...formData, file: e.target.files[0] })
-                        }
+                        onChange={(e) => setFormData({ ...formData, file: e.target.files[0] })}
                         className="text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer w-full"
                       />
                       <p className="text-[10px] text-emerald-500 mt-1 pl-1">
                         Supported: PDF, JPG, PNG, WEBP (Max 10MB)
                       </p>
                     </div>
-                    {editingItem?.fileUrl &&
-                      !formData.file &&
-                      !formData.deleteFile && (
-                        <div className="flex items-center justify-between bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100">
-                          <div className="flex items-center gap-2">
-                            {getFileIcon(editingItem.fileUrl)}
-                            <p className="text-[10px] text-emerald-600 font-medium">
-                              Current:{" "}
-                              {getFileType(editingItem.fileUrl) === "pdf"
-                                ? "PDF Document"
-                                : getFileType(editingItem.fileUrl) === "image"
-                                  ? "Image File"
-                                  : "Attached File"}
-                            </p>
-                            <a
-                              href={getFileUrl(editingItem.fileUrl)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] text-blue-500 hover:text-blue-700 underline font-bold"
-                            >
-                              Preview
-                            </a>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData({ ...formData, deleteFile: true })
-                            }
-                            className="text-[10px] font-bold text-red-500 hover:text-red-700 underline"
+                    {editingItem?.fileUrl && !formData.file && !formData.deleteFile && (
+                      <div className="flex items-center justify-between bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100">
+                        <div className="flex items-center gap-2">
+                          {getFileIcon(editingItem.fileUrl)}
+                          <p className="text-[10px] text-emerald-600 font-medium">
+                            Current:{' '}
+                            {getFileType(editingItem.fileUrl) === 'pdf'
+                              ? 'PDF Document'
+                              : getFileType(editingItem.fileUrl) === 'image'
+                                ? 'Image File'
+                                : 'Attached File'}
+                          </p>
+                          <a
+                            href={getFileUrl(editingItem.fileUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-blue-500 hover:text-blue-700 underline font-bold"
                           >
-                            Remove File
-                          </button>
+                            Preview
+                          </a>
                         </div>
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, deleteFile: true })}
+                          className="text-[10px] font-bold text-red-500 hover:text-red-700 underline"
+                        >
+                          Remove File
+                        </button>
+                      </div>
+                    )}
                     {formData.deleteFile && (
                       <p className="text-[10px] text-red-400 italic px-2">
                         File will be removed upon saving.
@@ -543,7 +499,7 @@ const ManageNotice = () => {
                     {saving ? (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : null}
-                    {editingItem ? "Update Notice" : "Save Notice"}
+                    {editingItem ? 'Update Notice' : 'Save Notice'}
                   </button>
                 </div>
               </form>

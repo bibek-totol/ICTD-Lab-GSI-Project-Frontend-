@@ -123,7 +123,7 @@ const SRDRechart = () => {
   const [activeIndex, setActiveIndex] = useState(null);
 
   useEffect(() => {
-    const API = import.meta.env.VITE_API_BASE_URL || 'https://ictd-lab-backend.vercel.app/api/v1';
+    const API = import.meta.env.VITE_API_BASE_URL;
     // Fetch both ICTD and SOF data
     Promise.all([
       fetch(`${API}/data/srd-data`).then((res) => res.json()),

@@ -13,7 +13,7 @@ const findBnName = (items, value) => {
   return match?.bn_name || value;
 };
 
-const API = import.meta.env.VITE_API_BASE_URL || 'https://ictd-lab-backend.vercel.app/api/v1';
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const fetchJson = async (path) => {
   const response = await fetch(`${API}${path}`, { credentials: 'include' });

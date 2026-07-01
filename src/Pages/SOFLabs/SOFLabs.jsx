@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from 'react';
 import {
   FaPrint,
   FaFileExcel,
@@ -12,27 +12,27 @@ import {
   FaEnvelope,
   FaPhone,
   FaUser,
-} from "react-icons/fa";
-import * as XLSX from "xlsx";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTranslation } from "react-i18next";
+} from 'react-icons/fa';
+import * as XLSX from 'xlsx';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const SOFLabs = () => {
   const { t } = useTranslation();
   const [labs, setLabs] = useState([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [entries, setEntries] = useState(25);
   const [page, setPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [district, setDistrict] = useState("");
-  const [upazila, setUpazila] = useState("");
+  const [district, setDistrict] = useState('');
+  const [upazila, setUpazila] = useState('');
 
   const fetchLabs = () => {
-    const token = localStorage.getItem("token");
-    fetch(`${import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1"}/labs?labType=sof`, {
+    const token = localStorage.getItem('token');
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/labs?labType=sof`, {
       headers: {
-        "Authorization": token ? `Bearer ${token}` : "",
+        Authorization: token ? `Bearer ${token}` : '',
       },
     })
       .then((res) => res.json())
@@ -43,7 +43,7 @@ const SOFLabs = () => {
         }
       })
       .catch((error) => {
-        console.error("Error fetching SOF labs data:", error);
+        console.error('Error fetching SOF labs data:', error);
       });
   };
 
@@ -51,28 +51,18 @@ const SOFLabs = () => {
     fetchLabs();
   }, []);
 
-  const districts = useMemo(
-    () => [...new Set(labs.map((l) => l.division))],
-    [labs]
-  );
+  const districts = useMemo(() => [...new Set(labs.map((l) => l.division))], [labs]);
 
   const upazilas = useMemo(
     () => [
-      ...new Set(
-        labs
-          .filter((l) => !district || l.division === district)
-          .map((l) => l.upazila)
-      ),
+      ...new Set(labs.filter((l) => !district || l.division === district).map((l) => l.upazila)),
     ],
-    [labs, district]
+    [labs, district],
   );
 
   const filtered = useMemo(() => {
     return labs.filter((lab) => {
-      const matchesText = Object.values(lab)
-        .join(" ")
-        .toLowerCase()
-        .includes(search.toLowerCase());
+      const matchesText = Object.values(lab).join(' ').toLowerCase().includes(search.toLowerCase());
 
       return (
         (!district || lab.division === district) &&
@@ -87,22 +77,14 @@ const SOFLabs = () => {
   const totalPages = Math.ceil(filtered.length / entries);
 
   const resetFilters = () => {
-    setDistrict("");
-    setUpazila("");
-    setSearch("");
+    setDistrict('');
+    setUpazila('');
+    setSearch('');
     setPage(1);
   };
 
   const exportCSV = () => {
-    const headers = [
-      "ক্রম",
-      "জেলা",
-      "উপজেলা",
-      "শিক্ষা প্রতিষ্ঠান",
-      "প্রধান",
-      "মোবাইল",
-      "ইমেইল",
-    ];
+    const headers = ['ক্রম', 'জেলা', 'উপজেলা', 'শিক্ষা প্রতিষ্ঠান', 'প্রধান', 'মোবাইল', 'ইমেইল'];
 
     const rows = filtered.map((l, index) => [
       index + 1,
@@ -115,14 +97,12 @@ const SOFLabs = () => {
     ]);
 
     const csv =
-      headers.join(",") +
-      "\n" +
-      rows.map((r) => r.map((v) => `"${v ?? ""}"`).join(",")).join("\n");
+      headers.join(',') + '\n' + rows.map((r) => r.map((v) => `"${v ?? ''}"`).join(',')).join('\n');
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = "sof-lab-list.csv";
+    link.download = 'sof-lab-list.csv';
     link.click();
   };
 
@@ -131,7 +111,7 @@ const SOFLabs = () => {
       ক্রম: index + 1,
       জেলা: l.division,
       উপজেলা: l.upazila,
-      "শিক্ষা প্রতিষ্ঠান": l.institute,
+      'শিক্ষা প্রতিষ্ঠান': l.institute,
       প্রধান: l.head,
       মোবাইল: l.mobile,
       ইমেইল: l.email,
@@ -139,8 +119,8 @@ const SOFLabs = () => {
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "SOF Labs");
-    XLSX.writeFile(workbook, "sof-lab-list.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'SOF Labs');
+    XLSX.writeFile(workbook, 'sof-lab-list.xlsx');
   };
 
   const containerVariants = {
@@ -199,7 +179,7 @@ const SOFLabs = () => {
             {isFilterOpen && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
+                animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 className="border-t border-emerald-100"
@@ -213,7 +193,7 @@ const SOFLabs = () => {
                       value={district}
                       onChange={(e) => {
                         setDistrict(e.target.value);
-                        setUpazila("");
+                        setUpazila('');
                       }}
                       className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-2 text-sm text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 outline-none transition-all shadow-sm hover:border-emerald-300"
                     >
@@ -343,22 +323,16 @@ const SOFLabs = () => {
             <table className="w-full text-sm text-left">
               <thead>
                 <tr className="bg-emerald-100/50 border-b border-emerald-200">
-                  {[
-                    "ক্রম",
-                    "জেলা",
-                    "উপজেলা",
-                    "প্রতিষ্ঠান",
-                    "প্রধান",
-                    "মোবাইল",
-                    "ইমেইল",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="px-6 py-4 font-semibold text-emerald-800 whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  {['ক্রম', 'জেলা', 'উপজেলা', 'প্রতিষ্ঠান', 'প্রধান', 'মোবাইল', 'ইমেইল'].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-6 py-4 font-semibold text-emerald-800 whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
 
@@ -373,22 +347,14 @@ const SOFLabs = () => {
                         exit={{ opacity: 0 }}
                         className="hover:bg-emerald-50 transition-all duration-200 group border-b border-emerald-50/50 hover:shadow-sm"
                       >
-                        <td className="px-6 py-4 font-medium text-emerald-600">
-                          {start + i + 1}
-                        </td>
+                        <td className="px-6 py-4 font-medium text-emerald-600">{start + i + 1}</td>
 
-                        <td className="px-6 py-4 text-emerald-900/80">
-                          {l.division}
-                        </td>
+                        <td className="px-6 py-4 text-emerald-900/80">{l.division}</td>
 
-                        <td className="px-6 py-4 text-emerald-900/80">
-                          {l.upazila}
-                        </td>
+                        <td className="px-6 py-4 text-emerald-900/80">{l.upazila}</td>
 
                         <td className="px-6 py-4">
-                          <div className="font-semibold text-emerald-950">
-                            {l.institute}
-                          </div>
+                          <div className="font-semibold text-emerald-950">{l.institute}</div>
                         </td>
 
                         <td className="px-6 py-4">
@@ -421,7 +387,7 @@ const SOFLabs = () => {
                       <td colSpan="7" className="px-6 py-12 text-center">
                         <div className="flex flex-col items-center gap-2 text-emerald-500">
                           <FaSearch className="text-4xl opacity-50" />
-                          <p>{t("no_data_found")}</p>
+                          <p>{t('no_data_found')}</p>
                         </div>
                       </td>
                     </tr>
@@ -433,19 +399,15 @@ const SOFLabs = () => {
 
           <div className="px-6 py-4 bg-emerald-50/50 border-t border-emerald-100 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-inner">
             <p className="text-sm text-emerald-700">
-              Showing{" "}
+              Showing{' '}
               <span className="font-semibold text-emerald-900">
                 {filtered.length === 0 ? 0 : start + 1}
-              </span>{" "}
-              to{" "}
+              </span>{' '}
+              to{' '}
               <span className="font-semibold text-emerald-900">
                 {Math.min(start + entries, filtered.length)}
-              </span>{" "}
-              of{" "}
-              <span className="font-semibold text-emerald-900">
-                {filtered.length}
-              </span>{" "}
-              entries
+              </span>{' '}
+              of <span className="font-semibold text-emerald-900">{filtered.length}</span> entries
             </p>
 
             <div className="flex items-center gap-2">
@@ -469,10 +431,11 @@ const SOFLabs = () => {
                     <button
                       key={pageNum}
                       onClick={() => setPage(pageNum)}
-                      className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${page === pageNum
-                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-500 scale-110"
-                        : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm hover:shadow-md hover:scale-105"
-                        }`}
+                      className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${
+                        page === pageNum
+                          ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 border border-emerald-500 scale-110'
+                          : 'bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm hover:shadow-md hover:scale-105'
+                      }`}
                     >
                       {pageNum}
                     </button>

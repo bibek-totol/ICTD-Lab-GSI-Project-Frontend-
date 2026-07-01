@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { useTranslation } from "react-i18next";
-import { FiBell, FiTarget } from "react-icons/fi";
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useTranslation } from 'react-i18next';
+import { FiBell, FiTarget } from 'react-icons/fi';
 
-const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const LatestUpdatesMarquee = () => {
   const { t } = useTranslation();
@@ -11,7 +11,7 @@ const LatestUpdatesMarquee = () => {
 
   const getFileUrl = (fileUrl) => {
     if (!fileUrl) return null;
-    if (fileUrl.toLowerCase().includes(".pdf")) {
+    if (fileUrl.toLowerCase().includes('.pdf')) {
       return `${API}/files/pdf?url=${encodeURIComponent(fileUrl)}`;
     }
     return fileUrl;
@@ -26,14 +26,14 @@ const LatestUpdatesMarquee = () => {
           return;
         }
       } catch (err) {
-        console.error("Failed to fetch announcements", err);
+        console.error('Failed to fetch announcements', err);
       }
 
       setAnnouncements([
-        { title: t("marquee_fallback_1") },
-        { title: t("marquee_fallback_2") },
-        { title: t("marquee_fallback_3") },
-        { title: t("marquee_fallback_4") },
+        { title: t('marquee_fallback_1') },
+        { title: t('marquee_fallback_2') },
+        { title: t('marquee_fallback_3') },
+        { title: t('marquee_fallback_4') },
       ]);
     };
 
@@ -46,31 +46,25 @@ const LatestUpdatesMarquee = () => {
 
       <div className="relative flex items-center h-8">
         <div className="flex-shrink-0 px-4 flex items-center gap-2 bg-white/80 py-1.5 rounded-r-full border border-emerald-200 border-l-0 shadow-sm z-10 h-full">
-          <FiBell
-            className="text-red-500 animate-pulse flex-shrink-0"
-            size={18}
-          />
+          <FiBell className="text-red-500 animate-pulse flex-shrink-0" size={18} />
           <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 whitespace-nowrap">
-            {t("latest_updates")}
+            {t('latest_updates')}
           </span>
         </div>
 
         <div className="flex-1 overflow-hidden h-full flex items-center">
           <div
-            className={`animate-marquee whitespace-nowrap inline-flex items-center ${announcements.length === 0 ? "opacity-0" : "opacity-100"}`}
+            className={`animate-marquee whitespace-nowrap inline-flex items-center ${announcements.length === 0 ? 'opacity-0' : 'opacity-100'}`}
           >
             {[...announcements, ...announcements].map((ann, index) => (
-              <span
-                key={`${ann.title}-${index}`}
-                className="inline-flex items-center mx-6"
-              >
+              <span key={`${ann.title}-${index}`} className="inline-flex items-center mx-6">
                 {ann.fileUrl ? (
                   <a
                     href={getFileUrl(ann.fileUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-medium text-emerald-800 hover:text-blue-600 hover:underline inline-flex items-center gap-1.5 whitespace-nowrap transition-colors duration-200 group"
-                    title={t("marquee_attachment_title")}
+                    title={t('marquee_attachment_title')}
                   >
                     <span className="inline-block">{ann.title}</span>
                     <FiTarget

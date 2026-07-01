@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fa';
 import { AuthContext } from '../../../../contexts/AuthContext';
 
-const API = import.meta.env.VITE_API_BASE_URL || 'https://ictd-lab-backend.vercel.app/api/v1';
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const roleBadge = {
   SuperAdmin: 'bg-red-100 text-red-700 border-red-200',

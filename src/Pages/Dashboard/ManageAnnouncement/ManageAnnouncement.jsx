@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
-import toast from "react-hot-toast";
+import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import {
   FaTrash,
   FaEdit,
@@ -17,9 +17,9 @@ import {
   FaTimes,
   FaFilePdf,
   FaFileImage,
-} from "react-icons/fa";
+} from 'react-icons/fa';
 
-const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const ManageAnnouncement = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -27,7 +27,7 @@ const ManageAnnouncement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
-    title: "",
+    title: '',
     serial: 0,
     isActive: true,
     file: null,
@@ -39,7 +39,7 @@ const ManageAnnouncement = () => {
   const getFileUrl = (fileUrl) => {
     if (!fileUrl) return null;
     // For PDFs, use direct proxy endpoint to display inline
-    if (fileUrl.toLowerCase().includes(".pdf")) {
+    if (fileUrl.toLowerCase().includes('.pdf')) {
       return `${API}/files/pdf?url=${encodeURIComponent(fileUrl)}`;
     }
     // For images, use direct URL
@@ -56,7 +56,7 @@ const ManageAnnouncement = () => {
         setAnnouncements(res.data.data);
       }
     } catch (err) {
-      toast.error("Failed to fetch announcements");
+      toast.error('Failed to fetch announcements');
     } finally {
       setLoading(false);
     }
@@ -79,11 +79,8 @@ const ManageAnnouncement = () => {
     } else {
       setEditingItem(null);
       setFormData({
-        title: "",
-        serial:
-          announcements.length > 0
-            ? Math.max(...announcements.map((a) => a.serial)) + 1
-            : 1,
+        title: '',
+        serial: announcements.length > 0 ? Math.max(...announcements.map((a) => a.serial)) + 1 : 1,
         isActive: true,
         file: null,
         deleteFile: false,
@@ -96,7 +93,7 @@ const ManageAnnouncement = () => {
     setIsModalOpen(false);
     setEditingItem(null);
     setFormData({
-      title: "",
+      title: '',
       serial: 0,
       isActive: true,
       file: null,
@@ -107,47 +104,42 @@ const ManageAnnouncement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const toastId = toast.loading(editingItem ? "Updating..." : "Creating...");
+    const toastId = toast.loading(editingItem ? 'Updating...' : 'Creating...');
 
     try {
       const data = new FormData();
-      data.append("title", formData.title);
-      data.append("serial", formData.serial);
-      data.append("isActive", formData.isActive);
+      data.append('title', formData.title);
+      data.append('serial', formData.serial);
+      data.append('isActive', formData.isActive);
       if (formData.file) {
-        data.append("file", formData.file);
+        data.append('file', formData.file);
       }
       if (formData.deleteFile) {
-        data.append("deleteFile", "true");
+        data.append('deleteFile', 'true');
       }
 
       let res;
       if (editingItem) {
-        res = await axios.put(
-          `${API}/announcements/update/${editingItem.id}`,
-          data,
-          {
-            withCredentials: true,
-            headers: { "Content-Type": "multipart/form-data" },
-          },
-        );
+        res = await axios.put(`${API}/announcements/update/${editingItem.id}`, data, {
+          withCredentials: true,
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       } else {
         res = await axios.post(`${API}/announcements/create`, data, {
           withCredentials: true,
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
       if (res.data.success) {
-        toast.success(
-          editingItem ? "Updated successfully" : "Created successfully",
-          { id: toastId },
-        );
+        toast.success(editingItem ? 'Updated successfully' : 'Created successfully', {
+          id: toastId,
+        });
         fetchAnnouncements();
         handleCloseModal();
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Operation failed", {
+      toast.error(err.response?.data?.message || 'Operation failed', {
         id: toastId,
       });
     } finally {
@@ -159,28 +151,26 @@ const ManageAnnouncement = () => {
     toast(
       (t) => (
         <div className="flex flex-col gap-3 p-1">
-          <p className="font-bold text-emerald-950 text-sm">
-            Delete this announcement?
-          </p>
+          <p className="font-bold text-emerald-950 text-sm">Delete this announcement?</p>
           <div className="flex gap-2">
             <button
               onClick={async () => {
                 toast.dismiss(t.id);
-                const tid = toast.loading("Deleting...");
+                const tid = toast.loading('Deleting...');
                 try {
                   await axios.delete(`${API}/announcements/delete/${id}`, {
                     withCredentials: true,
                   });
                   setAnnouncements((prev) => prev.filter((a) => a.id !== id));
-                  toast.success("Deleted", { id: tid });
+                  toast.success('Deleted', { id: tid });
                 } catch (err) {
-                  toast.error("Delete failed", { id: tid });
+                  toast.error('Delete failed', { id: tid });
                 }
               }}
               className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-bold"
             >
-              {" "}
-              Confirm{" "}
+              {' '}
+              Confirm{' '}
             </button>
             <button
               onClick={() => toast.dismiss(t.id)}
@@ -191,12 +181,12 @@ const ManageAnnouncement = () => {
           </div>
         </div>
       ),
-      { duration: 6000, position: "top-center" },
+      { duration: 6000, position: 'top-center' },
     );
   };
 
   const toggleStatus = async (item) => {
-    const tid = toast.loading("Updating status...");
+    const tid = toast.loading('Updating status...');
     try {
       const res = await axios.put(
         `${API}/announcements/update/${item.id}`,
@@ -208,14 +198,12 @@ const ManageAnnouncement = () => {
 
       if (res.data.success) {
         setAnnouncements((prev) =>
-          prev.map((a) =>
-            a.id === item.id ? { ...a, isActive: !item.isActive } : a,
-          ),
+          prev.map((a) => (a.id === item.id ? { ...a, isActive: !item.isActive } : a)),
         );
-        toast.success("Status updated", { id: tid });
+        toast.success('Status updated', { id: tid });
       }
     } catch (err) {
-      toast.error("Failed to update status", { id: tid });
+      toast.error('Failed to update status', { id: tid });
     }
   };
 
@@ -223,23 +211,23 @@ const ManageAnnouncement = () => {
   const getFileType = (fileUrl) => {
     if (!fileUrl) return null;
     const url = fileUrl.toLowerCase();
-    if (url.includes(".pdf") || url.includes("pdf")) return "pdf";
+    if (url.includes('.pdf') || url.includes('pdf')) return 'pdf';
     if (
-      url.includes(".jpg") ||
-      url.includes(".jpeg") ||
-      url.includes(".png") ||
-      url.includes(".webp") ||
-      url.includes("image")
+      url.includes('.jpg') ||
+      url.includes('.jpeg') ||
+      url.includes('.png') ||
+      url.includes('.webp') ||
+      url.includes('image')
     )
-      return "image";
-    return "file";
+      return 'image';
+    return 'file';
   };
 
   // Helper function to get file icon
   const getFileIcon = (fileUrl) => {
     const type = getFileType(fileUrl);
-    if (type === "pdf") return <FaFilePdf className="text-red-500" />;
-    if (type === "image") return <FaFileImage className="text-blue-500" />;
+    if (type === 'pdf') return <FaFilePdf className="text-red-500" />;
+    if (type === 'image') return <FaFileImage className="text-blue-500" />;
     return <FaFileAlt className="text-emerald-500" />;
   };
 
@@ -248,9 +236,7 @@ const ManageAnnouncement = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-emerald-950">
-            Manage Announcements
-          </h1>
+          <h1 className="text-4xl font-bold text-emerald-950">Manage Announcements</h1>
           <p className="text-emerald-600 mt-2">
             Create and manage scrolling notifications for the homepage
           </p>
@@ -271,21 +257,11 @@ const ManageAnnouncement = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-emerald-600 text-white">
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Serial
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  File
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Serial</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Title</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">File</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-left font-bold uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-50">
@@ -293,27 +269,19 @@ const ManageAnnouncement = () => {
                 <tr>
                   <td colSpan={5} className="py-20 text-center">
                     <FaSync className="animate-spin text-emerald-600 mx-auto text-4xl mb-4" />
-                    <p className="text-emerald-500 font-medium">
-                      Fetching announcements...
-                    </p>
+                    <p className="text-emerald-500 font-medium">Fetching announcements...</p>
                   </td>
                 </tr>
               ) : announcements.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="py-20 text-center text-emerald-400"
-                  >
+                  <td colSpan={5} className="py-20 text-center text-emerald-400">
                     <FaBell className="mx-auto text-5xl mb-4 opacity-20" />
                     No announcements found. Create one to get started!
                   </td>
                 </tr>
               ) : (
                 announcements.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-emerald-50/50 transition-colors"
-                  >
+                  <tr key={item.id} className="hover:bg-emerald-50/50 transition-colors">
                     <td className="px-6 py-4 align-middle">
                       <div className="flex items-center gap-2 text-emerald-700 font-bold">
                         <FaSortAmountUp className="text-emerald-300" />
@@ -326,8 +294,7 @@ const ManageAnnouncement = () => {
                           {item.title}
                         </p>
                         <p className="text-xs text-emerald-400 mt-1">
-                          Created:{" "}
-                          {new Date(item.createdAt).toLocaleDateString()}
+                          Created: {new Date(item.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </td>
@@ -341,11 +308,11 @@ const ManageAnnouncement = () => {
                         >
                           {getFileIcon(item.fileUrl)}
                           <span className="group-hover:translate-x-0.5 transition-transform">
-                            {getFileType(item.fileUrl) === "pdf"
-                              ? "View PDF"
-                              : getFileType(item.fileUrl) === "image"
-                                ? "View Image"
-                                : "View File"}
+                            {getFileType(item.fileUrl) === 'pdf'
+                              ? 'View PDF'
+                              : getFileType(item.fileUrl) === 'image'
+                                ? 'View Image'
+                                : 'View File'}
                           </span>
                         </a>
                       ) : (
@@ -355,13 +322,14 @@ const ManageAnnouncement = () => {
                     <td className="px-6 py-4 align-middle">
                       <button
                         onClick={() => toggleStatus(item)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${item.isActive
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
-                          } transition-all hover:scale-105`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
+                          item.isActive
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        } transition-all hover:scale-105`}
                       >
                         {item.isActive ? <FaCheckCircle /> : <FaTimesCircle />}
-                        {item.isActive ? "PUBLISHED" : "UNPUBLISHED"}
+                        {item.isActive ? 'PUBLISHED' : 'UNPUBLISHED'}
                       </button>
                     </td>
                     <td className="px-6 py-4 align-middle">
@@ -410,11 +378,9 @@ const ManageAnnouncement = () => {
               <div className="bg-emerald-600 p-6 text-white flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-bold">
-                    {editingItem ? "Edit Announcement" : "Create Announcement"}
+                    {editingItem ? 'Edit Announcement' : 'Create Announcement'}
                   </h3>
-                  <p className="text-emerald-100 text-xs mt-1">
-                    Fill in the details below
-                  </p>
+                  <p className="text-emerald-100 text-xs mt-1">Fill in the details below</p>
                 </div>
                 <button
                   onClick={handleCloseModal}
@@ -432,9 +398,7 @@ const ManageAnnouncement = () => {
                   <textarea
                     required
                     value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="w-full px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-sm outline-none focus:border-emerald-500 transition-all min-h-[100px]"
                     placeholder="Enter announcement text..."
                   />
@@ -449,9 +413,7 @@ const ManageAnnouncement = () => {
                       type="number"
                       required
                       value={formData.serial}
-                      onChange={(e) =>
-                        setFormData({ ...formData, serial: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, serial: e.target.value })}
                       className="w-full px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-sm outline-none focus:border-emerald-500"
                     />
                   </div>
@@ -464,7 +426,7 @@ const ManageAnnouncement = () => {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          isActive: e.target.value === "true",
+                          isActive: e.target.value === 'true',
                         })
                       }
                       className="w-full px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-sm outline-none focus:border-emerald-500"
@@ -484,49 +446,43 @@ const ManageAnnouncement = () => {
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png,.webp"
-                        onChange={(e) =>
-                          setFormData({ ...formData, file: e.target.files[0] })
-                        }
+                        onChange={(e) => setFormData({ ...formData, file: e.target.files[0] })}
                         className="text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer w-full"
                       />
                       <p className="text-[10px] text-emerald-500 mt-1 pl-1">
                         Supported: PDF, JPG, PNG, WEBP (Max 10MB)
                       </p>
                     </div>
-                    {editingItem?.fileUrl &&
-                      !formData.file &&
-                      !formData.deleteFile && (
-                        <div className="flex items-center justify-between bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100">
-                          <div className="flex items-center gap-2">
-                            {getFileIcon(editingItem.fileUrl)}
-                            <p className="text-[10px] text-emerald-600 font-medium">
-                              Current:{" "}
-                              {getFileType(editingItem.fileUrl) === "pdf"
-                                ? "PDF Document"
-                                : getFileType(editingItem.fileUrl) === "image"
-                                  ? "Image File"
-                                  : "Attached File"}
-                            </p>
-                            <a
-                              href={getFileUrl(editingItem.fileUrl)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] text-blue-500 hover:text-blue-700 underline font-bold"
-                            >
-                              Preview
-                            </a>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData({ ...formData, deleteFile: true })
-                            }
-                            className="text-[10px] font-bold text-red-500 hover:text-red-700 underline"
+                    {editingItem?.fileUrl && !formData.file && !formData.deleteFile && (
+                      <div className="flex items-center justify-between bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100">
+                        <div className="flex items-center gap-2">
+                          {getFileIcon(editingItem.fileUrl)}
+                          <p className="text-[10px] text-emerald-600 font-medium">
+                            Current:{' '}
+                            {getFileType(editingItem.fileUrl) === 'pdf'
+                              ? 'PDF Document'
+                              : getFileType(editingItem.fileUrl) === 'image'
+                                ? 'Image File'
+                                : 'Attached File'}
+                          </p>
+                          <a
+                            href={getFileUrl(editingItem.fileUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-blue-500 hover:text-blue-700 underline font-bold"
                           >
-                            Remove File
-                          </button>
+                            Preview
+                          </a>
                         </div>
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, deleteFile: true })}
+                          className="text-[10px] font-bold text-red-500 hover:text-red-700 underline"
+                        >
+                          Remove File
+                        </button>
+                      </div>
+                    )}
                     {formData.deleteFile && (
                       <p className="text-[10px] text-red-400 italic px-2">
                         File will be removed upon saving.
@@ -551,7 +507,7 @@ const ManageAnnouncement = () => {
                     {saving ? (
                       <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : null}
-                    {editingItem ? "Update Announcement" : "Save Announcement"}
+                    {editingItem ? 'Update Announcement' : 'Save Announcement'}
                   </button>
                 </div>
               </form>

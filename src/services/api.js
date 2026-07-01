@@ -1,8 +1,8 @@
-import axios from "axios";
-import AuthService from "./auth.service";
+import axios from 'axios';
+import AuthService from './auth.service';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1",
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
 });
 
@@ -19,7 +19,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor: clear auth on 401
@@ -30,7 +30,7 @@ api.interceptors.response.use(
       AuthService.clearAuthStorage();
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

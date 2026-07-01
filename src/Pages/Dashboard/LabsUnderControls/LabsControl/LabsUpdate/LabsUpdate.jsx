@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useParams, useNavigate } from "react-router";
-import { Link } from "react-router";
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { useParams, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import {
   HiOutlineOfficeBuilding,
   HiOutlineLocationMarker,
@@ -11,12 +11,12 @@ import {
   HiOutlineArrowLeft,
   HiOutlinePhotograph,
   HiOutlineX,
-} from "react-icons/hi";
-import { FaMapMarkerAlt } from "react-icons/fa";
-import { toast } from "react-hot-toast";
-import { useAuth } from "../../../../../contexts/AuthContext";
+} from 'react-icons/hi';
+import { FaMapMarkerAlt } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '../../../../../contexts/AuthContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LabsUpdate = () => {
   const { id } = useParams();
@@ -39,17 +39,17 @@ const LabsUpdate = () => {
   const [imagesToDelete, setImagesToDelete] = useState([]);
 
   const formatMobile = (mobile) => {
-    if (!mobile) return "";
+    if (!mobile) return '';
     const mobileStr = String(mobile);
-    return mobileStr.startsWith("0") ? mobileStr : `0${mobileStr}`;
+    return mobileStr.startsWith('0') ? mobileStr : `0${mobileStr}`;
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE_URL}/labs/${id}`, {
-          headers: { "Authorization": token ? `Bearer ${token}` : "" }
+          headers: { Authorization: token ? `Bearer ${token}` : '' },
         });
         const result = await response.json();
 
@@ -58,28 +58,28 @@ const LabsUpdate = () => {
           setLabData(data);
 
           // Pre-fill form
-          setValue("division", data.division);
-          setValue("district", data.district);
-          setValue("upazila", data.upazila);
-          setValue("seat", data.seat);
-          setValue("head", data.head);
-          setValue("email", data.email);
-          setValue("mobile", formatMobile(data.mobile));
-          setValue("alt_mobile", formatMobile(data.altMobile));
-          setValue("lat", data.lat);
-          setValue("long", data.long);
+          setValue('division', data.division);
+          setValue('district', data.district);
+          setValue('upazila', data.upazila);
+          setValue('seat', data.seat);
+          setValue('head', data.head);
+          setValue('email', data.email);
+          setValue('mobile', formatMobile(data.mobile));
+          setValue('alt_mobile', formatMobile(data.altMobile));
+          setValue('lat', data.lat);
+          setValue('long', data.long);
 
           // Load images
           if (data.labImages && Array.isArray(data.labImages)) {
-            setLabImages(data.labImages.map(url => ({ url })));
+            setLabImages(data.labImages.map((url) => ({ url })));
           }
           if (data.institutionImages && Array.isArray(data.institutionImages)) {
-            setInstitutionImages(data.institutionImages.map(url => ({ url })));
+            setInstitutionImages(data.institutionImages.map((url) => ({ url })));
           }
         }
       } catch (error) {
-        console.error("Error fetching lab data:", error);
-        toast.error("Failed to load lab data");
+        console.error('Error fetching lab data:', error);
+        toast.error('Failed to load lab data');
       } finally {
         setLoading(false);
       }
@@ -89,23 +89,23 @@ const LabsUpdate = () => {
 
   const getCurrentLocation = () => {
     setIsGettingLocation(true);
-    if ("geolocation" in navigator) {
+    if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setValue("lat", position.coords.latitude.toString());
-          setValue("long", position.coords.longitude.toString());
+          setValue('lat', position.coords.latitude.toString());
+          setValue('long', position.coords.longitude.toString());
           setIsGettingLocation(false);
-          toast.success("Location updated successfully!");
+          toast.success('Location updated successfully!');
         },
         (error) => {
-          console.error("Error getting location:", error);
+          console.error('Error getting location:', error);
           setIsGettingLocation(false);
-          toast.error("Failed to get location. Please enable location access.");
-        }
+          toast.error('Failed to get location. Please enable location access.');
+        },
       );
     } else {
       setIsGettingLocation(false);
-      toast.error("Geolocation is not supported by your browser.");
+      toast.error('Geolocation is not supported by your browser.');
     }
   };
 
@@ -114,13 +114,13 @@ const LabsUpdate = () => {
     const currentImages = type === 'lab' ? labImages : institutionImages;
 
     if (currentImages.length + files.length > 2) {
-      toast.error("You can only upload a maximum of 2 images.");
+      toast.error('You can only upload a maximum of 2 images.');
       return;
     }
 
-    const newImages = files.map(file => ({
+    const newImages = files.map((file) => ({
       file,
-      url: URL.createObjectURL(file)
+      url: URL.createObjectURL(file),
     }));
 
     if (type === 'lab') {
@@ -134,14 +134,14 @@ const LabsUpdate = () => {
     if (type === 'lab') {
       const img = labImages[index];
       if (img.url && !img.file) {
-        setImagesToDelete(prev => [...prev, img.url]);
+        setImagesToDelete((prev) => [...prev, img.url]);
       }
       if (img.file) URL.revokeObjectURL(img.url);
       setLabImages(labImages.filter((_, i) => i !== index));
     } else {
       const img = institutionImages[index];
       if (img.url && !img.file) {
-        setImagesToDelete(prev => [...prev, img.url]);
+        setImagesToDelete((prev) => [...prev, img.url]);
       }
       if (img.file) URL.revokeObjectURL(img.url);
       setInstitutionImages(institutionImages.filter((_, i) => i !== index));
@@ -152,64 +152,69 @@ const LabsUpdate = () => {
     setIsPending(true);
     const formData = new FormData();
 
-    formData.append("division", data.division || "");
-    formData.append("district", data.district || "");
-    formData.append("upazila", data.upazila || "");
-    formData.append("seat", data.seat || "");
-    formData.append("head", data.head);
-    formData.append("email", data.email || "");
-    formData.append("mobile", data.mobile);
-    formData.append("alt_mobile", data.alt_mobile || "");
-    formData.append("lat", data.lat);
-    formData.append("long", data.long);
+    formData.append('division', data.division || '');
+    formData.append('district', data.district || '');
+    formData.append('upazila', data.upazila || '');
+    formData.append('seat', data.seat || '');
+    formData.append('head', data.head);
+    formData.append('email', data.email || '');
+    formData.append('mobile', data.mobile);
+    formData.append('alt_mobile', data.alt_mobile || '');
+    formData.append('lat', data.lat);
+    formData.append('long', data.long);
 
     // Existing images
-    const activeLabUrls = labImages.filter(img => !img.file).map(img => img.url);
-    if (activeLabUrls.length > 0) activeLabUrls.forEach(url => formData.append("labImages", url));
-    else if (labImages.filter(img => img.file).length === 0) formData.append("labImages", "");
+    const activeLabUrls = labImages.filter((img) => !img.file).map((img) => img.url);
+    if (activeLabUrls.length > 0) activeLabUrls.forEach((url) => formData.append('labImages', url));
+    else if (labImages.filter((img) => img.file).length === 0) formData.append('labImages', '');
 
-    const activeInstUrls = institutionImages.filter(img => !img.file).map(img => img.url);
-    if (activeInstUrls.length > 0) activeInstUrls.forEach(url => formData.append("institutionImages", url));
-    else if (institutionImages.filter(img => img.file).length === 0) formData.append("institutionImages", "");
+    const activeInstUrls = institutionImages.filter((img) => !img.file).map((img) => img.url);
+    if (activeInstUrls.length > 0)
+      activeInstUrls.forEach((url) => formData.append('institutionImages', url));
+    else if (institutionImages.filter((img) => img.file).length === 0)
+      formData.append('institutionImages', '');
 
     // New files
-    labImages.filter(img => img.file).forEach(img => formData.append("labImages", img.file));
-    institutionImages.filter(img => img.file).forEach(img => formData.append("institutionImages", img.file));
+    labImages.filter((img) => img.file).forEach((img) => formData.append('labImages', img.file));
+    institutionImages
+      .filter((img) => img.file)
+      .forEach((img) => formData.append('institutionImages', img.file));
 
     if (imagesToDelete.length > 0) {
-      formData.append("deletedImages", JSON.stringify(imagesToDelete));
+      formData.append('deletedImages', JSON.stringify(imagesToDelete));
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/labs/update/${id}`, {
-        method: "PUT",
-        headers: { "Authorization": token ? `Bearer ${token}` : "" },
+        method: 'PUT',
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
         body: formData,
       });
       const result = await response.json();
       if (result.success) {
-        toast.success("Lab updated successfully!");
-        navigate("/dashboard/labsUnderControl");
+        toast.success('Lab updated successfully!');
+        navigate('/dashboard/labsUnderControl');
       } else {
-        toast.error(result.message || "Update failed");
+        toast.error(result.message || 'Update failed');
       }
     } catch (error) {
-      console.error("Update error:", error);
-      toast.error("Internal server error");
+      console.error('Update error:', error);
+      toast.error('Internal server error');
     } finally {
       setIsPending(false);
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-emerald-50 flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-emerald-900 font-bold">লোড হচ্ছে...</p>
+  if (loading)
+    return (
+      <div className="min-h-screen bg-emerald-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-emerald-900 font-bold">লোড হচ্ছে...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
 
   return (
     <div className="min-h-screen bg-emerald-50 p-6">
@@ -217,7 +222,10 @@ const LabsUpdate = () => {
         {/* Header */}
         <div className="flex items-center justify-between no-print">
           <div className="flex items-center gap-4">
-            <Link to="/dashboard/labsUnderControl" className="p-2 bg-white rounded-full text-emerald-600 hover:bg-emerald-50 transition-colors shadow-sm border border-emerald-100">
+            <Link
+              to="/dashboard/labsUnderControl"
+              className="p-2 bg-white rounded-full text-emerald-600 hover:bg-emerald-50 transition-colors shadow-sm border border-emerald-100"
+            >
               <HiOutlineArrowLeft className="w-6 h-6" />
             </Link>
             <div>
@@ -230,8 +238,12 @@ const LabsUpdate = () => {
             disabled={isPending}
             className="cursor-pointer hover:scale-105 flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg transition-all font-semibold disabled:opacity-50"
           >
-            {isPending ? <HiOutlineSave className="w-5 h-5 animate-spin" /> : <HiOutlineSave className="w-5 h-5" />}
-            {isPending ? "সংরক্ষণ করা হচ্ছে..." : "সংরক্ষণ করুন"}
+            {isPending ? (
+              <HiOutlineSave className="w-5 h-5 animate-spin" />
+            ) : (
+              <HiOutlineSave className="w-5 h-5" />
+            )}
+            {isPending ? 'সংরক্ষণ করা হচ্ছে...' : 'সংরক্ষণ করুন'}
           </button>
         </div>
 
@@ -239,12 +251,21 @@ const LabsUpdate = () => {
           {/* Institution Info (Read-only) */}
           <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6 space-y-6">
             <div className="flex items-center gap-4 mb-2 pb-4 border-b border-emerald-50">
-              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600"><HiOutlineOfficeBuilding className="w-6 h-6" /></div>
-              <div><h3 className="font-bold text-emerald-950">প্রতিষ্ঠানের তথ্য</h3><p className="text-xs text-emerald-500 uppercase font-semibold">মৌলিক তথ্য (অপরিবর্তনযোগ্য)</p></div>
+              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
+                <HiOutlineOfficeBuilding className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-emerald-950">প্রতিষ্ঠানের তথ্য</h3>
+                <p className="text-xs text-emerald-500 uppercase font-semibold">
+                  মৌলিক তথ্য (অপরিবর্তনযোগ্য)
+                </p>
+              </div>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-emerald-600 uppercase">প্রতিষ্ঠানের নাম</label>
+                <label className="text-xs font-bold text-emerald-600 uppercase">
+                  প্রতিষ্ঠানের নাম
+                </label>
                 <div className="mt-1 p-3 bg-gray-50 border border-gray-100 rounded-xl text-gray-500 font-medium">
                   {labData?.institute}
                 </div>
@@ -252,19 +273,38 @@ const LabsUpdate = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">বিভাগ</label>
-                  <input type="text" {...register("division")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
+                  <input
+                    type="text"
+                    {...register('division')}
+                    readOnly={!isSuperAdmin}
+                    className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all'}`}
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">জেলা</label>
-                  <input type="text" {...register("district")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
+                  <input
+                    type="text"
+                    {...register('district')}
+                    readOnly={!isSuperAdmin}
+                    className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all'}`}
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">উপজেলা</label>
-                  <input type="text" {...register("upazila")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} />
+                  <input
+                    type="text"
+                    {...register('upazila')}
+                    readOnly={!isSuperAdmin}
+                    className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all'}`}
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-emerald-600 uppercase">আসন (Seat)</label>
-                  <input type="text" {...register("seat")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" />
+                  <input
+                    type="text"
+                    {...register('seat')}
+                    className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none"
+                  />
                 </div>
               </div>
             </div>
@@ -273,14 +313,44 @@ const LabsUpdate = () => {
           {/* Location Info */}
           <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6 space-y-6">
             <div className="flex items-center gap-4 mb-2 pb-4 border-b border-emerald-50">
-              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600"><HiOutlineLocationMarker className="w-6 h-6" /></div>
-              <div><h3 className="font-bold text-emerald-950">অবস্থান</h3><p className="text-xs text-emerald-500 uppercase font-semibold">ভৌগোলিক তথ্য</p></div>
+              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
+                <HiOutlineLocationMarker className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-emerald-950">অবস্থান</h3>
+                <p className="text-xs text-emerald-500 uppercase font-semibold">ভৌগোলিক তথ্য</p>
+              </div>
             </div>
             <div className="space-y-4">
-              <button type="button" onClick={getCurrentLocation} className="w-full flex items-center justify-center gap-2 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md transition-all font-semibold"><FaMapMarkerAlt className={isGettingLocation ? "animate-bounce" : ""} /> {isGettingLocation ? "অবস্থান খোঁজা হচ্ছে..." : "আমার বর্তমান অবস্থান ব্যবহার করুন"}</button>
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md transition-all font-semibold"
+              >
+                <FaMapMarkerAlt className={isGettingLocation ? 'animate-bounce' : ''} />{' '}
+                {isGettingLocation ? 'অবস্থান খোঁজা হচ্ছে...' : 'আমার বর্তমান অবস্থান ব্যবহার করুন'}
+              </button>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs font-bold text-emerald-600 uppercase">অক্ষাংশ (Lat)</label><input type="text" {...register("lat")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
-                <div><label className="text-xs font-bold text-emerald-600 uppercase">দ্রাঘিমাংশ (Long)</label><input type="text" {...register("long")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">
+                    অক্ষাংশ (Lat)
+                  </label>
+                  <input
+                    type="text"
+                    {...register('lat')}
+                    className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">
+                    দ্রাঘিমাংশ (Long)
+                  </label>
+                  <input
+                    type="text"
+                    {...register('long')}
+                    className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -288,36 +358,100 @@ const LabsUpdate = () => {
           {/* Contact Info (Editable) */}
           <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6 space-y-6">
             <div className="flex items-center gap-4 mb-2 pb-4 border-b border-emerald-50">
-              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600"><HiOutlineIdentification className="w-6 h-6" /></div>
-              <div><h3 className="font-bold text-emerald-950">যোগাযোগের তথ্য</h3><p className="text-xs text-emerald-500 uppercase font-semibold">প্রতিষ্ঠান প্রধান ও যোগাযোগ</p></div>
+              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
+                <HiOutlineIdentification className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-emerald-950">যোগাযোগের তথ্য</h3>
+                <p className="text-xs text-emerald-500 uppercase font-semibold">
+                  প্রতিষ্ঠান প্রধান ও যোগাযোগ
+                </p>
+              </div>
             </div>
             <div className="space-y-4">
-              <div><label className="text-xs font-bold text-emerald-600 uppercase">প্রতিষ্ঠান প্রধানের নাম</label><input type="text" {...register("head")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="text-xs font-bold text-emerald-600 uppercase">মোবাইল নম্বর</label><input type="text" {...register("mobile")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
-                <div><label className="text-xs font-bold text-emerald-600 uppercase">বিকল্প মোবাইল</label><input type="text" {...register("alt_mobile")} className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none" /></div>
+              <div>
+                <label className="text-xs font-bold text-emerald-600 uppercase">
+                  প্রতিষ্ঠান প্রধানের নাম
+                </label>
+                <input
+                  type="text"
+                  {...register('head')}
+                  className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none"
+                />
               </div>
-              <div><label className="text-xs font-bold text-emerald-600 uppercase">ইমেইল</label><input type="email" {...register("email")} readOnly={!isSuperAdmin} className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"}`} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">
+                    মোবাইল নম্বর
+                  </label>
+                  <input
+                    type="text"
+                    {...register('mobile')}
+                    className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-emerald-600 uppercase">
+                    বিকল্প মোবাইল
+                  </label>
+                  <input
+                    type="text"
+                    {...register('alt_mobile')}
+                    className="mt-1 w-full p-3 bg-emerald-50 border border-emerald-100 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-emerald-600 uppercase">ইমেইল</label>
+                <input
+                  type="email"
+                  {...register('email')}
+                  readOnly={!isSuperAdmin}
+                  className={`mt-1 w-full p-3 border border-emerald-100 rounded-xl outline-none ${!isSuperAdmin ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-emerald-50 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all'}`}
+                />
+              </div>
             </div>
           </div>
 
           {/* Image Upload */}
           <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 p-6 space-y-6">
             <div className="flex items-center gap-4 mb-2 pb-4 border-b border-emerald-50">
-              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600"><HiOutlinePhotograph className="w-6 h-6" /></div>
-              <div><h3 className="font-bold text-emerald-950">ছবি আপলোড</h3><p className="text-xs text-emerald-500 uppercase font-semibold">ল্যাব এবং প্রতিষ্ঠানের ছবি (সর্বোচ্চ ২ টি)</p></div>
+              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
+                <HiOutlinePhotograph className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-emerald-950">ছবি আপলোড</h3>
+                <p className="text-xs text-emerald-500 uppercase font-semibold">
+                  ল্যাব এবং প্রতিষ্ঠানের ছবি (সর্বোচ্চ ২ টি)
+                </p>
+              </div>
             </div>
 
             <div className="space-y-6">
               {/* Lab Images */}
               <div>
-                <label className="text-sm font-bold text-emerald-700 block mb-2">ল্যাবের ছবি (সর্বোচ্চ ২ টি)</label>
-                <input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, 'lab')} className="w-full text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer" />
+                <label className="text-sm font-bold text-emerald-700 block mb-2">
+                  ল্যাবের ছবি (সর্বোচ্চ ২ টি)
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 'lab')}
+                  className="w-full text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer"
+                />
                 <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
                   {labImages.map((img, idx) => (
                     <div key={idx} className="relative w-32 h-32 flex-shrink-0 group">
-                      <img src={img.url} className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105" />
-                      <button type="button" onClick={() => removeImage('lab', idx)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors">
+                      <img
+                        src={img.url}
+                        className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage('lab', idx)}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
+                      >
                         <HiOutlineX className="w-4 h-4" />
                       </button>
                     </div>
@@ -327,13 +461,28 @@ const LabsUpdate = () => {
 
               {/* Institution Images */}
               <div>
-                <label className="text-sm font-bold text-emerald-700 block mb-2">প্রতিষ্ঠানের ছবি (সর্বোচ্চ ২ টি)</label>
-                <input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, 'inst')} className="w-full text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer" />
+                <label className="text-sm font-bold text-emerald-700 block mb-2">
+                  প্রতিষ্ঠানের ছবি (সর্বোচ্চ ২ টি)
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 'inst')}
+                  className="w-full text-sm text-emerald-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer"
+                />
                 <div className="flex gap-4 mt-4 overflow-x-auto pb-2">
                   {institutionImages.map((img, idx) => (
                     <div key={idx} className="relative w-32 h-32 flex-shrink-0 group">
-                      <img src={img.url} className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105" />
-                      <button type="button" onClick={() => removeImage('inst', idx)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors">
+                      <img
+                        src={img.url}
+                        className="w-full h-full object-cover rounded-xl border-2 border-emerald-100 shadow-sm transition-transform group-hover:scale-105"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage('inst', idx)}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
+                      >
                         <HiOutlineX className="w-4 h-4" />
                       </button>
                     </div>

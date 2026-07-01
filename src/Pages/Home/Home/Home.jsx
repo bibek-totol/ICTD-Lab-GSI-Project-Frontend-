@@ -12,7 +12,7 @@ import LatestUpdatesMarquee from '../../../components/sheard/LatestUpdatesMarque
 
 import { bangladeshDivisions } from '../../../data/bangladeshDivisions';
 
-const API = import.meta.env.VITE_API_BASE_URL || 'https://ictd-lab-backend.vercel.app/api/v1';
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const Home = () => {
   const { t } = useTranslation();

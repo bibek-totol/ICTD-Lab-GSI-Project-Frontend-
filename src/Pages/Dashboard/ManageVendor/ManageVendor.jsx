@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
-import toast from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaBuilding,
   FaCheckCircle,
@@ -13,12 +13,12 @@ import {
   FaTimes,
   FaTimesCircle,
   FaTrash,
-} from "react-icons/fa";
+} from 'react-icons/fa';
 
-const API = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const getAuthConfig = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
   return {
     withCredentials: true,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -26,9 +26,9 @@ const getAuthConfig = () => {
 };
 
 const emptyVendor = {
-  name: "",
-  address: "",
-  phone: "",
+  name: '',
+  address: '',
+  phone: '',
   serial: 1,
   isActive: true,
 };
@@ -58,13 +58,13 @@ const ManageVendor = () => {
         const { data } = await axios.get(`${API}/vendors/active`);
         if (data?.success) {
           setVendors(data.data || []);
-          toast.error("Showing published vendors. Sign in as Super Admin to manage them.");
+          toast.error('Showing published vendors. Sign in as Super Admin to manage them.');
           return;
         }
       } catch (fallbackErr) {
-        console.error("Failed to fetch active vendors:", fallbackErr);
+        console.error('Failed to fetch active vendors:', fallbackErr);
       }
-      toast.error(err.response?.data?.message || "Failed to fetch vendors");
+      toast.error(err.response?.data?.message || 'Failed to fetch vendors');
     } finally {
       setLoading(false);
     }
@@ -78,9 +78,9 @@ const ManageVendor = () => {
     if (vendor) {
       setEditingVendor(vendor);
       setFormData({
-        name: vendor.name || "",
-        address: vendor.address || "",
-        phone: vendor.phone || "",
+        name: vendor.name || '',
+        address: vendor.address || '',
+        phone: vendor.phone || '',
         serial: vendor.serial || 1,
         isActive: vendor.isActive ?? true,
       });
@@ -105,7 +105,7 @@ const ManageVendor = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSaving(true);
-    const toastId = toast.loading(editingVendor ? "Updating vendor..." : "Creating vendor...");
+    const toastId = toast.loading(editingVendor ? 'Updating vendor...' : 'Creating vendor...');
 
     try {
       const payload = {
@@ -118,21 +118,21 @@ const ManageVendor = () => {
         : await axios.post(`${API}/vendors/create`, payload, getAuthConfig());
 
       if (data?.success) {
-        toast.success(editingVendor ? "Vendor updated" : "Vendor created", { id: toastId });
+        toast.success(editingVendor ? 'Vendor updated' : 'Vendor created', { id: toastId });
         fetchVendors();
         closeModal();
       } else {
-        toast.error(data?.message || "Operation failed", { id: toastId });
+        toast.error(data?.message || 'Operation failed', { id: toastId });
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Operation failed", { id: toastId });
+      toast.error(err.response?.data?.message || 'Operation failed', { id: toastId });
     } finally {
       setSaving(false);
     }
   };
 
   const toggleStatus = async (vendor) => {
-    const toastId = toast.loading("Updating status...");
+    const toastId = toast.loading('Updating status...');
     try {
       const { data } = await axios.put(
         `${API}/vendors/update/${vendor.id}`,
@@ -146,12 +146,12 @@ const ManageVendor = () => {
             item.id === vendor.id ? { ...item, isActive: !vendor.isActive } : item,
           ),
         );
-        toast.success("Status updated", { id: toastId });
+        toast.success('Status updated', { id: toastId });
       } else {
-        toast.error(data?.message || "Status update failed", { id: toastId });
+        toast.error(data?.message || 'Status update failed', { id: toastId });
       }
     } catch (err) {
-      toast.error("Status update failed", { id: toastId });
+      toast.error('Status update failed', { id: toastId });
     }
   };
 
@@ -165,13 +165,13 @@ const ManageVendor = () => {
             <button
               onClick={async () => {
                 toast.dismiss(t.id);
-                const toastId = toast.loading("Deleting vendor...");
+                const toastId = toast.loading('Deleting vendor...');
                 try {
                   await axios.delete(`${API}/vendors/delete/${vendor.id}`, getAuthConfig());
                   setVendors((prev) => prev.filter((item) => item.id !== vendor.id));
-                  toast.success("Vendor deleted", { id: toastId });
+                  toast.success('Vendor deleted', { id: toastId });
                 } catch (err) {
-                  toast.error("Delete failed", { id: toastId });
+                  toast.error('Delete failed', { id: toastId });
                 }
               }}
               className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-bold text-white"
@@ -187,7 +187,7 @@ const ManageVendor = () => {
           </div>
         </div>
       ),
-      { duration: 6000, position: "top-center" },
+      { duration: 6000, position: 'top-center' },
     );
   };
 
@@ -207,7 +207,7 @@ const ManageVendor = () => {
             onClick={fetchVendors}
             className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-700 shadow-sm transition hover:bg-emerald-50"
           >
-            <FaSync className={loading ? "animate-spin" : ""} /> Reload
+            <FaSync className={loading ? 'animate-spin' : ''} /> Reload
           </button>
           <button
             onClick={() => openModal()}
@@ -254,26 +254,27 @@ const ManageVendor = () => {
                         <p className="text-base font-bold text-emerald-950">{vendor.name}</p>
                         <div className="mt-2 flex items-start gap-2 text-xs text-emerald-600">
                           <FaMapMarkerAlt className="mt-0.5 shrink-0" />
-                          <span>{vendor.address || "No address added"}</span>
+                          <span>{vendor.address || 'No address added'}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 font-semibold text-emerald-800">
                         <FaPhoneAlt className="text-emerald-500" />
-                        {vendor.phone || "No phone"}
+                        {vendor.phone || 'No phone'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => toggleStatus(vendor)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition hover:scale-105 ${vendor.isActive
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border-amber-200 bg-amber-50 text-amber-700"
-                          }`}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition hover:scale-105 ${
+                          vendor.isActive
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : 'border-amber-200 bg-amber-50 text-amber-700'
+                        }`}
                       >
                         {vendor.isActive ? <FaCheckCircle /> : <FaTimesCircle />}
-                        {vendor.isActive ? "PUBLISHED" : "UNPUBLISHED"}
+                        {vendor.isActive ? 'PUBLISHED' : 'UNPUBLISHED'}
                       </button>
                     </td>
                     <td className="px-6 py-4">
@@ -321,9 +322,11 @@ const ManageVendor = () => {
               <div className="flex items-center justify-between bg-emerald-600 p-6 text-white">
                 <div>
                   <h3 className="text-2xl font-bold">
-                    {editingVendor ? "Edit Vendor" : "Create Vendor"}
+                    {editingVendor ? 'Edit Vendor' : 'Create Vendor'}
                   </h3>
-                  <p className="mt-1 text-xs text-emerald-100">Vendor table data for the landing page</p>
+                  <p className="mt-1 text-xs text-emerald-100">
+                    Vendor table data for the landing page
+                  </p>
                 </div>
                 <button
                   onClick={closeModal}
@@ -393,7 +396,7 @@ const ManageVendor = () => {
                     <select
                       value={formData.isActive}
                       onChange={(e) =>
-                        setFormData({ ...formData, isActive: e.target.value === "true" })
+                        setFormData({ ...formData, isActive: e.target.value === 'true' })
                       }
                       className="w-full rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-500"
                     >
@@ -416,8 +419,10 @@ const ManageVendor = () => {
                     disabled={saving}
                     className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-700 disabled:opacity-50"
                   >
-                    {saving && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-                    {editingVendor ? "Update Vendor" : "Save Vendor"}
+                    {saving && (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    )}
+                    {editingVendor ? 'Update Vendor' : 'Save Vendor'}
                   </button>
                 </div>
               </form>

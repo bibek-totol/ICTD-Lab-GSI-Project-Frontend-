@@ -83,7 +83,7 @@ const LabListItem = memo(({ lab, index, onSelect }) => {
   );
 });
 
-const API = import.meta.env.VITE_API_BASE_URL || 'https://ictd-lab-backend.vercel.app/api/v1';
+const API = import.meta.env.VITE_API_BASE_URL;
 
 const LabDetails = () => {
   const [labType, setLabType] = useState('SOF'); // New state for Lab Type

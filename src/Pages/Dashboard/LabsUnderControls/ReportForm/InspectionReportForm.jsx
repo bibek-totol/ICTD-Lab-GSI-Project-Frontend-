@@ -1,94 +1,91 @@
-import React, { useState } from "react";
-import toast from "react-hot-toast";
-import { useForm } from "react-hook-form";
-import {
-  HiCheck,
-  HiOutlineDocumentText,
-  HiOutlineX,
-} from "react-icons/hi";
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { HiCheck, HiOutlineDocumentText, HiOutlineX } from 'react-icons/hi';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ictd-lab-backend.vercel.app/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const sofOperationLabel = "আইসিটিডি স্কুল অব ফিউচার এন্ড রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।";
-const ictdlOperationLabel = "আইসিটিডি ডিজিটাল ল্যাব যথাযথভাবে পরিচালিত না হলে তার কারণ।";
+const sofOperationLabel =
+  'আইসিটিডি স্কুল অব ফিউচার এন্ড রোবোটিক্স কর্নার যথাযথভাবে পরিচালিত না হলে তার কারণ।';
+const ictdlOperationLabel = 'আইসিটিডি ডিজিটাল ল্যাব যথাযথভাবে পরিচালিত না হলে তার কারণ।';
 
 const reportFields = [
   {
-    label: "শিক্ষা প্রতিষ্ঠানের নাম ও ঠিকানা",
-    name: "instituteAddress",
-    type: "textarea",
-    placeholder: "প্রতিষ্ঠানের নাম ও পূর্ণ ঠিকানা",
+    label: 'শিক্ষা প্রতিষ্ঠানের নাম ও ঠিকানা',
+    name: 'instituteAddress',
+    type: 'textarea',
+    placeholder: 'প্রতিষ্ঠানের নাম ও পূর্ণ ঠিকানা',
   },
   {
-    label: "ল্যাব স্থাপনের তারিখ ও সাল",
-    name: "labEstablishedAt",
-    type: "text",
-    placeholder: "১২/০৫/২০২৪",
+    label: 'ল্যাব স্থাপনের তারিখ ও সাল',
+    name: 'labEstablishedAt',
+    type: 'text',
+    placeholder: '১২/০৫/২০২৪',
   },
   {
-    label: "কম্পিউটার সংখ্যা",
-    name: "computerCount",
-    type: "number",
-    placeholder: "0",
+    label: 'কম্পিউটার সংখ্যা',
+    name: 'computerCount',
+    type: 'number',
+    placeholder: '0',
   },
   {
-    label: "অন্যান্য সরঞ্জামাদি ও সংখ্যা",
-    name: "otherEquipmentCount",
-    type: "textarea",
-    placeholder: "সরঞ্জামের নাম ও সংখ্যা লিখুন",
+    label: 'অন্যান্য সরঞ্জামাদি ও সংখ্যা',
+    name: 'otherEquipmentCount',
+    type: 'textarea',
+    placeholder: 'সরঞ্জামের নাম ও সংখ্যা লিখুন',
   },
   {
-    label: "ডিজিটাল ল্যাবসমূহের ক্লাস কার্যক্রম পরিচালিত হচ্ছে কিনা?",
-    name: "digitalLabStatus",
-    type: "radioWithDetails",
-    options: ["হ্যাঁ", "না"],
-    placeholder: "বিস্তারিত লিখুন",
+    label: 'ডিজিটাল ল্যাবসমূহের ক্লাস কার্যক্রম পরিচালিত হচ্ছে কিনা?',
+    name: 'digitalLabStatus',
+    type: 'radioWithDetails',
+    options: ['হ্যাঁ', 'না'],
+    placeholder: 'বিস্তারিত লিখুন',
   },
   {
-    label: "ল্যাব রেনোভেশন/ইন্টেরিয়র ডেকোরেশনের জন্য বরাদ্দ ছিল কি/না? (পরিমাণ)",
-    name: "renovationRouteStatus",
-    type: "radioWithDetails",
-    options: ["হ্যাঁ", "না"],
-    placeholder: "পরিমাণ/বিস্তারিত লিখুন",
+    label: 'ল্যাব রেনোভেশন/ইন্টেরিয়র ডেকোরেশনের জন্য বরাদ্দ ছিল কি/না? (পরিমাণ)',
+    name: 'renovationRouteStatus',
+    type: 'radioWithDetails',
+    options: ['হ্যাঁ', 'না'],
+    placeholder: 'পরিমাণ/বিস্তারিত লিখুন',
   },
   {
-    label: "ল্যাব ক্লাস রেজিস্টার আছে/নাই (না থাকলে কারণ)",
-    name: "labClassRegister",
-    type: "radioWithDetails",
-    options: ["আছে", "নাই"],
-    placeholder: "কারণ/বিস্তারিত লিখুন",
+    label: 'ল্যাব ক্লাস রেজিস্টার আছে/নাই (না থাকলে কারণ)',
+    name: 'labClassRegister',
+    type: 'radioWithDetails',
+    options: ['আছে', 'নাই'],
+    placeholder: 'কারণ/বিস্তারিত লিখুন',
   },
   {
-    label: "ল্যাবে ক্যামেরা আছে/নাই (না থাকলে কারণ)",
-    name: "labCameraStatus",
-    type: "radioWithDetails",
-    options: ["আছে", "নাই"],
-    placeholder: "কারণ/বিস্তারিত লিখুন",
+    label: 'ল্যাবে ক্যামেরা আছে/নাই (না থাকলে কারণ)',
+    name: 'labCameraStatus',
+    type: 'radioWithDetails',
+    options: ['আছে', 'নাই'],
+    placeholder: 'কারণ/বিস্তারিত লিখুন',
   },
   {
-    label: "ইন্টারনেট কানেকশন আছে/নাই (না থাকলে কারণ)",
-    name: "internetConnectionStatus",
-    type: "radioWithDetails",
-    options: ["আছে", "নাই"],
-    placeholder: "কারণ/বিস্তারিত লিখুন",
+    label: 'ইন্টারনেট কানেকশন আছে/নাই (না থাকলে কারণ)',
+    name: 'internetConnectionStatus',
+    type: 'radioWithDetails',
+    options: ['আছে', 'নাই'],
+    placeholder: 'কারণ/বিস্তারিত লিখুন',
   },
   {
     label: ictdlOperationLabel,
-    name: "sofRoboticsStatus",
-    type: "textarea",
-    placeholder: "কারণ লিখুন",
+    name: 'sofRoboticsStatus',
+    type: 'textarea',
+    placeholder: 'কারণ লিখুন',
   },
   {
-    label: "বর্তমান অবস্থা",
-    name: "currentStatus",
-    type: "textarea",
-    placeholder: "বর্তমান অবস্থা লিখুন",
+    label: 'বর্তমান অবস্থা',
+    name: 'currentStatus',
+    type: 'textarea',
+    placeholder: 'বর্তমান অবস্থা লিখুন',
   },
 ];
 
 const formatReportValue = (field, data) => {
-  const value = data[field.name] || "";
-  if (field.type !== "radioWithDetails") return value;
+  const value = data[field.name] || '';
+  if (field.type !== 'radioWithDetails') return value;
 
   const details = data[`${field.name}Details`];
   return details ? `${value} - ${details}` : value;
@@ -96,31 +93,31 @@ const formatReportValue = (field, data) => {
 
 const postJsonReport = async (endpoint, payload, headers) => {
   const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-    method: "POST",
+    method: 'POST',
     headers,
-    credentials: "include",
+    credentials: 'include',
     body: JSON.stringify(payload),
   });
 
-  const contentType = response.headers.get("content-type") || "";
-  const result = contentType.includes("application/json")
+  const contentType = response.headers.get('content-type') || '';
+  const result = contentType.includes('application/json')
     ? await response.json()
     : { message: await response.text() };
 
   return { response, result };
 };
 
-const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labType = "sof" }) => {
+const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labType = 'sof' }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const classReportFields = reportFields.map((field) => (
-    field.name === "sofRoboticsStatus"
-      ? { ...field, label: labType === "sof" ? sofOperationLabel : ictdlOperationLabel }
-      : field
-  ));
+  const classReportFields = reportFields.map((field) =>
+    field.name === 'sofRoboticsStatus'
+      ? { ...field, label: labType === 'sof' ? sofOperationLabel : ictdlOperationLabel }
+      : field,
+  );
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      instituteAddress: instituteName || "",
+      instituteAddress: instituteName || '',
       computerCount: 0,
     },
   });
@@ -133,7 +130,7 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
       const computerCount = parseInt(data.computerCount, 10) || 0;
       const reportSummary = classReportFields
         .map((field) => `${field.label}: ${formatReportValue(field, data)}`)
-        .join("\n");
+        .join('\n');
 
       const payload = {
         ...data,
@@ -144,12 +141,12 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
         reportDetails: data,
       };
 
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       const requestHeaders = {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
-      const { response, result } = await postJsonReport("class-reports", payload, requestHeaders);
+      const { response, result } = await postJsonReport('class-reports', payload, requestHeaders);
 
       if (!response.ok) {
         setSubmitError(result.message || `Failed to submit report (${response.status})`);
@@ -157,17 +154,17 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
       }
 
       if (result.success) {
-        toast.success("Report submitted successfully!", {
-          style: { borderRadius: "10px", background: "#333", color: "#fff" },
+        toast.success('Report submitted successfully!', {
+          style: { borderRadius: '10px', background: '#333', color: '#fff' },
         });
         onSubmitted?.({ labId, labType, report: result.data });
         onClose();
       } else {
-        setSubmitError(result.message || "Failed to submit report");
+        setSubmitError(result.message || 'Failed to submit report');
       }
     } catch (error) {
-      console.error("Error submitting report:", error);
-      setSubmitError("Failed to submit report. Please try again.");
+      console.error('Error submitting report:', error);
+      setSubmitError('Failed to submit report. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -190,10 +187,10 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
           </div>
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-emerald-900">
-               ক্লাস কার্যক্রম পরিচালনা রিপোর্ট
+              ক্লাস কার্যক্রম পরিচালনা রিপোর্ট
             </h2>
             <p className="text-emerald-600 text-sm mt-1">
-              {instituteName || "শিক্ষা প্রতিষ্ঠানের তথ্য"}
+              {instituteName || 'শিক্ষা প্রতিষ্ঠানের তথ্য'}
             </p>
           </div>
         </div>
@@ -225,11 +222,8 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
               <tbody>
                 <tr>
                   {classReportFields.map((field) => (
-                    <td
-                      key={field.name}
-                      className="border border-emerald-200 p-2 align-top"
-                    >
-                      {field.type === "radioWithDetails" ? (
+                    <td key={field.name} className="border border-emerald-200 p-2 align-top">
+                      {field.type === 'radioWithDetails' ? (
                         <div className="space-y-3">
                           <div className="flex flex-wrap gap-3">
                             {field.options.map((option) => (
@@ -254,7 +248,7 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
                             className="h-24 w-full resize-none rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-emerald-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                           />
                         </div>
-                      ) : field.type === "textarea" ? (
+                      ) : field.type === 'textarea' ? (
                         <textarea
                           {...register(field.name)}
                           rows={5}
@@ -265,7 +259,7 @@ const InspectionReportForm = ({ onClose, onSubmitted, instituteName, labId, labT
                         <input
                           {...register(field.name)}
                           type={field.type}
-                          min={field.type === "number" ? 0 : undefined}
+                          min={field.type === 'number' ? 0 : undefined}
                           placeholder={field.placeholder}
                           className="w-full rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-emerald-950 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
                         />
