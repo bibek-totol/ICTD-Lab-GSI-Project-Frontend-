@@ -1,4 +1,5 @@
 # AWS EC2 Deployment: https://65.2.197.96.nip.io/
+# Vercel Link: https://ictd-lab-gsi-project-frontend.vercel.app
 SuperAdmin Useremail: bbibekbhowmick2001@gmail.com
 SuperAdmin Password: 123456aA@
 # ICTD Lab Frontend Application
