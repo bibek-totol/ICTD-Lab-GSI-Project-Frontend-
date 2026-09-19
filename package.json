@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-   "dev": "vite --host 0.0.0.0 --port 5173",
-    "build": "vite build",
+    "dev": "node api.js && vite --host 0.0.0.0 --port 5173",
+    "build": "node api.js && vite build",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "preview": "vite preview",
